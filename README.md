@@ -66,8 +66,23 @@ nova/
 - PostgreSQL 14+
 - Redis 6+
 - npm or yarn
+- Docker (for easy PostgreSQL and Redis setup)
 
-### Backend Setup
+### Quick Setup
+
+We provide convenient scripts to help you get started quickly:
+
+```bash
+# One-time setup (installs dependencies, sets up database, etc.)
+./scripts/setup.sh
+
+# Run both backend and frontend in development mode
+./scripts/dev.sh
+```
+
+### Manual Setup
+
+#### Backend Setup
 
 1. Navigate to the backend directory:
 ```bash
