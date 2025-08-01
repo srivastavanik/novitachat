@@ -32,6 +32,14 @@ const envSchema = z.object({
   NOVITA_API_KEY: z.string(),
   NOVITA_API_BASE_URL: z.string().default('https://api.novita.ai/v3'),
 
+  // OAuth
+  OAUTH_CLIENT_ID: z.string(),
+  OAUTH_APP_SECRET: z.string(),
+  OAUTH_AUTH_URL: z.string().default('https://novita.ai/oauth/authorize'),
+  OAUTH_REDIRECT_URI: z.string().default('http://localhost:3001/api/external-auth/callback'),
+  OAUTH_SCOPE: z.string().default('openid+profile'),
+  OAUTH_USERINFO_URL: z.string().default('https://api-server.novita.ai/oauth/userinfo'),
+
   // CORS
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
   SOCKET_CORS_ORIGIN: z.string().default('http://localhost:5173'),
@@ -83,6 +91,15 @@ export const jwtConfig = {
 export const novitaConfig = {
   apiKey: config.NOVITA_API_KEY,
   baseURL: config.NOVITA_API_BASE_URL,
+};
+
+export const oauthConfig = {
+  clientId: config.OAUTH_CLIENT_ID,
+  appSecret: config.OAUTH_APP_SECRET,
+  authUrl: config.OAUTH_AUTH_URL,
+  redirectUri: config.OAUTH_REDIRECT_URI,
+  scope: config.OAUTH_SCOPE,
+  userInfoUrl: config.OAUTH_USERINFO_URL,
 };
 
 export const corsConfig = {

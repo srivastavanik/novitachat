@@ -10,6 +10,7 @@ import { config, corsConfig, socketCorsConfig } from './config';
 // Import routes
 import authRoutes from './routes/auth.routes';
 import chatRoutes from './routes/chat.routes';
+import externalAuthRoutes from './routes/external-auth.routes';
 
 // Initialize express app
 const app: Application = express();
@@ -47,6 +48,7 @@ app.get('/health', (req: Request, res: Response) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/external-auth', externalAuthRoutes);
 
 // Import chat controller for WebSocket handling
 import { chatController } from './controllers/chat.controller';
