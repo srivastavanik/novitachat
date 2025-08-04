@@ -9,6 +9,7 @@ import { Loader2 } from 'lucide-react'
 import Sidebar from '@/components/chat/Sidebar'
 import MessageList from '@/components/chat/MessageList'
 import ChatInput from '@/components/chat/ChatInput'
+import { getCookie } from '@/lib/utils'
 
 export default function ChatPage() {
   const router = useRouter()
@@ -35,7 +36,7 @@ export default function ChatPage() {
     if (user) {
       const socketInstance = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000', {
         auth: {
-          token: localStorage.getItem('access_token')
+          token: getCookie('access_token')
         }
       })
 

@@ -8,7 +8,7 @@ dotenv.config();
 const envSchema = z.object({
   // Server
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.string().default('3001').transform(Number),
+  PORT: z.string().default('5000').transform(Number),
   HOST: z.string().default('localhost'),
 
   // Database
@@ -36,9 +36,13 @@ const envSchema = z.object({
   OAUTH_CLIENT_ID: z.string(),
   OAUTH_APP_SECRET: z.string(),
   OAUTH_AUTH_URL: z.string().default('https://novita.ai/oauth/authorize'),
-  OAUTH_REDIRECT_URI: z.string().default('http://localhost:3001/api/external-auth/callback'),
+  OAUTH_TOKEN_EXCHANGE_URL: z.string().default('https://api-server.novita.ai/oauth/token'),
+  OAUTH_REDIRECT_URI: z.string().default('http://localhost:5000/api/external-auth/callback'),
   OAUTH_SCOPE: z.string().default('openid+profile'),
   OAUTH_USERINFO_URL: z.string().default('https://api-server.novita.ai/oauth/userinfo'),
+
+  // Frontend
+  WEB_ORIGIN: z.string().default('http://localhost:3000'),
 
   // CORS
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
@@ -97,10 +101,15 @@ export const oauthConfig = {
   clientId: config.OAUTH_CLIENT_ID,
   appSecret: config.OAUTH_APP_SECRET,
   authUrl: config.OAUTH_AUTH_URL,
+  tokenExchangeUrl: config.OAUTH_TOKEN_EXCHANGE_URL,
   redirectUri: config.OAUTH_REDIRECT_URI,
   scope: config.OAUTH_SCOPE,
   userInfoUrl: config.OAUTH_USERINFO_URL,
 };
+
+export const frontendConfig = {
+  webOrigin: config.WEB_ORIGIN,
+}
 
 export const corsConfig = {
   origin: config.CORS_ORIGIN.split(','),

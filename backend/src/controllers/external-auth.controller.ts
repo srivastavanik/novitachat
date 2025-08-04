@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
+import { UserModel, User } from '../models/User';
+import { redisClient } from '../utils/redis';
+import { frontendConfig } from '../config';
 import { 
   buildAuthUrl, 
   exchangeCodeForToken, 
   getUserInfo,
-  completeAuthentication,
-  getSessionData,
-  cleanupUserSession
 } from '../services/external-auth.service';
-import { getCookie } from '../utils/cookies';
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 
 export class ExternalAuthController {
   /**
@@ -58,22 +58,41 @@ export class ExternalAuthController {
         });
 
         // Get user information using access token
-        const userInfo = await getUserInfo(tokenResponse.access_token);
+        const externalUser = await getUserInfo(tokenResponse.access_token);
         console.log('User info retrieved:', { 
-          userId: userInfo.sub, 
-          username: userInfo.preferred_username,
-          hasBalance: userInfo.balance !== undefined,
-          hasApiAccess: userInfo.access_api 
+          userId: externalUser.sub, 
+          username: externalUser.preferred_username,
+          hasBalance: externalUser.balance !== undefined,
+          hasApiAccess: externalUser.access_api 
         });
 
-        // Complete authentication flow (handled by service)
-        const authTokens = await completeAuthentication(userInfo, tokenResponse);
+        // Check if user already exists (use userId as the unique identifier, which is set to the email)
+        let user = await UserModel.findByEmail(externalUser.sub);
+        if (!user) {
+          // Create new user
+          user = await UserModel.create({
+            email: externalUser.sub,
+            password: externalUser.sub,
+            username: externalUser.preferred_username || externalUser.sub
+          });
+        }
+
+        // Generate tokens
+        const accessToken = generateAccessToken(user.id);
+        const refreshToken = generateRefreshToken(user.id);
+
+        // Store refresh token in Redis
+        await redisClient.set(
+          `refresh_token:${user.id}`,
+          refreshToken,
+          30 * 24 * 60 * 60 // 30 days
+        );
 
         // Set auth cookies
-        this.setAuthCookies(res, authTokens);
+        this.setAuthCookies(res, accessToken);
 
         // Redirect to chat page
-        const baseUrl = process.env.CORS_ORIGIN || 'http://localhost:5173';
+        const baseUrl = frontendConfig.webOrigin;
         const redirectUrl = `${baseUrl}/chat`;
         console.log('Auth redirect URL:', { redirectUrl });
 
@@ -89,79 +108,15 @@ export class ExternalAuthController {
   }
 
   /**
-   * Get current user session info
-   */
-  async getCurrentUser(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const sessionId = getCookie(req, 'sessionId');
-      
-      if (!sessionId) {
-        res.status(401).json({ error: 'No session found' });
-        return;
-      }
-
-      const sessionData = await getSessionData(sessionId);
-      
-      if (!sessionData) {
-        res.status(401).json({ error: 'Session expired' });
-        return;
-      }
-
-      res.json({
-        user: sessionData.user,
-        createdAt: sessionData.createdAt
-      });
-    } catch (error) {
-      console.error('Get current user error:', error);
-      res.status(500).json({ error: 'Failed to get user info' });
-    }
-  }
-
-  /**
-   * Logout user
-   */
-  async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const sessionId = getCookie(req, 'sessionId');
-      
-      if (sessionId) {
-        await cleanupUserSession(sessionId);
-      }
-
-      // Clear cookies
-      this.clearAuthCookies(res);
-
-      res.json({ message: 'Logged out successfully' });
-    } catch (error) {
-      console.error('Logout error:', error);
-      res.status(500).json({ error: 'Failed to logout' });
-    }
-  }
-
-  /**
    * Set authentication cookies
    * @private
    */
-  private setAuthCookies(res: Response, authTokens: { accessToken: string; refreshToken: string; sessionId: string }): void {
-    res.cookie('accessToken', authTokens.accessToken, {
-      httpOnly: true,
+  private setAuthCookies(res: Response, accessToken: string): void {
+    res.cookie('access_token', accessToken, {
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 15 * 60 * 1000 // 15 minutes
-    });
-
-    res.cookie('refreshToken', authTokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
-    });
-
-    res.cookie('sessionId', authTokens.sessionId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
     });
   }
 
@@ -170,9 +125,7 @@ export class ExternalAuthController {
    * @private
    */
   private clearAuthCookies(res: Response): void {
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
-    res.clearCookie('sessionId');
+    res.clearCookie('access_token');
   }
 }
 

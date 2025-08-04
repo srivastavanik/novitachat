@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import axios from 'axios'
+import { getCookie, setCookie, removeCookie } from './utils'
 
 interface User {
   id: string
@@ -28,7 +29,7 @@ axios.defaults.withCredentials = true
 // Add auth token to requests
 axios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token')
+    const token = getCookie('access_token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -46,11 +47,15 @@ axios.interceptors.response.use(
       originalRequest._retry = true
       try {
         const response = await axios.post('/api/auth/refresh')
-        localStorage.setItem('access_token', response.data.access_token)
+        setCookie('access_token', response.data.access_token, { 
+          expires: 7, // 7 days
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax'
+        })
         originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`
         return axios(originalRequest)
       } catch (refreshError) {
-        localStorage.removeItem('access_token')
+        removeCookie('access_token')
         window.location.href = '/login'
         return Promise.reject(refreshError)
       }
@@ -69,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('access_token')
+      const token = getCookie('access_token')
       if (!token) {
         setLoading(false)
         return
@@ -77,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await axios.get('/api/auth/profile')
       setUser(response.data.user)
     } catch (error) {
-      localStorage.removeItem('access_token')
+      removeCookie('access_token')
     } finally {
       setLoading(false)
     }
@@ -85,13 +90,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const response = await axios.post('/api/auth/login', { email, password })
-    localStorage.setItem('access_token', response.data.access_token)
+    setCookie('access_token', response.data.access_token, {
+      expires: 7, // 7 days
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
+    })
     setUser(response.data.user)
   }
 
   const register = async (email: string, password: string, username: string) => {
     const response = await axios.post('/api/auth/register', { email, password, username })
-    localStorage.setItem('access_token', response.data.access_token)
+    setCookie('access_token', response.data.access_token, {
+      expires: 7, // 7 days
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
+    })
     setUser(response.data.user)
   }
 
@@ -101,13 +114,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       // Continue with logout even if API call fails
     }
-    localStorage.removeItem('access_token')
+    removeCookie('access_token')
     setUser(null)
   }
 
   const refreshToken = async () => {
     const response = await axios.post('/api/auth/refresh')
-    localStorage.setItem('access_token', response.data.access_token)
+    setCookie('access_token', response.data.access_token, {
+      expires: 7, // 7 days
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
+    })
   }
 
   return (

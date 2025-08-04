@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
@@ -10,6 +10,13 @@ import { cn } from '@/lib/utils'
 export default function LoginPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const { user } = useAuth()
+
+  useEffect(() => {
+    if (user) {
+      router.push('/chat')
+    }
+  }, [user])
 
   const handleLogin = async () => {
     setIsLoading(true);
