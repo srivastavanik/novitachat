@@ -87,7 +87,7 @@ export default function Message({ message, isStreaming = false }: MessageProps) 
   }
 
   return (
-    <div className={`flex ${isUser ? 'justify-end pl-8' : 'justify-start pr-8'} px-4 py-3`}>
+    <div className={`flex ${isUser ? 'justify-end pl-8' : 'justify-start pr-8'} px-4 ${isUser ? 'py-3' : 'py-6'}`}>
       {!isUser && (
         <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-[var(--nova-bg-tertiary)] mr-3">
           <Image 
@@ -137,9 +137,9 @@ export default function Message({ message, isStreaming = false }: MessageProps) 
               : 'px-4 py-3'
             }
           `}>
-            <div className={`prose prose-sm max-w-none prose-invert ${
-              isUser ? '' : 'font-[var(--nova-font-sans)]'
-            }`}>
+            <div className={`prose prose-lg max-w-none prose-invert ${
+              isUser ? '' : 'font-[var(--nova-font-sans)] leading-relaxed'
+            } ${!isUser ? 'space-y-4' : ''}`}>
               {isUser ? (
                 <p className="whitespace-pre-wrap m-0">{message.content}</p>
               ) : (
@@ -150,7 +150,7 @@ export default function Message({ message, isStreaming = false }: MessageProps) 
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm]}
                       components={{
-                        p: ({children}) => <p className="m-0 mb-2 last:mb-0 text-[var(--nova-text-primary)]">{children}</p>,
+                        p: ({children}) => <p className={`m-0 ${isUser ? 'mb-2' : 'mb-4'} last:mb-0 text-[var(--nova-text-primary)]`}>{children}</p>,
                         ul: ({children}) => <ul className="m-0 mb-2 last:mb-0">{children}</ul>,
                         ol: ({children}) => <ol className="m-0 mb-2 last:mb-0">{children}</ol>,
                         h1: ({children}) => <h1 className="text-lg font-semibold m-0 mb-2">{children}</h1>,

@@ -26,11 +26,11 @@
   --nova-primary-light: #40FFB7;    /* Light mint */
   
   /* Background Colors - Dark Theme Default */
-  --nova-bg-primary: #262624;       /* Base dark - darker black-gray */
-  --nova-bg-secondary: #2A2B32;     /* Main gray - darker */
-  --nova-bg-tertiary: #343541;      /* Lighter gray for cards */
-  --nova-bg-elevated: #3E3F4A;      /* Elevated surfaces */
-  --nova-bg-hover: #40414F;         /* Hover states */
+  --nova-bg-primary: #202020;       /* Base dark - true black-gray */
+  --nova-bg-secondary: #252525;     /* Main gray - darker */
+  --nova-bg-tertiary: #2A2A2A;      /* Lighter gray for cards */
+  --nova-bg-elevated: #303030;      /* Elevated surfaces */
+  --nova-bg-hover: #353535;         /* Hover states */
   
   /* Text Colors - Dark Theme Default */
   --nova-text-primary: #FFFFFF;     /* Pure white */
@@ -163,11 +163,11 @@
 /* Dark Mode Theme - Refined Design */
 [data-theme="dark"] {
   /* Background Colors - Dark Theme */
-  --nova-bg-primary: #262624;       /* Base dark - darker black-gray */
-  --nova-bg-secondary: #2A2B32;     /* Main gray - darker */
-  --nova-bg-tertiary: #343541;      /* Lighter gray for cards */
-  --nova-bg-elevated: #3E3F4A;      /* Elevated surfaces */
-  --nova-bg-hover: #40414F;         /* Hover states */
+  --nova-bg-primary: #202020;       /* Base dark - true black-gray */
+  --nova-bg-secondary: #252525;     /* Main gray - darker */
+  --nova-bg-tertiary: #2A2A2A;      /* Lighter gray for cards */
+  --nova-bg-elevated: #303030;      /* Elevated surfaces */
+  --nova-bg-hover: #353535;         /* Hover states */
   
   /* Text Colors - Dark Theme */
   --nova-text-primary: #ECECF1;     /* Softer white */
@@ -176,8 +176,8 @@
   --nova-text-inverse: #000000;     /* Pure black */
   
   /* Border Colors - Dark Theme */
-  --nova-border-primary: #565869;   /* Dark gray borders */
-  --nova-border-secondary: #40414F; /* Medium gray borders */
+  --nova-border-primary: #404040;   /* Dark gray borders */
+  --nova-border-secondary: #353535; /* Medium gray borders */
   
   /* Enhanced Shadows for Dark Mode */
   --nova-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.8);
@@ -229,6 +229,9 @@
   /* Legacy Gradients */
   --nova-gradient-green: linear-gradient(135deg, #00D26A 0%, #00E87E 100%);
   --nova-gradient-green-subtle: linear-gradient(135deg, rgba(0, 210, 106, 0.1) 0%, rgba(0, 232, 126, 0.1) 100%);
+  
+  /* Icon invert for dark mode */
+  --icon-invert: 1;
 }
 
 /* Light Mode Theme */
@@ -261,6 +264,9 @@
   --nova-shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --nova-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   --nova-shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  
+  /* Icon invert for light mode */
+  --icon-invert: 0;
 }
 
 /* Default to dark theme */

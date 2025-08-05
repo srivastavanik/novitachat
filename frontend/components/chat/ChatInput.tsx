@@ -12,7 +12,7 @@ interface Attachment {
 interface ChatInputProps {
   value: string
   onChange: (value: string) => void
-  onSend: (attachments?: Attachment[], options?: { webSearch?: boolean; deepResearch?: boolean; thinking?: boolean }) => void
+  onSend: (attachments?: Attachment[], options?: { webSearch?: boolean; deepResearch?: boolean; thinking?: boolean; style?: any }) => void
   isStreaming: boolean
   disabled?: boolean
   currentModel?: string
@@ -115,7 +115,8 @@ export default function ChatInput({
       onSend(attachments, { 
         webSearch: webSearchEnabled || manualWebSearchOverride, 
         deepResearch: deepResearchEnabled,
-        thinking: supportsThinking && thinkingEnabled
+        thinking: supportsThinking && thinkingEnabled,
+        style: currentStyle
       })
       setAttachments([])
       setDeepResearchEnabled(false)

@@ -480,6 +480,9 @@ export class ChatController {
     webSearch?: boolean;
     deepResearch?: boolean;
     thinking?: boolean;
+    style?: {
+      systemPrompt: string;
+    };
   }) {
     try {
       const { conversationId, content, userId, attachments, webSearch, deepResearch, thinking } = data;
@@ -496,6 +499,12 @@ export class ChatController {
       if (!conversation) {
         socket.emit('error', { message: 'Conversation not found' });
         return;
+      }
+
+      // Extract style if provided
+      let styleSystemPrompt = '';
+      if (data.style && data.style.systemPrompt) {
+        styleSystemPrompt = data.style.systemPrompt;
       }
 
       // Prepare metadata for user message
@@ -683,6 +692,12 @@ export class ChatController {
       
       // Add system prompt with search instructions if needed
       let systemPrompt = conversation.system_prompt || '';
+      
+      // Add style system prompt if provided
+      if (styleSystemPrompt) {
+        systemPrompt = styleSystemPrompt + '\n\n' + systemPrompt;
+      }
+      
       if (searchResults) {
         systemPrompt += '\n\nYou have access to web search results. Use this information to provide accurate, up-to-date responses. When citing sources, format them as clickable links using markdown: [Source Title](URL). Always include the specific sources you reference.';
         systemPrompt += '\n\nSearch Results:\n' + searchResults;

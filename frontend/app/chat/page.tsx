@@ -509,7 +509,7 @@ export default function ChatPage() {
     }
   }
 
-  const handleSendMessage = async (message: string, options?: { webSearch?: boolean; attachments?: File[] }) => {
+  const handleSendMessage = async (message: string, options?: { webSearch?: boolean; attachments?: File[]; style?: any }) => {
     // Handle trial mode
     if (isTrialMode) {
       // Convert File[] to the format expected by handleTrialSendMessage
@@ -534,6 +534,9 @@ export default function ChatPage() {
     // Add options if provided
     if (options?.webSearch) {
       messageData.webSearch = true
+    }
+    if (options?.style) {
+      messageData.style = options.style
     }
 
     // Handle attachments if provided
@@ -837,7 +840,8 @@ export default function ChatPage() {
                 if (inputMessage.trim()) {
                   handleSendMessage(inputMessage.trim(), { 
                     webSearch: options?.webSearch,
-                    attachments: attachments?.map(a => a.file)
+                    attachments: attachments?.map(a => a.file),
+                    style: options?.style
                   })
                   setInputMessage('')
                 }

@@ -17,7 +17,7 @@ const styles: Style[] = [
     name: 'Normal',
     description: 'Default conversational style',
     systemPrompt: '',
-    icon: '💬'
+    icon: ''
   },
   {
     id: 'formal',
@@ -32,7 +32,7 @@ const styles: Style[] = [
 - Using proper grammar and punctuation throughout
 - Addressing the user respectfully
 - Providing thorough but efficient responses`,
-    icon: '👔'
+    icon: ''
   },
   {
     id: 'explanatory',
@@ -49,7 +49,7 @@ const styles: Style[] = [
 - Structure explanations progressively from basic to advanced
 - Use clear headings and bullet points for organization
 - Summarize key takeaways at the end`,
-    icon: '🎓'
+    icon: ''
   },
   {
     id: 'concise',
@@ -64,7 +64,7 @@ const styles: Style[] = [
 - Eliminating redundancy
 - Focusing only on essential information
 - Providing short, actionable answers`,
-    icon: '⚡'
+    icon: ''
   },
   {
     id: 'creative',
@@ -81,7 +81,7 @@ const styles: Style[] = [
 - Explore "what if" scenarios
 - Challenge conventional wisdom respectfully
 - Present multiple creative alternatives`,
-    icon: '🎨'
+    icon: ''
   },
   {
     id: 'socratic',
@@ -98,7 +98,7 @@ const styles: Style[] = [
 - Provide gentle guidance when users are stuck
 - Celebrate insights the user discovers
 - Balance questioning with necessary information`,
-    icon: '🤔'
+    icon: ''
   }
 ]
 
@@ -136,11 +136,16 @@ export default function StyleSelector({ onStyleChange, defaultStyle = 'normal' }
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--nova-bg-tertiary)] hover:bg-[var(--nova-bg-hover)] transition-all text-sm"
+        className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--nova-bg-tertiary)] hover:bg-[var(--nova-bg-hover)] transition-all text-sm"
       >
-        <span className="text-lg">{selectedStyle.icon}</span>
+        <img 
+          src="/style-icon.png" 
+          alt="Style" 
+          className="h-4 w-4 object-contain brightness-0 dark:brightness-100"
+          style={{ filter: 'invert(var(--icon-invert, 0))' }}
+        />
         <span className="font-medium text-[var(--nova-text-primary)]">
-          {selectedStyle.name}
+          Styles
         </span>
         <ChevronDown className={`h-4 w-4 text-[var(--nova-text-tertiary)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
@@ -151,7 +156,7 @@ export default function StyleSelector({ onStyleChange, defaultStyle = 'normal' }
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute top-full right-0 mt-2 w-80 rounded-xl border border-[var(--nova-border-primary)] bg-[var(--nova-bg-tertiary)] shadow-2xl z-50">
+          <div className="absolute bottom-full right-0 mb-2 w-80 rounded-xl border border-[var(--nova-border-primary)] bg-[var(--nova-bg-tertiary)] shadow-2xl z-50">
             <div className="p-3 border-b border-[var(--nova-border-primary)]">
               <h3 className="font-medium text-sm text-[var(--nova-text-primary)]">Conversation Style</h3>
               <p className="text-xs text-[var(--nova-text-tertiary)] mt-1">Choose how Nova responds to you</p>
@@ -167,7 +172,6 @@ export default function StyleSelector({ onStyleChange, defaultStyle = 'normal' }
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl mt-0.5">{style.icon}</span>
                     <div className="flex-1">
                       <div className="font-medium text-sm text-[var(--nova-text-primary)]">
                         {style.name}
