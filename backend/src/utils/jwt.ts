@@ -14,20 +14,20 @@ export interface DecodedToken extends TokenPayload {
 
 export class JWTService {
   static generateAccessToken(payload: TokenPayload): string {
-    return jwt.sign(payload, jwtConfig.secret, {
-      expiresIn: jwtConfig.accessTokenExpiry,
+    return jwt.sign(payload, jwtConfig.accessSecret, {
+      expiresIn: jwtConfig.accessExpiresIn,
     } as jwt.SignOptions);
   }
 
   static generateRefreshToken(payload: TokenPayload): string {
-    return jwt.sign(payload, jwtConfig.secret, {
-      expiresIn: jwtConfig.refreshTokenExpiry,
+    return jwt.sign(payload, jwtConfig.refreshSecret, {
+      expiresIn: jwtConfig.refreshExpiresIn,
     } as jwt.SignOptions);
   }
 
   static verifyAccessToken(token: string): DecodedToken {
     try {
-      return jwt.verify(token, jwtConfig.secret) as DecodedToken;
+      return jwt.verify(token, jwtConfig.accessSecret) as DecodedToken;
     } catch (error) {
       throw new Error('Invalid or expired access token');
     }
@@ -35,7 +35,7 @@ export class JWTService {
 
   static verifyRefreshToken(token: string): DecodedToken {
     try {
-      return jwt.verify(token, jwtConfig.secret) as DecodedToken;
+      return jwt.verify(token, jwtConfig.refreshSecret) as DecodedToken;
     } catch (error) {
       throw new Error('Invalid or expired refresh token');
     }
@@ -58,12 +58,12 @@ export const generateTokenPair = (payload: TokenPayload) => {
 };
 
 // Export convenience functions for auth controller
-export const generateAccessToken = (userId: string): string => {
-  return JWTService.generateAccessToken({ userId, email: '', role: 'user' });
+export const generateAccessToken = (userId: string, email: string = '', role: string = 'user'): string => {
+  return JWTService.generateAccessToken({ userId, email, role });
 };
 
-export const generateRefreshToken = (userId: string): string => {
-  return JWTService.generateRefreshToken({ userId, email: '', role: 'user' });
+export const generateRefreshToken = (userId: string, email: string = '', role: string = 'user'): string => {
+  return JWTService.generateRefreshToken({ userId, email, role });
 };
 
 export const verifyRefreshToken = (token: string): DecodedToken | null => {

@@ -10,6 +10,7 @@ import { config, corsConfig, socketCorsConfig } from './config';
 // Import routes
 import authRoutes from './routes/auth.routes';
 import chatRoutes from './routes/chat.routes';
+import modelsRoutes from './routes/models.routes';
 
 // Initialize express app
 const app: Application = express();
@@ -47,6 +48,7 @@ app.get('/health', (req: Request, res: Response) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/models', modelsRoutes);
 
 // Import chat controller for WebSocket handling
 import { chatController } from './controllers/chat.controller';
@@ -114,17 +116,22 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const status = err.status || 500;
   const message = err.message || 'Internal Server Error';
 
-  console.error('Error:', {
+  console.error('❌ Error Details:', {
     status,
     message,
     stack: err.stack,
     path: req.path,
-    method: req.method
+    method: req.method,
+    body: req.body,
+    env: config.NODE_ENV
   });
 
   res.status(status).json({
     error: message,
-    ...(config.NODE_ENV === 'development' && { stack: err.stack })
+    ...(config.NODE_ENV === 'development' && { 
+      stack: err.stack,
+      details: err.toString() 
+    })
   });
 });
 

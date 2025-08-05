@@ -11,10 +11,17 @@ class RedisClient {
       port: redisConfig.port,
       password: redisConfig.password,
       retryStrategy: (times) => {
+        // Stop retrying after 3 attempts
+        if (times > 3) {
+          console.log('⚠️  Redis not available - running without caching');
+          console.log('   To enable Redis, install Docker and run: docker compose up -d redis');
+          return null;
+        }
         const delay = Math.min(times * 50, 2000);
         return delay;
       },
-      maxRetriesPerRequest: 3,
+      maxRetriesPerRequest: 1,
+      enableOfflineQueue: false,
     });
 
     this.client.on('connect', () => {

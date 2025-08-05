@@ -1,18 +1,44 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { io, Socket } from 'socket.io-client'
-import axios from 'axios'
-import { Loader2 } from 'lucide-react'
+import axios from '@/lib/axios-config'
+import { Loader2, Settings, AlertCircle, Sparkles, X } from 'lucide-react'
+import Link from 'next/link'
 import Sidebar from '@/components/chat/Sidebar'
 import MessageList from '@/components/chat/MessageList'
 import ChatInput from '@/components/chat/ChatInput'
+import ConversationSettings from '@/components/chat/ConversationSettings'
+import ThinkingDisplay from '@/components/chat/ThinkingDisplay'
+
+interface TrialMessage {
+  id: string
+  content: string
+  role: 'user' | 'assistant' | 'system'
+  timestamp: Date
+  attachments?: Array<{
+    id: string
+    name: string
+    type: 'image' | 'document'
+    size: number
+    data?: string
+  }>
+  metadata?: {
+    webSearch?: boolean
+    isSearchProgress?: boolean
+  }
+}
+
+const TRIAL_MESSAGE_LIMIT = 10
 
 export default function ChatPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, loading: authLoading, logout } = useAuth()
+  const isTrialMode = searchParams.get('trial') === 'true'
+  const initialQuery = searchParams.get('q')
   const [socket, setSocket] = useState<Socket | null>(null)
   const [conversations, setConversations] = useState<any[]>([])
   const [currentConversation, setCurrentConversation] = useState<any>(null)
@@ -22,18 +48,86 @@ export default function ChatPage() {
   const [streamingMessage, setStreamingMessage] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [messagesLoading, setMessagesLoading] = useState(false)
+  const [currentModel, setCurrentModel] = useState<string>('')
+  const [modelCapabilities, setModelCapabilities] = useState<string[]>([])
+  const [showSettings, setShowSettings] = useState(false)
+  
+  // Trial mode states
+  const [trialMessages, setTrialMessages] = useState<TrialMessage[]>([])
+  const [trialMessageCount, setTrialMessageCount] = useState(0)
+  const [showDeepResearchModal, setShowDeepResearchModal] = useState(false)
+  const hasInitialized = useRef(false)
+  
+  // Thinking state for trial mode
+  const [trialThinkingContent, setTrialThinkingContent] = useState<string>('')
+  const [isTrialThinking, setIsTrialThinking] = useState(false)
+  
+  // Thinking state for authenticated users
+  const [thinkingMessage, setThinkingMessage] = useState<{ id: string; content: string; isThinking: boolean } | null>(null)
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated and not in trial mode
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!isTrialMode && !authLoading && !user) {
       router.push('/login')
     }
-  }, [authLoading, user, router])
+  }, [authLoading, user, router, isTrialMode])
 
-  // Initialize WebSocket connection
+  // Initialize trial mode
   useEffect(() => {
-    if (user) {
-      const socketInstance = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000', {
+    if (isTrialMode && !hasInitialized.current) {
+      hasInitialized.current = true
+      
+      // Load existing trial messages
+      const savedMessages = localStorage.getItem('trialMessages')
+      const savedCount = localStorage.getItem('trialMessageCount')
+      
+      if (savedMessages) {
+        try {
+          const parsed = JSON.parse(savedMessages)
+          setTrialMessages(parsed.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          })))
+        } catch (e) {
+          console.error('Failed to parse trial messages:', e)
+        }
+      }
+
+      if (savedCount) {
+        const count = parseInt(savedCount, 10)
+        setTrialMessageCount(count)
+        
+        // Check if trial is exhausted
+        if (count >= TRIAL_MESSAGE_LIMIT) {
+          router.push('/register?exhausted=true')
+          return
+        }
+      }
+
+      // Handle initial query from home page
+      if (initialQuery && (!savedMessages || JSON.parse(savedMessages).length === 0)) {
+        // Set the initial message in the input
+        setInputMessage(initialQuery)
+        // Send it after a brief delay to ensure everything is initialized
+        setTimeout(() => {
+          handleTrialSendMessage(initialQuery)
+        }, 100)
+      }
+    }
+  }, [isTrialMode, initialQuery, router])
+
+  // Save trial data to localStorage whenever it changes
+  useEffect(() => {
+    if (isTrialMode && trialMessages.length > 0) {
+      localStorage.setItem('trialMessages', JSON.stringify(trialMessages))
+      localStorage.setItem('trialMessageCount', trialMessageCount.toString())
+    }
+  }, [isTrialMode, trialMessages, trialMessageCount])
+
+  // Initialize WebSocket connection (only for authenticated users)
+  useEffect(() => {
+    if (user && !isTrialMode) {
+      const socketInstance = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001', {
         auth: {
           token: localStorage.getItem('access_token')
         }
@@ -47,18 +141,85 @@ export default function ChatPage() {
         setMessages(prev => [...prev, data.message])
       })
 
-      socketInstance.on('stream_start', () => {
+      socketInstance.on('search_progress', (data) => {
+        setMessages(prev => [...prev, data.message])
+      })
+
+      socketInstance.on('search_update', (data) => {
+        setMessages(prev => prev.map(msg => 
+          msg.id === data.messageId 
+            ? { 
+                ...msg, 
+                content: msg.content + '\n' + data.update,
+                metadata: { 
+                  ...msg.metadata, 
+                  linkPreviews: data.links || msg.metadata?.linkPreviews,
+                  isComplete: data.isComplete || false
+                }
+              }
+            : msg
+        ))
+      })
+
+      // Handle thinking messages
+      socketInstance.on('thinking_start', (data) => {
+        console.log('Thinking started:', data)
+        setThinkingMessage({ id: data.messageId, content: '', isThinking: true })
+      })
+
+      socketInstance.on('thinking_chunk', (data) => {
+        console.log('Thinking chunk:', data.chunk)
+        setThinkingMessage(prev => prev && prev.id === data.messageId 
+          ? { ...prev, content: prev.content + data.chunk }
+          : prev
+        )
+      })
+
+      socketInstance.on('thinking_complete', (data) => {
+        console.log('Thinking complete:', data)
+        setThinkingMessage(prev => prev && prev.id === data.messageId 
+          ? { ...prev, isThinking: false }
+          : prev
+        )
+        // Don't clear immediately - let user see the complete reasoning
+      })
+
+      socketInstance.on('stream_start', (data) => {
         setIsStreaming(true)
         setStreamingMessage('')
+        // Add the empty assistant message to the messages array
+        if (data.message) {
+          setMessages(prev => [...prev, data.message])
+        }
       })
 
       socketInstance.on('stream_chunk', (data) => {
         setStreamingMessage(prev => prev + data.chunk)
+        // Also update the message in the messages array
+        if (data.messageId) {
+          setMessages(prev => prev.map(msg => 
+            msg.id === data.messageId 
+              ? { ...msg, content: msg.content + data.chunk }
+              : msg
+          ))
+        }
       })
 
       socketInstance.on('stream_complete', (data) => {
         setIsStreaming(false)
-        setMessages(prev => [...prev, data.message])
+        // Update the existing message instead of adding a duplicate
+        setMessages(prev => prev.map(msg => 
+          msg.id === data.message.id 
+            ? {
+                ...data.message,
+                // Preserve link previews from search results
+                metadata: {
+                  ...data.message.metadata,
+                  linkPreviews: msg.metadata?.linkPreviews || data.message.metadata?.linkPreviews
+                }
+              }
+            : msg
+        ))
         setStreamingMessage('')
       })
 
@@ -68,29 +229,46 @@ export default function ChatPage() {
         setStreamingMessage('')
       })
 
+      socketInstance.on('conversation_title_updated', (data) => {
+        // Update the conversation title in both current conversation and list
+        setCurrentConversation((prev: any) => 
+          prev && prev.id === data.conversationId 
+            ? { ...prev, title: data.title }
+            : prev
+        )
+        setConversations(prev => 
+          prev.map(conv => 
+            conv.id === data.conversationId 
+              ? { ...conv, title: data.title }
+              : conv
+          )
+        )
+      })
+
       setSocket(socketInstance)
 
       return () => {
         socketInstance.disconnect()
       }
     }
-  }, [user])
+  }, [user, isTrialMode])
 
-  // Load conversations
+  // Load conversations (only for authenticated users)
   useEffect(() => {
-    if (user) {
+    if (user && !isTrialMode) {
       loadConversations()
     }
-  }, [user])
+  }, [user, isTrialMode])
 
   const loadConversations = async () => {
     try {
       const response = await axios.get('/api/chat/conversations')
-      setConversations(response.data.conversations)
+      const convs = response.data.conversations || []
+      setConversations(convs)
       
       // Select the first conversation if available
-      if (response.data.conversations.length > 0 && !currentConversation) {
-        selectConversation(response.data.conversations[0])
+      if (convs.length > 0 && !currentConversation) {
+        selectConversation(convs[0])
       }
     } catch (error) {
       console.error('Failed to load conversations:', error)
@@ -100,10 +278,13 @@ export default function ChatPage() {
   const createNewConversation = async () => {
     try {
       const response = await axios.post('/api/chat/conversations', {
-        title: 'New Chat'
+        title: 'New Chat',
+        model: currentModel || 'meta-llama/llama-3.3-70b-instruct',
+        max_tokens: 2048  // Default to 2048 tokens
       })
-      setConversations(prev => [response.data.conversation, ...prev])
-      setCurrentConversation(response.data.conversation)
+      const newConversation = response.data.conversation
+      setConversations(prev => [newConversation, ...(prev || [])])
+      setCurrentConversation(newConversation)
       setMessages([])
     } catch (error) {
       console.error('Failed to create conversation:', error)
@@ -112,10 +293,11 @@ export default function ChatPage() {
 
   const selectConversation = async (conversation: any) => {
     setCurrentConversation(conversation)
+    setCurrentModel(conversation.model || 'meta-llama/llama-3.3-70b-instruct')
     setMessagesLoading(true)
     try {
       const response = await axios.get(`/api/chat/conversations/${conversation.id}/messages`)
-      setMessages(response.data.messages)
+      setMessages(response.data.messages || [])
       if (socket) {
         socket.emit('conversation:join', { conversationId: conversation.id })
       }
@@ -126,18 +308,273 @@ export default function ChatPage() {
     }
   }
 
-  const sendMessage = async () => {
+  // Auto-detect if web search should be enabled
+  const shouldEnableWebSearch = (query: string): boolean => {
+    const searchKeywords = [
+      'search', 'find', 'look up', 'what is', 'who is', 'when is', 'where is', 
+      'how to', 'latest', 'news', 'current', 'today', 'recent', 'update',
+      'price', 'cost', 'weather', 'definition', 'explain', 'information about',
+      'tell me about', 'show me', 'google', 'check', 'verify'
+    ]
+    
+    const lowerQuery = query.toLowerCase()
+    return searchKeywords.some(keyword => lowerQuery.includes(keyword)) || query.includes('?')
+  }
+
+  const handleTrialSendMessage = async (content: string, attachments?: any[], options?: { webSearch?: boolean; deepResearch?: boolean }) => {
+    if (!content.trim() || isStreaming) return
+
+    const webSearchEnabled = options?.webSearch || shouldEnableWebSearch(content)
+
+    // Check message limit
+    if (trialMessageCount >= TRIAL_MESSAGE_LIMIT - 1) {
+      // This will be their last message
+      const userMessage: TrialMessage = {
+        id: Date.now().toString(),
+        content,
+        role: 'user',
+        timestamp: new Date()
+      }
+      
+      setTrialMessages(prev => [...prev, userMessage])
+      setTrialMessageCount(prev => prev + 1)
+      
+      // Show limit reached message
+      setTimeout(() => {
+        const limitMessage: TrialMessage = {
+          id: (Date.now() + 1).toString(),
+          content: "You've reached the 10 message limit for the free trial. Please sign up to continue chatting with Nova and unlock unlimited conversations!",
+          role: 'assistant',
+          timestamp: new Date()
+        }
+        setTrialMessages(prev => [...prev, limitMessage])
+        
+        // Redirect to register after 3 seconds
+        setTimeout(() => {
+          router.push('/register?exhausted=true&preserveTrial=true')
+        }, 3000)
+      }, 1000)
+      
+      return
+    }
+
+    // Convert attachments to base64 for storage
+    const messageAttachments = await Promise.all(
+      (attachments || []).map(async (att) => {
+        const base64 = await fileToBase64(att.file)
+        return {
+          id: att.id,
+          name: att.file.name,
+          type: att.type,
+          size: att.file.size,
+          data: base64
+        }
+      })
+    )
+
+    // Add user message with metadata
+    const userMessage: TrialMessage = {
+      id: Date.now().toString(),
+      content,
+      role: 'user',
+      timestamp: new Date(),
+      attachments: messageAttachments.length > 0 ? messageAttachments : undefined,
+      metadata: webSearchEnabled ? { webSearch: true } : undefined
+    }
+    
+    setTrialMessages(prev => [...prev, userMessage])
+    setTrialMessageCount(prev => prev + 1)
+    setIsStreaming(true)
+    setStreamingMessage('')
+
+    // Add search progress message if web search is enabled
+    let searchMessageId: string | null = null
+    if (webSearchEnabled) {
+      const searchMessage: TrialMessage = {
+        id: `search-${Date.now()}`,
+        content: '🔍 Searching the web...',
+        role: 'system',
+        timestamp: new Date(),
+        metadata: { isSearchProgress: true }
+      }
+      searchMessageId = searchMessage.id
+      setTrialMessages(prev => [...prev, searchMessage])
+    }
+
+    try {
+      // Make API call to get response
+      const response = await fetch('http://localhost:3001/api/chat/trial', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: content,
+          history: trialMessages.filter(msg => msg.role !== 'system').map(msg => ({
+            role: msg.role,
+            content: msg.content
+          })),
+          attachments: messageAttachments,
+          webSearch: webSearchEnabled
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to get response')
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let fullResponse = ''
+      let fullThinking = ''
+      let hasThinkingContent = false
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('\n')
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6))
+                if (data.thinking) {
+                  // Handle thinking content
+                  if (!hasThinkingContent) {
+                    hasThinkingContent = true
+                    setIsTrialThinking(true)
+                    setTrialThinkingContent('')
+                  }
+                  fullThinking += data.thinking
+                  setTrialThinkingContent(fullThinking)
+                } else if (data.content) {
+                  // Handle regular content
+                  fullResponse += data.content
+                  setStreamingMessage(fullResponse)
+                }
+              } catch (e) {
+                // Ignore parse errors
+              }
+            }
+          }
+        }
+      }
+
+      // End thinking state if we had thinking content
+      if (hasThinkingContent) {
+        setIsTrialThinking(false)
+        // Keep thinking content visible for user to review
+      }
+
+      // Update search message if it exists
+      if (searchMessageId && webSearchEnabled) {
+        setTrialMessages(prev => prev.map(msg => 
+          msg.id === searchMessageId 
+            ? { ...msg, content: '✅ Web search completed!' }
+            : msg
+        ))
+      }
+
+      // Add assistant message
+      const assistantMessage: TrialMessage = {
+        id: (Date.now() + 1).toString(),
+        content: fullResponse || "I'm here to help! Feel free to ask me anything.",
+        role: 'assistant',
+        timestamp: new Date()
+      }
+      
+      setTrialMessages(prev => [...prev, assistantMessage])
+      setStreamingMessage('')
+      
+    } catch (error) {
+      console.error('Error sending message:', error)
+      
+      // Add error message
+      const errorMessage: TrialMessage = {
+        id: (Date.now() + 1).toString(),
+        content: "I apologize, but I encountered an error. Please try again or sign up for a full account for a better experience.",
+        role: 'assistant',
+        timestamp: new Date()
+      }
+      
+      setTrialMessages(prev => [...prev, errorMessage])
+      setStreamingMessage('')
+    } finally {
+      setIsStreaming(false)
+    }
+  }
+
+  const sendMessage = async (attachments?: any[], options?: { webSearch?: boolean; deepResearch?: boolean }) => {
+    // Handle trial mode
+    if (isTrialMode) {
+      // Handle deep research request in trial mode
+      if (options?.deepResearch) {
+        setShowDeepResearchModal(true)
+        return
+      }
+      return handleTrialSendMessage(inputMessage.trim(), attachments, options)
+    }
+
+    // Normal authenticated flow
     if (!inputMessage.trim() || !currentConversation || isStreaming) return
 
     const message = inputMessage.trim()
     setInputMessage('')
 
-    if (socket) {
-      socket.emit('chat:stream', {
-        conversationId: currentConversation.id,
-        content: message
-      })
+    // Prepare the message data
+    const messageData: any = {
+      conversationId: currentConversation.id,
+      content: message
     }
+
+    // Add options if provided
+    if (options?.webSearch) {
+      messageData.webSearch = true
+    }
+    if (options?.deepResearch) {
+      messageData.deepResearch = true
+    }
+
+    // Handle attachments if provided
+    if (attachments && attachments.length > 0) {
+      // Convert attachments to base64 for transmission
+      const processedAttachments = await Promise.all(
+        attachments.map(async (attachment) => {
+          const base64 = await fileToBase64(attachment.file)
+          return {
+            name: attachment.file.name,
+            type: attachment.type,
+            mimeType: attachment.file.type,
+            size: attachment.file.size,
+            data: base64
+          }
+        })
+      )
+      messageData.attachments = processedAttachments
+    }
+
+    if (socket) {
+      socket.emit('chat:stream', messageData)
+    }
+  }
+
+  // Helper function to convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        const base64 = reader.result as string
+        // Remove the data URL prefix to get just the base64 string
+        const base64Data = base64.split(',')[1]
+        resolve(base64Data)
+      }
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
   }
 
   const handleLogout = async () => {
@@ -145,7 +582,25 @@ export default function ChatPage() {
     router.push('/login')
   }
 
-  if (authLoading) {
+  const handleModelChange = async (modelId: string, model: any) => {
+    setCurrentModel(modelId)
+    setModelCapabilities(model.capabilities || [])
+    
+    // Update the current conversation with the new model
+    if (currentConversation) {
+      try {
+        await axios.put(`/api/chat/conversations/${currentConversation.id}`, {
+          model: modelId
+        })
+        // Update local state
+        setCurrentConversation((prev: any) => ({ ...prev, model: modelId }))
+      } catch (error) {
+        console.error('Failed to update conversation model:', error)
+      }
+    }
+  }
+
+  if (authLoading && !isTrialMode) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -153,6 +608,173 @@ export default function ChatPage() {
     )
   }
 
+  // Trial mode UI
+  if (isTrialMode) {
+    const remainingMessages = TRIAL_MESSAGE_LIMIT - trialMessageCount
+
+    return (
+      <div className="flex h-screen bg-[var(--nova-bg-primary)]">
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col">
+          {/* Header */}
+          <div className="border-b border-[var(--nova-border-primary)] bg-[var(--nova-bg-secondary)] px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Link 
+                  href="/" 
+                  className="text-xl font-bold nova-text-gradient"
+                >
+                  Nova
+                </Link>
+                <div className="flex items-center gap-2">
+                  <span className="nova-badge-primary text-xs">
+                    <Sparkles className="h-3 w-3 mr-1 inline" />
+                    Free Trial
+                  </span>
+                  <span className="text-sm nova-text-muted">
+                    {remainingMessages} {remainingMessages === 1 ? 'message' : 'messages'} remaining
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                {remainingMessages <= 3 && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--nova-warning)]/10 text-[var(--nova-warning)]">
+                    <AlertCircle className="h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      {remainingMessages} {remainingMessages === 1 ? 'message' : 'messages'} left
+                    </span>
+                  </div>
+                )}
+                
+                <Link 
+                  href="/register?preserveTrial=true" 
+                  className="nova-button-primary px-4 py-2 text-sm"
+                >
+                  Sign Up to Continue
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Thinking Display for Trial Mode */}
+          {trialThinkingContent && (
+            <div className="border-b border-[var(--nova-border-primary)] bg-[var(--nova-bg-secondary)]/50 backdrop-blur-xl">
+              <ThinkingDisplay 
+                content={trialThinkingContent}
+                isActive={isTrialThinking}
+              />
+            </div>
+          )}
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto">
+            {trialMessages.length === 0 && (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center py-12">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--nova-primary)]/10 mb-4">
+                    <Sparkles className="h-8 w-8 text-[var(--nova-primary)]" />
+                  </div>
+                  <h2 className="text-xl font-semibold mb-2">Welcome to Nova Trial Chat!</h2>
+                  <p className="nova-text-muted max-w-md mx-auto">
+                    You have {TRIAL_MESSAGE_LIMIT} free messages to experience Nova's capabilities. 
+                    Ask me anything to get started!
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {trialMessages.length > 0 && (
+              <MessageList
+                messages={trialMessages.map(msg => ({
+                  ...msg,
+                  created_at: msg.timestamp.toISOString()
+                }))}
+                streamingMessage={streamingMessage}
+                isStreaming={isStreaming}
+                loading={false}
+              />
+            )}
+          </div>
+
+          {/* Input */}
+          <ChatInput
+            value={inputMessage}
+            onChange={setInputMessage}
+            onSend={sendMessage}
+            isStreaming={isStreaming || trialMessageCount >= TRIAL_MESSAGE_LIMIT}
+            currentModel="meta-llama/llama-3.3-70b-instruct"
+            onModelChange={() => {}}
+            modelCapabilities={['chat']}
+            placeholder={
+              trialMessageCount >= TRIAL_MESSAGE_LIMIT
+                ? "Trial limit reached. Sign up to continue..."
+                : "Type your message..."
+            }
+            isTrialMode={true}
+          />
+        </div>
+
+        {/* Deep Research Modal */}
+        {showDeepResearchModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="nova-card max-w-md w-full p-6 relative">
+              <button
+                onClick={() => setShowDeepResearchModal(false)}
+                className="absolute top-4 right-4 p-1 rounded hover:bg-[var(--nova-bg-tertiary)] transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--nova-primary)]/10 mb-4">
+                  <Sparkles className="h-8 w-8 text-[var(--nova-primary)]" />
+                </div>
+                
+                <h3 className="text-xl font-semibold mb-2">Deep Research Available for Members</h3>
+                <p className="nova-text-muted mb-6">
+                  Unlock advanced research capabilities that analyze multiple sources, 
+                  cross-reference information, and provide comprehensive insights with citations.
+                </p>
+                
+                <div className="space-y-3 text-left mb-6">
+                  <div className="flex items-start gap-3">
+                    <div className="h-2 w-2 rounded-full bg-[var(--nova-accent)] mt-2 flex-shrink-0" />
+                    <p className="text-sm">Multi-source analysis for comprehensive answers</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="h-2 w-2 rounded-full bg-[var(--nova-accent)] mt-2 flex-shrink-0" />
+                    <p className="text-sm">Academic-quality research with proper citations</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="h-2 w-2 rounded-full bg-[var(--nova-accent)] mt-2 flex-shrink-0" />
+                    <p className="text-sm">Real-time data synthesis from trusted sources</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowDeepResearchModal(false)}
+                    className="flex-1 nova-button-ghost px-4 py-2"
+                  >
+                    Continue Trial
+                  </button>
+                  <Link
+                    href="/register?feature=deep-research"
+                    className="flex-1 nova-button-primary px-4 py-2 text-center"
+                  >
+                    Sign Up Now
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Normal authenticated UI
   return (
     <div className="flex h-screen bg-background">
       <Sidebar
@@ -169,17 +791,36 @@ export default function ChatPage() {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="h-14 border-b flex items-center px-4">
+        <div className="h-14 border-b flex items-center justify-between px-4">
           <h2 className="font-semibold">
             {currentConversation ? currentConversation.title : 'Select a conversation'}
           </h2>
+          {currentConversation && (
+            <button
+              onClick={() => setShowSettings(true)}
+              className="p-2 hover:bg-muted rounded-md transition-colors"
+              title="Conversation Settings"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {/* Messages */}
         {currentConversation ? (
           <>
+            {/* Thinking Display - Separate from messages */}
+            {thinkingMessage && (
+              <div className="border-b border-white/10 bg-black/30 backdrop-blur-xl">
+                <ThinkingDisplay 
+                  content={thinkingMessage.content}
+                  isActive={thinkingMessage.isThinking}
+                />
+              </div>
+            )}
+            
             <MessageList
-              messages={messages}
+              messages={messages.filter(msg => !msg.metadata?.isThinking)}
               streamingMessage={streamingMessage}
               isStreaming={isStreaming}
               loading={messagesLoading}
@@ -189,6 +830,10 @@ export default function ChatPage() {
               onChange={setInputMessage}
               onSend={sendMessage}
               isStreaming={isStreaming}
+              currentModel={currentModel}
+              onModelChange={handleModelChange}
+              modelCapabilities={modelCapabilities}
+              placeholder={thinkingMessage && thinkingMessage.isThinking ? "Nova is thinking..." : undefined}
             />
           </>
         ) : (
@@ -202,6 +847,21 @@ export default function ChatPage() {
           </div>
         )}
       </div>
+
+      {/* Settings Modal */}
+      <ConversationSettings
+        conversation={currentConversation}
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        onUpdate={(updatedConversation) => {
+          setCurrentConversation(updatedConversation)
+          setConversations(prev => 
+            prev.map(conv => 
+              conv.id === updatedConversation.id ? updatedConversation : conv
+            )
+          )
+        }}
+      />
     </div>
   )
 }

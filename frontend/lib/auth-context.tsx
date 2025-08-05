@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import axios from 'axios'
+import axios from './axios-config'
 
 interface User {
   id: string
@@ -21,63 +21,57 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Configure axios defaults
-axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-axios.defaults.withCredentials = true
-
-// Add auth token to requests
-axios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('access_token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => Promise.reject(error)
-)
-
-// Handle token refresh on 401
-axios.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
-      try {
-        const response = await axios.post('/api/auth/refresh')
-        localStorage.setItem('access_token', response.data.access_token)
-        originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`
-        return axios(originalRequest)
-      } catch (refreshError) {
-        localStorage.removeItem('access_token')
-        window.location.href = '/login'
-        return Promise.reject(refreshError)
-      }
-    }
-    return Promise.reject(error)
-  }
-)
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    checkAuth()
+    // Skip auth check if in trial mode
+    const urlParams = new URLSearchParams(window.location.search)
+    const isTrialMode = urlParams.get('trial') === 'true'
+    
+    if (!isTrialMode) {
+      checkAuth()
+    } else {
+      // Set trial user immediately for trial mode
+      setUser({
+        id: 'trial-user',
+        email: 'trial@nova.ai',
+        username: 'Trial User'
+      })
+      setLoading(false)
+    }
   }, [])
 
   const checkAuth = async () => {
     try {
       const token = localStorage.getItem('access_token')
-      if (!token) {
+      
+      // Check if we're in trial mode
+      const urlParams = new URLSearchParams(window.location.search)
+      const isTrial = urlParams.get('trial') === 'true'
+      
+      if (!token && !isTrial) {
         setLoading(false)
         return
       }
-      const response = await axios.get('/api/auth/profile')
+
+      if (isTrial) {
+        // Set a trial user for trial mode
+        setUser({
+          id: 'trial-user',
+          email: 'trial@nova.ai',
+          username: 'Trial User'
+        })
+        setLoading(false)
+        return
+      }
+      
+      const response = await axios.get('/api/auth/me')
       setUser(response.data.user)
     } catch (error) {
       localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
     } finally {
       setLoading(false)
     }
@@ -85,14 +79,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const response = await axios.post('/api/auth/login', { email, password })
-    localStorage.setItem('access_token', response.data.access_token)
+    if (response.data.tokens) {
+      localStorage.setItem('access_token', response.data.tokens.accessToken)
+      localStorage.setItem('refresh_token', response.data.tokens.refreshToken)
+    }
     setUser(response.data.user)
+    // Set auth header immediately after login
+    axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.accessToken}`
   }
 
   const register = async (email: string, password: string, username: string) => {
     const response = await axios.post('/api/auth/register', { email, password, username })
-    localStorage.setItem('access_token', response.data.access_token)
+    if (response.data.tokens) {
+      localStorage.setItem('access_token', response.data.tokens.accessToken)
+      localStorage.setItem('refresh_token', response.data.tokens.refreshToken)
+    }
     setUser(response.data.user)
+    // Set auth header immediately after register
+    axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.accessToken}`
   }
 
   const logout = async () => {
@@ -102,12 +106,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Continue with logout even if API call fails
     }
     localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
     setUser(null)
   }
 
   const refreshToken = async () => {
-    const response = await axios.post('/api/auth/refresh')
-    localStorage.setItem('access_token', response.data.access_token)
+    const refreshTokenValue = localStorage.getItem('refresh_token')
+    if (!refreshTokenValue) {
+      throw new Error('No refresh token')
+    }
+    const response = await axios.post('/api/auth/refresh', { refreshToken: refreshTokenValue })
+    localStorage.setItem('access_token', response.data.accessToken)
   }
 
   return (

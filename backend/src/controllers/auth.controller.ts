@@ -4,7 +4,6 @@ import bcrypt from 'bcrypt';
 import { UserModel, User } from '../models/User';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import { redisClient } from '../utils/redis';
-import { AuthRequest } from '../types/auth';
 
 export class AuthController {
   /**
@@ -12,16 +11,21 @@ export class AuthController {
    */
   async register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      console.log('📝 Register attempt for:', req.body.email);
+      
       // Validate request
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log('❌ Validation errors:', errors.array());
         res.status(400).json({ errors: errors.array() });
         return;
       }
 
       const { email, password, username } = req.body;
+      console.log('✅ Validation passed');
 
       // Check if user already exists
+      console.log('🔍 Checking if user exists...');
       const existingUser = await UserModel.findByEmail(email);
       if (existingUser) {
         res.status(409).json({ 
@@ -31,22 +35,29 @@ export class AuthController {
       }
 
       // Create new user
+      console.log('🆕 Creating new user...');
       const user = await UserModel.create({
         email,
         password,
         username
       });
+      console.log('✅ User created:', user.id);
 
       // Generate tokens
-      const accessToken = generateAccessToken(user.id);
-      const refreshToken = generateRefreshToken(user.id);
+      const accessToken = generateAccessToken(user.id, user.email, user.role);
+      const refreshToken = generateRefreshToken(user.id, user.email, user.role);
 
-      // Store refresh token in Redis
-      await redisClient.set(
-        `refresh_token:${user.id}`,
-        refreshToken,
-        30 * 24 * 60 * 60 // 30 days
-      );
+      // Store refresh token in Redis (if available)
+      try {
+        await redisClient.set(
+          `refresh_token:${user.id}`,
+          refreshToken,
+          30 * 24 * 60 * 60 // 30 days
+        );
+      } catch (redisError: any) {
+        console.warn('⚠️  Could not store refresh token in Redis:', redisError.message);
+        // Continue without Redis - tokens will still work but won't be revocable
+      }
 
       res.status(201).json({
         message: 'User registered successfully',
@@ -61,7 +72,15 @@ export class AuthController {
           refreshToken
         }
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('❌ Registration error:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        fullError: JSON.stringify(error, null, 2),
+        errorKeys: Object.keys(error || {})
+      });
       next(error);
     }
   }
@@ -102,15 +121,20 @@ export class AuthController {
       await UserModel.updateLastLogin(user.id);
 
       // Generate tokens
-      const accessToken = generateAccessToken(user.id);
-      const refreshToken = generateRefreshToken(user.id);
+      const accessToken = generateAccessToken(user.id, user.email, user.role);
+      const refreshToken = generateRefreshToken(user.id, user.email, user.role);
 
-      // Store refresh token in Redis
-      await redisClient.set(
-        `refresh_token:${user.id}`,
-        refreshToken,
-        30 * 24 * 60 * 60 // 30 days
-      );
+      // Store refresh token in Redis (if available)
+      try {
+        await redisClient.set(
+          `refresh_token:${user.id}`,
+          refreshToken,
+          30 * 24 * 60 * 60 // 30 days
+        );
+      } catch (redisError: any) {
+        console.warn('⚠️  Could not store refresh token in Redis:', redisError.message);
+        // Continue without Redis - tokens will still work but won't be revocable
+      }
 
       res.json({
         message: 'Login successful',
@@ -153,17 +177,22 @@ export class AuthController {
         return;
       }
 
-      // Check if refresh token exists in Redis
-      const storedToken = await redisClient.get(`refresh_token:${payload.userId}`);
-      if (!storedToken || storedToken !== refreshToken) {
-        res.status(401).json({ 
-          error: 'Invalid refresh token' 
-        });
-        return;
+      // Check if refresh token exists in Redis (if available)
+      try {
+        const storedToken = await redisClient.get(`refresh_token:${payload.userId}`);
+        if (storedToken && storedToken !== refreshToken) {
+          res.status(401).json({ 
+            error: 'Invalid refresh token' 
+          });
+          return;
+        }
+      } catch (redisError: any) {
+        console.warn('⚠️  Could not check refresh token in Redis:', redisError.message);
+        // Continue without Redis validation
       }
 
       // Generate new access token
-      const accessToken = generateAccessToken(payload.userId);
+      const accessToken = generateAccessToken(payload.userId, payload.email, payload.role);
 
       res.json({
         accessToken
@@ -178,18 +207,21 @@ export class AuthController {
    */
   async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const authReq = req as AuthRequest;
-      const userId = authReq.userId;
+      const userInfo = (req as any).user;
 
-      if (!userId) {
+      if (!userInfo || !userInfo.userId) {
         res.status(401).json({ 
           error: 'Unauthorized' 
         });
         return;
       }
 
-      // Remove refresh token from Redis
-      await redisClient.del(`refresh_token:${userId}`);
+      // Remove refresh token from Redis (if available)
+      try {
+        await redisClient.del(`refresh_token:${userInfo.userId}`);
+      } catch (redisError: any) {
+        console.warn('⚠️  Could not remove refresh token from Redis:', redisError.message);
+      }
 
       res.json({
         message: 'Logout successful'
@@ -204,17 +236,16 @@ export class AuthController {
    */
   async me(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const authReq = req as AuthRequest;
-      const userId = authReq.userId;
+      const userInfo = (req as any).user;
 
-      if (!userId) {
+      if (!userInfo || !userInfo.userId) {
         res.status(401).json({ 
           error: 'Unauthorized' 
         });
         return;
       }
 
-      const user = await UserModel.findById(userId);
+      const user = await UserModel.findById(userInfo.userId);
       if (!user) {
         res.status(404).json({ 
           error: 'User not found' 
@@ -249,10 +280,9 @@ export class AuthController {
         return;
       }
 
-      const authReq = req as AuthRequest;
-      const userId = authReq.userId;
+      const userInfo = (req as any).user;
 
-      if (!userId) {
+      if (!userInfo || !userInfo.userId) {
         res.status(401).json({ 
           error: 'Unauthorized' 
         });
@@ -262,7 +292,7 @@ export class AuthController {
       const { currentPassword, newPassword } = req.body;
 
       // Get user
-      const user = await UserModel.findById(userId);
+      const user = await UserModel.findById(userInfo.userId);
       if (!user) {
         res.status(404).json({ 
           error: 'User not found' 
@@ -280,10 +310,14 @@ export class AuthController {
       }
 
       // Update password
-      await UserModel.changePassword(userId, newPassword);
+      await UserModel.changePassword(userInfo.userId, newPassword);
 
-      // Invalidate all refresh tokens
-      await redisClient.del(`refresh_token:${userId}`);
+      // Invalidate all refresh tokens (if Redis is available)
+      try {
+        await redisClient.del(`refresh_token:${userInfo.userId}`);
+      } catch (redisError: any) {
+        console.warn('⚠️  Could not invalidate refresh tokens in Redis:', redisError.message);
+      }
 
       res.json({
         message: 'Password changed successfully. Please login again.'

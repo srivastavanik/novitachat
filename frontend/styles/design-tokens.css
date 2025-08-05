@@ -1,0 +1,242 @@
+/* Nova Design Tokens - Modern Geometric Design System */
+
+:root {
+  /* === Color Palette === */
+  
+  /* Primary Backgrounds */
+  --nova-bg-black: #000000;         /* Pure black for major sections */
+  --nova-bg-white: #FFFFFF;         /* Pure white for contrasting sections */
+  
+  /* Text Colors */
+  --nova-text-white: #FFFFFF;       /* Bright white on dark backgrounds */
+  --nova-text-black: #000000;       /* Jet black on light backgrounds */
+  
+  /* Enhanced Sophisticated Green Palette - Lumina Inspired */
+  --nova-green-primary: #00FF7F;    /* Bright emerald */
+  --nova-green-secondary: #00D96A;  /* Deep jade */
+  --nova-green-accent: #40FFB7;     /* Light mint */
+  --nova-green-glow: rgba(0, 255, 127, 0.4);     /* Enhanced glow */
+  --nova-green-alt: #00D96A;        /* Alternative sophisticated green */
+  --nova-green-subtle: rgba(0, 255, 127, 0.15);  /* Edge glow opacity */
+  --nova-green-hover: rgba(0, 255, 127, 0.1);    /* Hover fill opacity */
+  
+  /* Legacy mappings for compatibility - Updated to bright emerald */
+  --nova-primary: #00FF7F;          /* Maps to bright emerald */
+  --nova-primary-dark: #00D96A;     /* Deep jade */
+  --nova-primary-light: #40FFB7;    /* Light mint */
+  
+  /* Background Colors - Dark Theme Default */
+  --nova-bg-primary: #000000;       /* Pure black */
+  --nova-bg-secondary: #111111;     /* Very dark gray */
+  --nova-bg-tertiary: #1A1A1A;      /* Dark gray for cards */
+  --nova-bg-elevated: #000000;      /* Pure black for elevated surfaces */
+  --nova-bg-hover: #1A1A1A;         /* Hover states */
+  
+  /* Text Colors - Dark Theme Default */
+  --nova-text-primary: #FFFFFF;     /* Pure white */
+  --nova-text-secondary: #9CA3AF;   /* Sophisticated gray */
+  --nova-text-tertiary: #8B92A1;    /* Refined secondary gray */
+  --nova-text-inverse: #000000;     /* Black text on green backgrounds */
+  
+  /* Border Colors - Light Theme Default */
+  --nova-border-primary: #E5E7EB;   /* Light gray borders */
+  --nova-border-secondary: #D1D5DB; /* Medium gray borders */
+  --nova-border-focus: #0EC773;     /* Focus state borders */
+  
+  /* Semantic Colors */
+  --nova-error: #EF4444;            /* Error red */
+  --nova-warning: #F59E0B;          /* Warning amber */
+  --nova-success: #10B981;          /* Success green */
+  --nova-info: #3B82F6;             /* Info blue */
+  
+  /* Code Colors */
+  --nova-code-bg: #18181B;          /* Code block background */
+  --nova-code-text: #E4E4E7;        /* Code text */
+  --nova-code-comment: #71717A;     /* Code comments */
+  --nova-code-keyword: #818CF8;     /* Keywords */
+  --nova-code-string: #34D399;      /* Strings */
+  --nova-code-function: #FCD34D;    /* Functions */
+  
+  /* === Typography === */
+  
+  /* Font Families - Manrope for the example-inspired look */
+  --nova-font-sans: 'Manrope', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --nova-font-mono: 'JetBrains Mono', 'Fira Code', Consolas, 'Courier New', monospace;
+  
+  /* Font Sizes - Hierarchical Scale */
+  --nova-text-xs: 0.75rem;          /* 12px */
+  --nova-text-sm: 0.875rem;         /* 14px - Navigation */
+  --nova-text-base: 1rem;           /* 16px - Navigation alt */
+  --nova-text-lg: 1.125rem;         /* 18px - Subheading min */
+  --nova-text-xl: 1.25rem;          /* 20px - Subheading max */
+  --nova-text-2xl: 1.5rem;          /* 24px */
+  --nova-text-3xl: 1.875rem;        /* 30px */
+  --nova-text-4xl: 2.25rem;         /* 36px */
+  --nova-text-5xl: 3rem;            /* 48px */
+  --nova-text-6xl: 3.75rem;         /* 60px */
+  --nova-text-7xl: 4.5rem;          /* 72px */
+  --nova-text-8xl: 6rem;            /* 96px - MASSIVE hero heading */
+  --nova-text-9xl: 8rem;            /* 128px - Ultra massive */
+  
+  /* Font Weights - Extended Range */
+  --nova-font-light: 300;
+  --nova-font-normal: 400;
+  --nova-font-medium: 500;
+  --nova-font-semibold: 600;
+  --nova-font-bold: 700;
+  --nova-font-extrabold: 800;       /* For hero headings */
+  --nova-font-black: 900;           /* For maximum impact */
+  
+  /* Line Heights */
+  --nova-leading-none: 1;
+  --nova-leading-tight: 1.25;
+  --nova-leading-snug: 1.375;
+  --nova-leading-normal: 1.5;
+  --nova-leading-relaxed: 1.625;
+  --nova-leading-loose: 2;
+  
+  /* === Spacing - Generous System === */
+  
+  --nova-space-px: 1px;
+  --nova-space-0: 0;
+  --nova-space-0-5: 0.125rem;       /* 2px */
+  --nova-space-1: 0.25rem;          /* 4px */
+  --nova-space-2: 0.5rem;           /* 8px */
+  --nova-space-3: 0.75rem;          /* 12px - Vertical button padding */
+  --nova-space-4: 1rem;             /* 16px */
+  --nova-space-5: 1.25rem;          /* 20px */
+  --nova-space-6: 1.5rem;           /* 24px - Horizontal button padding, gutter */
+  --nova-space-8: 2rem;             /* 32px - Between heading and subhead */
+  --nova-space-10: 2.5rem;          /* 40px */
+  --nova-space-12: 3rem;            /* 48px */
+  --nova-space-16: 4rem;            /* 64px - Hero section padding */
+  --nova-space-20: 5rem;            /* 80px */
+  --nova-space-24: 6rem;            /* 96px */
+  --nova-space-32: 8rem;            /* 128px */
+  
+  /* Container Widths */
+  --nova-container-max: 71.25rem;   /* 1140px - Max content width */
+  
+  /* === Border Radius === */
+  
+  --nova-radius-none: 0;
+  --nova-radius-sm: 0.125rem;       /* 2px */
+  --nova-radius-base: 0.375rem;     /* 6px */
+  --nova-radius-md: 0.5rem;         /* 8px */
+  --nova-radius-lg: 0.75rem;        /* 12px */
+  --nova-radius-xl: 1rem;           /* 16px */
+  --nova-radius-2xl: 1.5rem;        /* 24px */
+  --nova-radius-full: 9999px;
+  
+  /* === Shadows - Light Theme Default === */
+  
+  --nova-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --nova-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --nova-shadow-base: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --nova-shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --nova-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --nova-shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  
+  /* Glow Effects */
+  --nova-glow-primary: 0 0 40px rgba(0, 255, 0, 0.6);
+  --nova-glow-accent: 0 0 20px rgba(0, 255, 0, 0.4);
+  
+  /* === Transitions === */
+  
+  --nova-transition-fast: 150ms ease-in-out;
+  --nova-transition-base: 200ms ease-in-out;
+  --nova-transition-slow: 300ms ease-in-out;
+  
+  /* === Z-Index Scale === */
+  
+  --nova-z-0: 0;
+  --nova-z-10: 10;
+  --nova-z-20: 20;
+  --nova-z-30: 30;
+  --nova-z-40: 40;
+  --nova-z-50: 50;
+  --nova-z-modal: 1000;
+  --nova-z-popover: 1100;
+  --nova-z-tooltip: 1200;
+}
+
+/* Dark Mode Theme - Pure Black Design */
+[data-theme="dark"] {
+  /* Background Colors - Dark Theme */
+  --nova-bg-primary: #000000;       /* Pure black */
+  --nova-bg-secondary: #111111;     /* Very dark gray */
+  --nova-bg-tertiary: #1A1A1A;      /* Dark gray for cards */
+  --nova-bg-elevated: #000000;      /* Pure black for elevated surfaces */
+  --nova-bg-hover: #1A1A1A;         /* Hover states */
+  
+  /* Text Colors - Dark Theme */
+  --nova-text-primary: #FFFFFF;     /* Pure white */
+  --nova-text-secondary: #A1A1AA;   /* Light gray */
+  --nova-text-tertiary: #71717A;    /* Medium gray */
+  --nova-text-inverse: #000000;     /* Pure black */
+  
+  /* Border Colors - Dark Theme */
+  --nova-border-primary: #333333;   /* Dark gray borders */
+  --nova-border-secondary: #4A4A4A; /* Medium gray borders */
+  
+  /* Enhanced Shadows for Dark Mode */
+  --nova-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.8);
+  --nova-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.8), 0 1px 2px 0 rgba(0, 0, 0, 0.6);
+  --nova-shadow-base: 0 4px 6px -1px rgba(0, 0, 0, 0.8), 0 2px 4px -1px rgba(0, 0, 0, 0.6);
+  --nova-shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.8), 0 4px 6px -2px rgba(0, 0, 0, 0.5);
+  --nova-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 10px 10px -5px rgba(0, 0, 0, 0.6);
+  --nova-shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
+  
+  /* Radial Gradients and Glows */
+  --nova-glow-primary: 0 0 40px rgba(0, 255, 0, 0.6);
+  --nova-glow-accent: 0 0 20px rgba(0, 255, 0, 0.4);
+  --nova-radial-hero: radial-gradient(circle at center, rgba(0, 255, 0, 0.3) 0%, rgba(0, 255, 0, 0.1) 40%, transparent 70%);
+}
+
+/* Halftone and Pattern Utilities */
+:root {
+  /* Enhanced Lumina-Inspired Atmospheric Patterns */
+  --nova-pattern-halftone: radial-gradient(circle, rgba(0, 255, 127, 0.4) 1px, transparent 1px);
+  --nova-pattern-halftone-subtle: radial-gradient(circle, rgba(0, 255, 127, 0.2) 1px, transparent 1px);
+  --nova-pattern-dots-dark: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  --nova-pattern-grid: linear-gradient(rgba(0, 255, 127, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 127, 0.1) 1px, transparent 1px);
+  --nova-pattern-mesh: conic-gradient(from 0deg at 50% 50%, rgba(0, 255, 127, 0.1) 0deg, transparent 60deg, rgba(64, 255, 183, 0.1) 120deg, transparent 180deg, rgba(0, 217, 106, 0.1) 240deg, transparent 300deg, rgba(0, 255, 127, 0.1) 360deg);
+  
+  /* Enhanced Lumina-Inspired Background Sphere */
+  --nova-sphere-gradient: radial-gradient(80vh circle at center, 
+    rgba(0, 255, 127, 0.4) 0%, 
+    rgba(0, 255, 127, 0.3) 20%, 
+    rgba(64, 255, 183, 0.25) 40%, 
+    rgba(0, 217, 106, 0.15) 60%, 
+    transparent 80%);
+  
+  /* Dynamic Atmospheric Effects */
+  --nova-atmosphere-glow: radial-gradient(50vh circle at center, 
+    rgba(0, 255, 127, 0.2) 0%, 
+    rgba(0, 255, 127, 0.1) 40%, 
+    transparent 70%);
+  
+  /* Glass-morphism Effects */
+  --nova-glass-bg: rgba(0, 0, 0, 0.4);
+  --nova-glass-border: rgba(255, 255, 255, 0.1);
+  --nova-glass-blur: blur(20px);
+  
+  /* Depth Background Gradient */
+  --nova-depth-gradient: radial-gradient(circle at center, 
+    rgba(0, 255, 127, 0.08) 0%, 
+    transparent 70%);
+  
+  /* Legacy Gradients */
+  --nova-gradient-green: linear-gradient(135deg, #00D26A 0%, #00E87E 100%);
+  --nova-gradient-green-subtle: linear-gradient(135deg, rgba(0, 210, 106, 0.1) 0%, rgba(0, 232, 126, 0.1) 100%);
+}
+
+/* Default to light theme */
+:root {
+  color-scheme: light;
+}
+
+/* Explicit dark theme */
+[data-theme="dark"]:root {
+  color-scheme: dark;
+}

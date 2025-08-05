@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import database from '../database';
+import { supabaseAdmin } from '../services/supabase.service';
 import { generateTokenPair } from '../utils/jwt';
 
 export interface User {
@@ -34,46 +34,102 @@ export class UserModel {
   static async create(input: CreateUserInput): Promise<User> {
     const { email, username, password, full_name } = input;
     
-    // Hash password
-    const saltRounds = 10;
-    const password_hash = await bcrypt.hash(password, saltRounds);
-    
-    const query = `
-      INSERT INTO users (email, username, password_hash, full_name)
-      VALUES ($1, $2, $3, $4)
-      RETURNING *
-    `;
-    
-    const values = [email, username, password_hash, full_name || null];
-    const result = await database.query(query, values);
-    
-    return result.rows[0];
+    try {
+      // Test Supabase connection first
+      console.log('🔍 Testing Supabase connection...');
+      const testQuery = await supabaseAdmin
+        .from('users')
+        .select('count')
+        .limit(0);
+      
+      if (testQuery.error) {
+        console.error('❌ Supabase connection test failed:', testQuery.error);
+        throw new Error(`Database connection failed: ${testQuery.error.message}`);
+      }
+      console.log('✅ Supabase connection OK');
+      
+      // Hash password
+      const saltRounds = 10;
+      const password_hash = await bcrypt.hash(password, saltRounds);
+      
+      console.log('🔐 Password hashed, inserting user into database...');
+      console.log('📋 Insert data:', { email, username, password_hash: '***', full_name });
+      
+      const { data, error } = await supabaseAdmin
+        .from('users')
+        .insert({
+          email,
+          username,
+          password_hash,
+          full_name: full_name || null
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('❌ Supabase insert error:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw new Error(`Failed to create user: ${error.message}`);
+      }
+      
+      if (!data) {
+        throw new Error('No data returned from insert');
+      }
+      
+      console.log('✅ User created in database:', data.id);
+      return data;
+    } catch (error: any) {
+      console.error('❌ UserModel.create error:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+      throw error;
+    }
   }
 
   static async findById(id: string): Promise<User | null> {
-    const query = 'SELECT * FROM users WHERE id = $1';
-    const result = await database.query(query, [id]);
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
     
-    return result.rows[0] || null;
+    if (error) return null;
+    return data;
   }
 
   static async findByEmail(email: string): Promise<User | null> {
-    const query = 'SELECT * FROM users WHERE email = $1';
-    const result = await database.query(query, [email]);
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
     
-    return result.rows[0] || null;
+    if (error) return null;
+    return data;
   }
 
   static async findByUsername(username: string): Promise<User | null> {
-    const query = 'SELECT * FROM users WHERE username = $1';
-    const result = await database.query(query, [username]);
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('username', username)
+      .single();
     
-    return result.rows[0] || null;
+    if (error) return null;
+    return data;
   }
 
   static async updateLastLogin(userId: string): Promise<void> {
-    const query = 'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = $1';
-    await database.query(query, [userId]);
+    await supabaseAdmin
+      .from('users')
+      .update({ last_login_at: new Date().toISOString() })
+      .eq('id', userId);
   }
 
   static async verifyPassword(user: User, password: string): Promise<boolean> {
@@ -118,59 +174,64 @@ export class UserModel {
 
   static async update(userId: string, updates: Partial<User>): Promise<User | null> {
     const allowedFields = ['full_name', 'avatar_url', 'email', 'username'];
-    const updateFields: string[] = [];
-    const values: any[] = [];
-    let paramCount = 1;
+    const filteredUpdates: any = {};
     
     for (const [key, value] of Object.entries(updates)) {
       if (allowedFields.includes(key)) {
-        updateFields.push(`${key} = $${paramCount}`);
-        values.push(value);
-        paramCount++;
+        filteredUpdates[key] = value;
       }
     }
     
-    if (updateFields.length === 0) {
+    if (Object.keys(filteredUpdates).length === 0) {
       return await this.findById(userId);
     }
     
-    values.push(userId);
-    const query = `
-      UPDATE users 
-      SET ${updateFields.join(', ')}
-      WHERE id = $${paramCount}
-      RETURNING *
-    `;
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .update(filteredUpdates)
+      .eq('id', userId)
+      .select()
+      .single();
     
-    const result = await database.query(query, values);
-    return result.rows[0] || null;
+    if (error) return null;
+    return data;
   }
 
   static async changePassword(userId: string, newPassword: string): Promise<boolean> {
     const saltRounds = 10;
     const password_hash = await bcrypt.hash(newPassword, saltRounds);
     
-    const query = 'UPDATE users SET password_hash = $1 WHERE id = $2';
-    const result = await database.query(query, [password_hash, userId]);
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update({ password_hash })
+      .eq('id', userId);
     
-    return (result.rowCount ?? 0) > 0;
+    return !error;
   }
 
   static async delete(userId: string): Promise<boolean> {
-    const query = 'DELETE FROM users WHERE id = $1';
-    const result = await database.query(query, [userId]);
+    const { error } = await supabaseAdmin
+      .from('users')
+      .delete()
+      .eq('id', userId);
     
-    return (result.rowCount ?? 0) > 0;
+    return !error;
   }
 
   static async exists(email: string, username: string): Promise<{ emailExists: boolean; usernameExists: boolean }> {
-    const query = 'SELECT email, username FROM users WHERE email = $1 OR username = $2';
-    const result = await database.query(query, [email, username]);
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select('email, username')
+      .or(`email.eq.${email},username.eq.${username}`);
+    
+    if (error || !data) {
+      return { emailExists: false, usernameExists: false };
+    }
     
     let emailExists = false;
     let usernameExists = false;
     
-    for (const row of result.rows) {
+    for (const row of data) {
       if (row.email === email) emailExists = true;
       if (row.username === username) usernameExists = true;
     }

@@ -3,7 +3,13 @@ import { novitaConfig } from '../config';
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
-  content: string;
+  content: string | Array<{
+    type: 'text' | 'image_url';
+    text?: string;
+    image_url?: {
+      url: string;
+    };
+  }>;
 }
 
 export interface ChatCompletionRequest {
@@ -44,6 +50,7 @@ export interface StreamChunk {
     delta: {
       content?: string;
       role?: string;
+      thinking?: string;
     };
     finish_reason: string | null;
   }>;
@@ -120,46 +127,90 @@ class NovitaService {
     onComplete?: () => void
   ): Promise<void> {
     try {
+      // Create a timeout controller
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, 60000); // 60 second timeout
+
       const response = await this.client.post('/chat/completions', {
         ...request,
         stream: true,
       }, {
         responseType: 'stream',
+        signal: controller.signal,
+        timeout: 0, // Disable axios timeout for streaming
       });
 
       const stream = response.data;
       let buffer = '';
+      let isCompleted = false;
+
+      const cleanup = () => {
+        clearTimeout(timeoutId);
+        if (!isCompleted) {
+          isCompleted = true;
+          if (onComplete) onComplete();
+        }
+      };
 
       stream.on('data', (chunk: Buffer) => {
-        buffer += chunk.toString();
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
+        try {
+          buffer += chunk.toString();
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
 
-        for (const line of lines) {
-          if (line.trim() === '') continue;
-          if (line.trim() === 'data: [DONE]') {
-            if (onComplete) onComplete();
-            continue;
-          }
+          for (const line of lines) {
+            if (line.trim() === '') continue;
+            if (line.trim() === 'data: [DONE]') {
+              cleanup();
+              return;
+            }
 
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              onChunk(data);
-            } catch (e) {
-              console.error('Failed to parse SSE data:', e);
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                // Validate chunk structure before passing to callback
+                if (data && typeof data === 'object') {
+                  onChunk(data);
+                }
+              } catch (e) {
+                console.error('Failed to parse SSE data:', e, 'Line:', line);
+              }
             }
           }
+        } catch (error) {
+          console.error('Stream data processing error:', error);
+          if (onError) onError(error as Error);
         }
       });
 
       stream.on('error', (error: Error) => {
+        clearTimeout(timeoutId);
         console.error('Stream error:', error);
-        if (onError) onError(error);
+        if (!isCompleted) {
+          isCompleted = true;
+          if (onError) onError(error);
+        }
       });
 
       stream.on('end', () => {
-        if (onComplete) onComplete();
+        cleanup();
+      });
+
+      stream.on('close', () => {
+        cleanup();
+      });
+
+      // Handle abort
+      controller.signal.addEventListener('abort', () => {
+        clearTimeout(timeoutId);
+        if (!isCompleted) {
+          isCompleted = true;
+          const timeoutError = new Error('Stream timeout after 60 seconds');
+          console.error('Stream timeout:', timeoutError);
+          if (onError) onError(timeoutError);
+        }
       });
 
     } catch (error: any) {
@@ -175,7 +226,12 @@ class NovitaService {
    */
   async listModels(): Promise<any> {
     try {
-      const response = await this.client.get('/models');
+      // Request with a limit parameter to get more models
+      const response = await this.client.get('/models', {
+        params: {
+          limit: 100, // Request up to 100 models
+        }
+      });
       return response.data;
     } catch (error: any) {
       throw new Error(`Failed to list models: ${error.message}`);
@@ -195,6 +251,13 @@ class NovitaService {
   }
 
   /**
+   * Get models (alias for listModels for backward compatibility)
+   */
+  async getModels(): Promise<any> {
+    return this.listModels();
+  }
+
+  /**
    * Test the API connection
    */
   async testConnection(): Promise<boolean> {
@@ -211,7 +274,7 @@ class NovitaService {
   /**
    * Format messages for the API
    */
-  formatMessages(messages: Array<{ role: string; content: string }>): ChatMessage[] {
+  formatMessages(messages: Array<{ role: string; content: string | Array<any> }>): ChatMessage[] {
     return messages.map(msg => ({
       role: msg.role as 'system' | 'user' | 'assistant',
       content: msg.content,
