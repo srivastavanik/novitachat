@@ -99,13 +99,13 @@ export default function SearchProgress({ content, isActive = true, isExpanded = 
     <div className="flex justify-center p-4">
       <div className="max-w-3xl w-full">
         <div 
-          className="bg-black/50 backdrop-blur-xl border border-white/10 rounded-2xl transition-all duration-300 ease-out shadow-xl"
+          className="bg-[#343541]/50 backdrop-blur-xl border border-[#4E4F60] rounded-2xl transition-all duration-300 ease-out shadow-xl"
           style={{
             animation: 'fadeInUp 0.3s ease-out',
           }}
         >
           <div 
-            className="flex items-center justify-between p-6 cursor-pointer hover:bg-white/5 transition-colors"
+            className="flex items-center justify-between p-6 cursor-pointer hover:bg-[#3E3F4A]/50 transition-colors"
             onClick={handleToggle}
           >
             <div className="flex items-center gap-3">
@@ -117,11 +117,11 @@ export default function SearchProgress({ content, isActive = true, isExpanded = 
                 </div>
               )}
               <div>
-                <h3 className="font-semibold text-white">
+                <h3 className="font-semibold text-gray-200">
                   {isDeepResearch ? 'Deep Research Analysis' : 'Web Search Results'}
                 </h3>
                 {isComplete && (
-                  <div className="flex items-center gap-4 mt-1 text-xs text-white/60">
+                  <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
                     {sourceCount > 0 && <span>{sourceCount} sources analyzed</span>}
                     {databaseCount > 0 && <span>{databaseCount} databases queried</span>}
                     {analysisCount > 0 && <span>{analysisCount} analysis steps</span>}
@@ -131,20 +131,20 @@ export default function SearchProgress({ content, isActive = true, isExpanded = 
             </div>
             <div className="flex items-center gap-2">
               {!isActive && (
-                <span className="text-xs text-white/40 mr-2">
+                <span className="text-xs text-gray-500 mr-2">
                   Click to {showFullContent ? 'collapse' : 'expand'}
                 </span>
               )}
               {showFullContent ? (
-                <ChevronUp className="h-5 w-5 text-white/60" />
+                <ChevronUp className="h-5 w-5 text-gray-500" />
               ) : (
-                <ChevronDown className="h-5 w-5 text-white/60" />
+                <ChevronDown className="h-5 w-5 text-gray-500" />
               )}
             </div>
           </div>
 
           {showFullContent && (
-            <div className="px-6 pb-6 space-y-2 border-t border-white/10">
+            <div className="px-6 pb-6 space-y-2 border-t border-[#4E4F60]">
               {lines.map((line, index) => {
                 const icon = getLineIcon(line)
                 const isMain = isMainAction(line)
@@ -159,7 +159,7 @@ export default function SearchProgress({ content, isActive = true, isExpanded = 
                     }}
                   >
                     {icon && <div className="mt-0.5 flex-shrink-0">{icon}</div>}
-                    <div className="text-sm text-white/80 flex-1">
+                    <div className="text-sm text-gray-300 flex-1">
                       {formatLine(line)}
                     </div>
                   </div>
@@ -170,7 +170,7 @@ export default function SearchProgress({ content, isActive = true, isExpanded = 
 
           {!isComplete && isActive && showFullContent && (
             <div 
-              className="px-6 pb-6 flex items-center gap-2 text-xs text-white/40"
+              className="px-6 pb-6 flex items-center gap-2 text-xs text-gray-500"
               style={{
                 animation: 'fadeIn 0.5s ease-out',
               }}

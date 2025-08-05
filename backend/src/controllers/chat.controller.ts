@@ -615,7 +615,12 @@ export class ChatController {
 
           if (deepResearch) {
             console.log('📚 Performing deep research for:', content);
-            searchResults = await searchService.deepResearch(content, progressCallback);
+            const deepResearchResult = await searchService.deepResearch(content, progressCallback);
+            searchResults = deepResearchResult.content;
+            // Add the unique sources to link previews
+            if (deepResearchResult.sources) {
+              linkPreviews = [...linkPreviews, ...deepResearchResult.sources];
+            }
           } else if (webSearch) {
             console.log('🔍 Performing web search for:', content);
             searchResults = await searchService.webSearch(content, 5, progressCallback);
@@ -925,8 +930,29 @@ export class ChatController {
         return res.status(400).json({ error: 'Search query is required' });
       }
 
+      // Search in conversation titles
       const conversations = await ConversationModel.search(userId, q);
-      res.json(conversations);
+      
+      // Also search in message content for each conversation
+      const conversationsWithMessageMatches = await Promise.all(
+        conversations.map(async (conv) => {
+          const messageMatches = await MessageModel.searchInConversation(conv.id, q);
+          return {
+            ...conv,
+            hasMessageMatch: messageMatches.length > 0,
+            matchedMessages: messageMatches.slice(0, 3) // Include up to 3 matching messages
+          };
+        })
+      );
+
+      // Sort by relevance - conversations with message matches first
+      conversationsWithMessageMatches.sort((a, b) => {
+        if (a.hasMessageMatch && !b.hasMessageMatch) return -1;
+        if (!a.hasMessageMatch && b.hasMessageMatch) return 1;
+        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+      });
+
+      res.json(conversationsWithMessageMatches);
     } catch (error) {
       console.error('Error searching conversations:', error);
       res.status(500).json({ error: 'Failed to search conversations' });

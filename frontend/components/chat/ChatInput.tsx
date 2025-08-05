@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react'
-import { Send, Loader2, Image, Paperclip, X, Search, FileText, FileImage, Sparkles } from 'lucide-react'
 import ModelSelector from './ModelSelector'
+import StyleSelector from './StyleSelector'
 
 interface Attachment {
   id: string
@@ -40,6 +40,7 @@ export default function ChatInput({
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [deepResearchEnabled, setDeepResearchEnabled] = useState(false)
   const [thinkingEnabled, setThinkingEnabled] = useState(false)
+  const [currentStyle, setCurrentStyle] = useState<any>(null)
   
   // Check if current model supports thinking (based on Novita AI models)
   const supportsThinking = currentModel?.includes('thinking') || 
@@ -83,11 +84,14 @@ export default function ChatInput({
   }
 
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
+  const [manualWebSearchOverride, setManualWebSearchOverride] = useState(false)
   
   // Update web search state when query changes
   useEffect(() => {
-    setWebSearchEnabled(shouldEnableWebSearch(value))
-  }, [value])
+    if (!manualWebSearchOverride) {
+      setWebSearchEnabled(shouldEnableWebSearch(value))
+    }
+  }, [value, manualWebSearchOverride])
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -109,12 +113,13 @@ export default function ChatInput({
     if (e) e.preventDefault()
     if (!disabled && !isStreaming && value.trim()) {
       onSend(attachments, { 
-        webSearch: webSearchEnabled, 
+        webSearch: webSearchEnabled || manualWebSearchOverride, 
         deepResearch: deepResearchEnabled,
         thinking: supportsThinking && thinkingEnabled
       })
       setAttachments([])
       setDeepResearchEnabled(false)
+      setManualWebSearchOverride(false)
       // Keep thinking enabled for future queries
     }
   }
@@ -161,44 +166,34 @@ export default function ChatInput({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border-t border-white/10 bg-black/50 backdrop-blur-xl p-4">
+    <form onSubmit={handleSubmit} className="border-t border-[var(--nova-border-primary)] bg-[var(--nova-bg-secondary)] p-4">
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-3 flex items-center justify-between">
           {!isTrialMode ? (
-        <ModelSelector
-          currentModel={currentModel}
-          onModelChange={onModelChange}
-          hasAttachments={attachments.length > 0}
-          attachmentTypes={attachments.map(att => att.type)}
-        />
+            <div className="flex items-center gap-3">
+              <ModelSelector
+                currentModel={currentModel}
+                onModelChange={onModelChange}
+                hasAttachments={attachments.length > 0}
+                attachmentTypes={attachments.map(att => att.type)}
+              />
+              <StyleSelector 
+                onStyleChange={setCurrentStyle}
+              />
+            </div>
           ) : (
             <div />
           )}
-          <div className="flex items-center gap-2">
-            {/* Deep Research Toggle */}
-            <button
-              type="button"
-              onClick={() => setDeepResearchEnabled(!deepResearchEnabled)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                deepResearchEnabled 
-                  ? 'bg-gradient-to-r from-[#00FF7F] to-[#00D96A] text-black' 
-                  : 'bg-white/5 hover:bg-white/10 text-white/80 border border-white/10'
-              }`}
-              title="Enable deep research"
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>Deep Research</span>
-            </button>
-
-            {/* Thinking Toggle (only for supported models) */}
+          <div className="flex items-center gap-3">
+            {/* Thinking Toggle (only for supported models) - moved to left */}
             {supportsThinking && (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-white/80">Thinking</span>
+                <span className="text-sm text-[var(--nova-text-tertiary)]">Thinking</span>
                 <button
                   type="button"
                   onClick={() => setThinkingEnabled(!thinkingEnabled)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-black ${
-                    thinkingEnabled ? 'bg-gradient-to-r from-[#8B5CF6] to-[#7C3AED]' : 'bg-white/20'
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--nova-primary)] focus:ring-offset-2 focus:ring-offset-[var(--nova-bg-secondary)] ${
+                    thinkingEnabled ? 'bg-gradient-to-r from-[var(--nova-primary)] to-[var(--nova-primary-dark)]' : 'bg-[var(--nova-bg-tertiary)]'
                   }`}
                   title="Toggle thinking mode for reasoning-enabled models"
                 >
@@ -211,42 +206,41 @@ export default function ChatInput({
               </div>
             )}
 
-            {/* Attachment Buttons */}
-            {modelCapabilities.includes('image') && (
-              <>
-                <input
-                  ref={imageInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => handleFileSelect(e.target.files, 'image')}
-                />
-                <button
-                  type="button"
-                  onClick={() => imageInputRef.current?.click()}
-                  className="p-2 rounded-full hover:bg-white/5 transition-colors"
-                  title="Attach images"
-                >
-                  <Image className="h-4 w-4 text-white/60" />
-                </button>
-              </>
-            )}
-            
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              className="hidden"
-              onChange={(e) => handleFileSelect(e.target.files, 'document')}
-            />
+            {/* Web Search Button */}
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="p-2 rounded-full hover:bg-white/5 transition-colors"
-              title="Attach files"
+              onClick={() => {
+                setManualWebSearchOverride(!manualWebSearchOverride)
+                if (!manualWebSearchOverride) {
+                  setWebSearchEnabled(true)
+                } else {
+                  setWebSearchEnabled(shouldEnableWebSearch(value))
+                }
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                (webSearchEnabled || manualWebSearchOverride) 
+                  ? 'bg-[#00BFFF] text-white shadow-lg shadow-[#00BFFF]/25' 
+                  : 'bg-[var(--nova-bg-tertiary)] hover:bg-[var(--nova-bg-hover)] text-[var(--nova-text-secondary)]'
+              }`}
+              title="Toggle web search"
             >
-              <Paperclip className="h-4 w-4 text-white/60" />
+              <img src="/web-search-icon.png" alt="Web Search" className="h-4 w-4 object-contain" />
+              <span>Web Search</span>
+            </button>
+
+            {/* Deep Research Button */}
+            <button
+              type="button"
+              onClick={() => setDeepResearchEnabled(!deepResearchEnabled)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                deepResearchEnabled 
+                  ? 'bg-[#8B5CF6] text-white shadow-lg shadow-[#8B5CF6]/25' 
+                  : 'bg-[var(--nova-bg-tertiary)] hover:bg-[var(--nova-bg-hover)] text-[var(--nova-text-secondary)]'
+              }`}
+              title="Enable deep research"
+            >
+              <img src="/Daco_4819829.png" alt="Deep Research" className="h-4 w-4 object-contain" />
+              <span>Deep Research</span>
             </button>
           </div>
         </div>
@@ -260,7 +254,7 @@ export default function ChatInput({
                 className="relative group"
               >
                 {attachment.type === 'image' && attachment.preview ? (
-                  <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-white/10 backdrop-blur-sm">
+                  <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-[#565869]">
                     <img
                       src={attachment.preview}
                       alt={attachment.file.name}
@@ -271,26 +265,25 @@ export default function ChatInput({
                       onClick={() => removeAttachment(attachment.id)}
                       className="absolute top-1 right-1 p-1 rounded-full bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <X className="h-3 w-3" />
+                      ×
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 backdrop-blur-sm">
-                    <FileText className="h-4 w-4 text-white/60" />
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#565869]/50 border border-[#565869]">
                     <div className="text-sm">
-                      <div className="font-medium truncate max-w-[150px] text-white">
+                      <div className="font-medium truncate max-w-[150px] text-gray-200">
                         {attachment.file.name}
                       </div>
-                      <div className="text-xs text-white/40">
+                      <div className="text-xs text-gray-500">
                         {formatFileSize(attachment.file.size)}
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => removeAttachment(attachment.id)}
-                      className="p-1 rounded-full hover:bg-white/10 transition-colors"
+                      className="p-1 rounded-full hover:bg-[#444654] transition-colors text-gray-400"
                     >
-                      <X className="h-3 w-3 text-white/60" />
+                      ×
                     </button>
                   </div>
                 )}
@@ -300,47 +293,48 @@ export default function ChatInput({
         )}
 
         {/* Active Options Indicator */}
-        {(webSearchEnabled || deepResearchEnabled || thinkingEnabled) && (
-          <div className="mb-3 flex items-center gap-2 text-xs text-white/60">
+        {((webSearchEnabled || manualWebSearchOverride) || deepResearchEnabled || thinkingEnabled) && (
+          <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
             <span>Active:</span>
-            {webSearchEnabled && (
+            {(webSearchEnabled || manualWebSearchOverride) && (
               <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-[#00BFFF]/20 text-[#00BFFF] border border-[#00BFFF]/30">
-                <Search className="h-3 w-3" />
-                Web Search
+                Web Search {manualWebSearchOverride && '(Manual)'}
                 <button
                   type="button"
-                  onClick={() => setWebSearchEnabled(false)}
-                  className="ml-1 p-0.5 hover:bg-[#00BFFF]/30 rounded-full transition-colors"
+                  onClick={() => {
+                    setWebSearchEnabled(false)
+                    setManualWebSearchOverride(false)
+                  }}
+                  className="ml-1 p-0.5 hover:bg-[#00BFFF]/30 rounded-full transition-colors text-xs"
                   title="Disable web search"
                 >
-                  <X className="h-2.5 w-2.5" />
+                  ×
                 </button>
               </span>
             )}
             {deepResearchEnabled && (
               <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-[#00FF7F]/20 text-[#00FF7F] border border-[#00FF7F]/30">
-                <Sparkles className="h-3 w-3" />
                 Deep Research
                 <button
                   type="button"
                   onClick={() => setDeepResearchEnabled(false)}
-                  className="ml-1 p-0.5 hover:bg-[#00FF7F]/30 rounded-full transition-colors"
+                  className="ml-1 p-0.5 hover:bg-[#00FF7F]/30 rounded-full transition-colors text-xs"
                   title="Disable deep research"
                 >
-                  <X className="h-2.5 w-2.5" />
+                  ×
                 </button>
               </span>
             )}
             {thinkingEnabled && (
-              <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
+              <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-[#00FF7F]/20 text-[#00FF7F] border border-[#00FF7F]/30">
                 Thinking Mode
                 <button
                   type="button"
                   onClick={() => setThinkingEnabled(false)}
-                  className="ml-1 p-0.5 hover:bg-purple-500/30 rounded-full transition-colors"
+                  className="ml-1 p-0.5 hover:bg-[#00FF7F]/30 rounded-full transition-colors text-xs"
                   title="Disable thinking mode"
                 >
-                  <X className="h-2.5 w-2.5" />
+                  ×
                 </button>
               </span>
             )}
@@ -348,6 +342,56 @@ export default function ChatInput({
         )}
 
         <div className="relative flex items-end gap-3">
+          {/* Hidden file inputs */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            onChange={(e) => handleFileSelect(e.target.files, 'document')}
+            accept=".pdf,.doc,.docx,.txt,.md,.csv,.json"
+            multiple
+          />
+          <input
+            ref={imageInputRef}
+            type="file"
+            className="hidden"
+            onChange={(e) => handleFileSelect(e.target.files, 'image')}
+            accept="image/*"
+            multiple
+          />
+          
+          {/* Attachment buttons */}
+          <div className="flex items-center gap-1 mb-[1px]">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                fileInputRef.current?.click()
+              }}
+              className="p-2 rounded-lg hover:bg-[var(--nova-bg-hover)] transition-colors text-[var(--nova-text-tertiary)] hover:text-[var(--nova-text-secondary)]"
+              title="Attach files"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                imageInputRef.current?.click()
+              }}
+              className="p-2 rounded-lg hover:bg-[var(--nova-bg-hover)] transition-colors text-[var(--nova-text-tertiary)] hover:text-[var(--nova-text-secondary)]"
+              title="Attach images"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </button>
+          </div>
+          
           <div className="flex-1 relative">
             <textarea
               ref={textareaRef}
@@ -364,7 +408,7 @@ export default function ChatInput({
               }
               disabled={disabled || isStreaming}
               rows={1}
-              className="w-full resize-none rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[#00FF7F]/50 focus:ring-1 focus:ring-[#00FF7F]/50 disabled:cursor-not-allowed disabled:opacity-50 max-h-32 overflow-y-auto transition-all"
+              className="w-full resize-none rounded-2xl border border-[var(--nova-border-primary)] bg-[var(--nova-bg-tertiary)] px-4 py-3 text-sm text-[var(--nova-text-primary)] placeholder:text-[var(--nova-text-tertiary)] focus:outline-none focus:border-[var(--nova-primary)]/50 focus:ring-1 focus:ring-[var(--nova-primary)]/50 disabled:cursor-not-allowed disabled:opacity-50 max-h-32 overflow-y-auto transition-all"
               style={{ minHeight: '48px' }}
             />
           </div>
@@ -372,18 +416,29 @@ export default function ChatInput({
             <button
               type="submit"
               disabled={disabled || isStreaming || !value.trim()}
-              className="rounded-full bg-gradient-to-r from-[#00FF7F] to-[#00D96A] p-3 text-black hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[#00FF7F]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center h-[46px] w-[46px]"
+              className="rounded-full bg-gradient-to-r from-[var(--nova-primary)] to-[var(--nova-primary-dark)] p-3 text-[var(--nova-text-inverse)] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--nova-primary)]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center h-[46px] w-[46px]"
             >
               {isStreaming ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />
               ) : (
-                <Send className="h-5 w-5" />
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="h-5 w-5"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 19l7-7-7-7" />
+                  <path d="M5 12h14" />
+                </svg>
               )}
             </button>
           </div>
         </div>
         {isStreaming && (
-          <p className="mt-2 text-xs text-white/40 text-center">
+          <p className="mt-2 text-xs text-[var(--nova-text-tertiary)] text-center">
             Nova is thinking...
           </p>
         )}

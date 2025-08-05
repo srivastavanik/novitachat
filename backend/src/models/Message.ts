@@ -221,6 +221,23 @@ export class MessageModel {
     }));
   }
 
+  static async searchInConversation(
+    conversationId: string,
+    searchTerm: string,
+    limit = 10
+  ): Promise<Message[]> {
+    const { data: messages } = await supabaseAdmin
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .ilike('content', `%${searchTerm}%`)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (!messages) return [];
+    return messages;
+  }
+
   static async getConversationContext(
     conversationId: string,
     maxMessages = 50,  // Increased to get more context

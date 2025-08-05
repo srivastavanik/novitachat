@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { X, Settings } from 'lucide-react'
 import axios from 'axios'
 
 interface ConversationSettingsProps {
@@ -57,15 +56,12 @@ export default function ConversationSettings({
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm">
       <div className="bg-[var(--nova-bg-primary)] border border-[var(--nova-border-primary)] rounded-xl w-full max-w-md mx-4 shadow-2xl">
         <div className="flex items-center justify-between p-6 border-b border-[var(--nova-border-primary)]">
-          <div className="flex items-center gap-2">
-            <Settings className="h-5 w-5 text-[var(--nova-primary)]" />
-            <h2 className="text-lg font-semibold text-[var(--nova-text-primary)]">Conversation Settings</h2>
-          </div>
+          <h2 className="text-lg font-semibold text-[var(--nova-text-primary)]">Conversation Settings</h2>
           <button
             onClick={onClose}
             className="text-[var(--nova-text-secondary)] hover:text-[var(--nova-text-primary)] transition-colors p-1 hover:bg-[var(--nova-bg-secondary)] rounded-lg"
           >
-            <X className="h-5 w-5" />
+            Close
           </button>
         </div>
 
@@ -151,7 +147,7 @@ export default function ConversationSettings({
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="flex-1 px-4 py-2 bg-[var(--nova-primary)] text-white rounded-lg hover:bg-[var(--nova-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            className="flex-1 px-4 py-2 bg-[var(--nova-primary)] text-[var(--nova-text-inverse)] rounded-lg hover:bg-[var(--nova-primary-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
             {isSaving ? 'Saving...' : 'Save Changes'}
           </button>

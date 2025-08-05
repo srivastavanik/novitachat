@@ -23,7 +23,7 @@ router.get('/conversations/:conversationId/messages', (req, res) => chatControll
 router.post('/conversations/:conversationId/messages', (req, res) => chatController.sendMessage(req, res));
 
 // Search
-router.post('/search', (req, res) => chatController.searchConversations(req, res));
+router.get('/search', (req, res) => chatController.searchConversations(req, res));
 router.post('/conversations/:id/archive', (req, res) => chatController.archiveConversation(req, res));
 router.post('/conversations/:id/unarchive', (req, res) => chatController.unarchiveConversation(req, res));
 

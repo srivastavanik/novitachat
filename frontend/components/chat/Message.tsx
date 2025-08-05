@@ -2,11 +2,11 @@ import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { format } from 'date-fns'
-import { User, FileText, Download, Search } from 'lucide-react'
 import Image from 'next/image'
 import SearchProgress from './SearchProgress'
 import ThinkingDisplay from './ThinkingDisplay'
 import LinkPreview from './LinkPreview'
+import SearchSources from './SearchSources'
 
 interface MessageProps {
   message: {
@@ -31,6 +31,14 @@ interface MessageProps {
         description?: string
         image?: string
       }>
+      searchSources?: Array<{
+        url: string
+        title: string
+        snippet: string
+        domain?: string
+        favicon?: string
+      }>
+      thinkingTime?: number
     }
     attachments?: Array<{
       id: string
@@ -79,9 +87,9 @@ export default function Message({ message, isStreaming = false }: MessageProps) 
   }
 
   return (
-    <div className={`flex ${isUser ? 'justify-end pl-8' : 'justify-start pr-8'} px-4 py-2`}>
+    <div className={`flex ${isUser ? 'justify-end pl-8' : 'justify-start pr-8'} px-4 py-3`}>
       {!isUser && (
-        <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-black/50 backdrop-blur-sm border border-white/10 p-2 mr-3">
+        <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-[var(--nova-bg-tertiary)] mr-3">
           <Image 
             src="/novita-logo-only.png" 
             alt="Nova" 
@@ -94,24 +102,30 @@ export default function Message({ message, isStreaming = false }: MessageProps) 
       
       <div className={`${isUser ? 'max-w-[95%]' : 'max-w-[95%]'}`}>
         <div className={`space-y-2 ${isUser ? 'items-end' : 'items-start'}`}>
+          {/* Display search sources before the message if this is an assistant message with search results */}
+          {!isUser && message.metadata?.searchSources && message.metadata.searchSources.length > 0 && (
+            <SearchSources 
+              sources={message.metadata.searchSources}
+              isCompact={true}
+            />
+          )}
+          
           <div className="flex items-center gap-2">
             {!isUser && (
-              <span className="font-medium text-sm text-white/80">Nova</span>
+              <span className="font-medium text-sm text-[var(--nova-text-primary)]">Nova</span>
             )}
             {!isStreaming && (
-              <span className="text-xs text-white/40">
+              <span className="text-xs text-[var(--nova-text-tertiary)]">
                 {format(new Date(message.created_at), 'h:mm a')}
               </span>
             )}
             {isUser && message.metadata?.webSearch && (
-              <span className="flex items-center gap-1 text-xs text-[#00BFFF]">
-                <Search className="h-3 w-3" />
+              <span className="text-xs text-[#00BFFF]">
                 Web Search
               </span>
             )}
             {isUser && message.metadata?.deepResearch && (
-              <span className="flex items-center gap-1 text-xs text-[#00FF7F]">
-                <Search className="h-3 w-3" />
+              <span className="text-xs text-[#00FF7F]">
                 Deep Research
               </span>
             )}
@@ -119,24 +133,24 @@ export default function Message({ message, isStreaming = false }: MessageProps) 
           
           <div className={`
             ${isUser 
-              ? 'bg-gradient-to-r from-[#00FF7F]/20 to-[#00D96A]/20 border border-[#00FF7F]/30 px-4 py-3 rounded-2xl max-w-fit backdrop-blur-sm' 
-              : 'bg-white/5 border border-white/10 px-4 py-3 rounded-2xl backdrop-blur-sm'
+              ? 'bg-[var(--nova-bg-hover)] px-4 py-3 rounded-2xl max-w-fit' 
+              : 'px-4 py-3'
             }
           `}>
             <div className={`prose prose-sm max-w-none prose-invert ${
-              isUser ? '' : ''
+              isUser ? '' : 'font-[var(--nova-font-sans)]'
             }`}>
               {isUser ? (
                 <p className="whitespace-pre-wrap m-0">{message.content}</p>
               ) : (
                 <>
                   {isStreaming && !message.content ? (
-                    <p className="m-0 text-white/60 italic">Nova is thinking...</p>
+                    <p className="m-0 text-gray-400 italic">Nova is thinking...</p>
                   ) : (
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm]}
                       components={{
-                        p: ({children}) => <p className="m-0 mb-2 last:mb-0">{children}</p>,
+                        p: ({children}) => <p className="m-0 mb-2 last:mb-0 text-[var(--nova-text-primary)]">{children}</p>,
                         ul: ({children}) => <ul className="m-0 mb-2 last:mb-0">{children}</ul>,
                         ol: ({children}) => <ol className="m-0 mb-2 last:mb-0">{children}</ol>,
                         h1: ({children}) => <h1 className="text-lg font-semibold m-0 mb-2">{children}</h1>,
@@ -155,11 +169,11 @@ export default function Message({ message, isStreaming = false }: MessageProps) 
                         code: ({children, className}) => {
                           const isInline = !className || !className.includes('language-')
                           if (isInline) {
-                            return <code className="bg-white/10 px-1 py-0.5 rounded text-[#00FF7F] text-sm">{children}</code>
+                            return <code className="bg-[var(--nova-bg-primary)] px-1 py-0.5 rounded text-[var(--nova-primary)] text-sm">{children}</code>
                           }
                           return <code className="block overflow-x-auto">{children}</code>
                         },
-                        pre: ({children}) => <pre className="bg-black/50 border border-white/10 p-4 rounded-lg overflow-x-auto">{children}</pre>
+                        pre: ({children}) => <pre className="bg-[var(--nova-bg-primary)] border border-[var(--nova-border-primary)] p-4 rounded-lg overflow-x-auto">{children}</pre>
                       }}
                     >
                       {cleanContent(message.content)}
@@ -176,7 +190,7 @@ export default function Message({ message, isStreaming = false }: MessageProps) 
               {message.attachments.map((attachment) => (
                 <div
                   key={attachment.id}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/10 backdrop-blur-sm"
+                  className="flex items-center gap-2 p-2 rounded-lg bg-[var(--nova-bg-tertiary)] border border-[var(--nova-border-primary)]"
                 >
                   {attachment.type === 'image' && attachment.data ? (
                     <div className="relative w-full max-w-sm">
@@ -185,16 +199,15 @@ export default function Message({ message, isStreaming = false }: MessageProps) 
                         alt={attachment.filename}
                         className="rounded-lg w-full"
                       />
-                      <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/70 rounded text-xs text-white">
+                      <div className="absolute bottom-2 right-2 px-2 py-1 bg-[var(--nova-bg-primary)]/70 rounded text-xs text-[var(--nova-text-primary)]">
                         {attachment.filename}
                       </div>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 flex-1">
-                      <FileText className="h-4 w-4 text-white/60" />
                       <div className="flex-1">
-                        <div className="text-sm font-medium text-white">{attachment.filename}</div>
-                        <div className="text-xs text-white/40">
+                        <div className="text-sm font-medium text-[var(--nova-text-primary)]">{attachment.filename}</div>
+                        <div className="text-xs text-[var(--nova-text-tertiary)]">
                           {formatFileSize(attachment.size)}
                         </div>
                       </div>
@@ -202,9 +215,9 @@ export default function Message({ message, isStreaming = false }: MessageProps) 
                         <a
                           href={`data:${attachment.mime_type};base64,${attachment.data}`}
                           download={attachment.filename}
-                          className="p-1 hover:bg-white/10 rounded transition-colors"
+                          className="px-2 py-1 text-xs bg-[var(--nova-bg-hover)] hover:bg-[var(--nova-bg-tertiary)] rounded transition-colors text-[var(--nova-text-secondary)]"
                         >
-                          <Download className="h-4 w-4 text-white/60 hover:text-white" />
+                          Download
                         </a>
                       )}
                     </div>

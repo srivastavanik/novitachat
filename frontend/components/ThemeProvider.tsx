@@ -19,15 +19,14 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light')
+  const [theme, setTheme] = useState<Theme>('dark')
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    // Check for saved theme preference or default to light
+    // Check for saved theme preference or default to dark
     const savedTheme = localStorage.getItem('nova-theme') as Theme
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light')
+    const initialTheme = savedTheme || 'dark'
     
     setTheme(initialTheme)
     document.documentElement.setAttribute('data-theme', initialTheme)

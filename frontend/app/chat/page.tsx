@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { io, Socket } from 'socket.io-client'
 import axios from '@/lib/axios-config'
-import { Loader2, Settings, AlertCircle, Sparkles, X } from 'lucide-react'
+import { Loader2, Settings, AlertCircle, MessageSquare, X } from 'lucide-react'
 import Link from 'next/link'
 import Sidebar from '@/components/chat/Sidebar'
 import MessageList from '@/components/chat/MessageList'
@@ -154,6 +154,7 @@ export default function ChatPage() {
                 metadata: { 
                   ...msg.metadata, 
                   linkPreviews: data.links || msg.metadata?.linkPreviews,
+                  searchSources: data.links || msg.metadata?.searchSources,
                   isComplete: data.isComplete || false
                 }
               }
@@ -508,48 +509,44 @@ export default function ChatPage() {
     }
   }
 
-  const sendMessage = async (attachments?: any[], options?: { webSearch?: boolean; deepResearch?: boolean }) => {
+  const handleSendMessage = async (message: string, options?: { webSearch?: boolean; attachments?: File[] }) => {
     // Handle trial mode
     if (isTrialMode) {
-      // Handle deep research request in trial mode
-      if (options?.deepResearch) {
-        setShowDeepResearchModal(true)
-        return
-      }
-      return handleTrialSendMessage(inputMessage.trim(), attachments, options)
+      // Convert File[] to the format expected by handleTrialSendMessage
+      const attachments = options?.attachments?.map((file, index) => ({
+        id: `${Date.now()}-${index}`,
+        file: file,
+        type: file.type.startsWith('image/') ? 'image' as const : 'document' as const
+      }))
+      return handleTrialSendMessage(message, attachments, { webSearch: options?.webSearch })
     }
 
     // Normal authenticated flow
-    if (!inputMessage.trim() || !currentConversation || isStreaming) return
-
-    const message = inputMessage.trim()
-    setInputMessage('')
+    if (!message.trim() || !currentConversation || isStreaming) return
 
     // Prepare the message data
     const messageData: any = {
       conversationId: currentConversation.id,
-      content: message
+      content: message,
+      userId: user?.id // Add userId which is required by backend
     }
 
     // Add options if provided
     if (options?.webSearch) {
       messageData.webSearch = true
     }
-    if (options?.deepResearch) {
-      messageData.deepResearch = true
-    }
 
     // Handle attachments if provided
-    if (attachments && attachments.length > 0) {
-      // Convert attachments to base64 for transmission
+    if (options?.attachments && options.attachments.length > 0) {
+      // Convert attachments to the format expected by backend
       const processedAttachments = await Promise.all(
-        attachments.map(async (attachment) => {
-          const base64 = await fileToBase64(attachment.file)
+        options.attachments.map(async (file) => {
+          const base64 = await fileToBase64(file)
           return {
-            name: attachment.file.name,
-            type: attachment.type,
-            mimeType: attachment.file.type,
-            size: attachment.file.size,
+            name: file.name,
+            type: file.type.startsWith('image/') ? 'image' : 'document',
+            mimeType: file.type,
+            size: file.size,
             data: base64
           }
         })
@@ -628,7 +625,6 @@ export default function ChatPage() {
                 </Link>
                 <div className="flex items-center gap-2">
                   <span className="nova-badge-primary text-xs">
-                    <Sparkles className="h-3 w-3 mr-1 inline" />
                     Free Trial
                   </span>
                   <span className="text-sm nova-text-muted">
@@ -673,7 +669,7 @@ export default function ChatPage() {
               <div className="flex items-center justify-center h-full">
                 <div className="text-center py-12">
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--nova-primary)]/10 mb-4">
-                    <Sparkles className="h-8 w-8 text-[var(--nova-primary)]" />
+                    <MessageSquare className="h-8 w-8 text-[var(--nova-primary)]" />
                   </div>
                   <h2 className="text-xl font-semibold mb-2">Welcome to Nova Trial Chat!</h2>
                   <p className="nova-text-muted max-w-md mx-auto">
@@ -701,8 +697,17 @@ export default function ChatPage() {
           <ChatInput
             value={inputMessage}
             onChange={setInputMessage}
-            onSend={sendMessage}
+            onSend={(attachments, options) => {
+              if (inputMessage.trim()) {
+                handleSendMessage(inputMessage.trim(), { 
+                  webSearch: options?.webSearch,
+                  attachments: attachments?.map(a => a.file)
+                })
+                setInputMessage('')
+              }
+            }}
             isStreaming={isStreaming || trialMessageCount >= TRIAL_MESSAGE_LIMIT}
+            disabled={isStreaming || trialMessageCount >= TRIAL_MESSAGE_LIMIT}
             currentModel="meta-llama/llama-3.3-70b-instruct"
             onModelChange={() => {}}
             modelCapabilities={['chat']}
@@ -728,7 +733,7 @@ export default function ChatPage() {
               
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--nova-primary)]/10 mb-4">
-                  <Sparkles className="h-8 w-8 text-[var(--nova-primary)]" />
+                  <MessageSquare className="h-8 w-8 text-[var(--nova-primary)]" />
                 </div>
                 
                 <h3 className="text-xl font-semibold mb-2">Deep Research Available for Members</h3>
@@ -776,7 +781,7 @@ export default function ChatPage() {
 
   // Normal authenticated UI
   return (
-    <div className="flex h-screen bg-background">
+      <div className="flex h-screen bg-[var(--nova-bg-primary)] text-[var(--nova-text-primary)]">
       <Sidebar
         conversations={conversations}
         currentConversation={currentConversation}
@@ -789,16 +794,16 @@ export default function ChatPage() {
       />
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-[#343541]">
         {/* Header */}
-        <div className="h-14 border-b flex items-center justify-between px-4">
-          <h2 className="font-semibold">
+        <div className="h-14 border-b border-[var(--nova-border-primary)] bg-[var(--nova-bg-secondary)] flex items-center justify-between px-6">
+          <h2 className="font-semibold text-[var(--nova-text-primary)]">
             {currentConversation ? currentConversation.title : 'Select a conversation'}
           </h2>
           {currentConversation && (
             <button
               onClick={() => setShowSettings(true)}
-              className="p-2 hover:bg-muted rounded-md transition-colors"
+              className="p-2 hover:bg-[#3E3F4A] rounded-md transition-colors text-gray-400 hover:text-gray-200"
               title="Conversation Settings"
             >
               <Settings className="h-4 w-4" />
@@ -811,7 +816,7 @@ export default function ChatPage() {
           <>
             {/* Thinking Display - Separate from messages */}
             {thinkingMessage && (
-              <div className="border-b border-white/10 bg-black/30 backdrop-blur-xl">
+              <div className="border-b border-[var(--nova-border-primary)] bg-[var(--nova-bg-secondary)]/50 backdrop-blur-xl">
                 <ThinkingDisplay 
                   content={thinkingMessage.content}
                   isActive={thinkingMessage.isThinking}
@@ -828,7 +833,15 @@ export default function ChatPage() {
             <ChatInput
               value={inputMessage}
               onChange={setInputMessage}
-              onSend={sendMessage}
+              onSend={(attachments, options) => {
+                if (inputMessage.trim()) {
+                  handleSendMessage(inputMessage.trim(), { 
+                    webSearch: options?.webSearch,
+                    attachments: attachments?.map(a => a.file)
+                  })
+                  setInputMessage('')
+                }
+              }}
               isStreaming={isStreaming}
               currentModel={currentModel}
               onModelChange={handleModelChange}
@@ -839,8 +852,8 @@ export default function ChatPage() {
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center space-y-2">
-              <h3 className="text-lg font-medium">Welcome to Nova</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="text-lg font-medium text-[var(--nova-text-primary)]">Welcome to Nova</h3>
+              <p className="text-sm text-[var(--nova-text-tertiary)]">
                 Create a new chat or select an existing conversation to get started
               </p>
             </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { ChevronDown, Sparkles, Image, Code, MessageSquare, Lightbulb, Calculator, Crown, ChevronRight } from 'lucide-react'
+import { ChevronDown, Image, Code, MessageSquare, Lightbulb, Calculator, Crown, ChevronRight } from 'lucide-react'
 
 interface Model {
   id: string
@@ -174,25 +174,11 @@ export default function ModelSelector({
         return <Calculator className="h-4 w-4" />
       case 'Crown':
         return <Crown className="h-4 w-4" />
-      case 'Sparkles':
-        return <Sparkles className="h-4 w-4" />
       default:
         return <MessageSquare className="h-4 w-4" />
     }
   }
 
-  const getCapabilityIcon = (capability: string) => {
-    switch (capability) {
-      case 'text':
-        return <MessageSquare className="h-3 w-3" />
-      case 'image':
-        return <Image className="h-3 w-3" />
-      case 'code':
-        return <Code className="h-3 w-3" />
-      default:
-        return <Sparkles className="h-3 w-3" />
-    }
-  }
 
   const formatContextSize = (size: number) => {
     if (size >= 1000000) {
@@ -206,8 +192,8 @@ export default function ModelSelector({
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 text-sm text-white/60">
-        <Sparkles className="h-4 w-4 animate-pulse text-[#00FF7F]" />
+      <div className="flex items-center gap-2 px-3 py-2 text-sm text-[var(--nova-text-tertiary)]">
+        <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--nova-primary)] border-t-transparent" />
         <span>Loading models...</span>
       </div>
     )
@@ -218,13 +204,12 @@ export default function ModelSelector({
       <div className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-sm"
+          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--nova-bg-tertiary)] hover:bg-[var(--nova-bg-hover)] transition-all text-sm"
         >
-          <Sparkles className="h-4 w-4 text-[#00FF7F]" />
-          <span className="font-medium text-white">
+          <span className="font-medium text-[var(--nova-text-primary)]">
             {selectedModel?.name || 'Select Model'}
           </span>
-          <ChevronDown className={`h-4 w-4 text-white/60 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`h-4 w-4 text-[var(--nova-text-tertiary)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
         {isOpen && (
@@ -233,11 +218,11 @@ export default function ModelSelector({
               className="fixed inset-0 z-40"
               onClick={() => setIsOpen(false)}
             />
-            <div className="absolute bottom-full left-0 mb-2 w-[500px] max-h-[600px] overflow-y-auto rounded-xl border border-white/10 bg-black/90 backdrop-blur-xl p-3 shadow-lg z-50">
+            <div className="absolute bottom-full left-0 mb-2 w-[500px] max-h-[600px] overflow-y-auto rounded-xl border border-[var(--nova-border-primary)] bg-[var(--nova-bg-tertiary)] p-3 shadow-2xl z-50">
               {/* Header */}
-              <div className="mb-3 pb-2 border-b border-white/10">
-                <h3 className="font-medium text-sm text-white">Choose AI Model</h3>
-                <p className="text-xs text-white/60 mt-1">Select the best model for your task</p>
+              <div className="mb-3 pb-2 border-b border-[var(--nova-border-primary)]">
+                <h3 className="font-medium text-sm text-[var(--nova-text-primary)]">Choose AI Model</h3>
+                <p className="text-xs text-[var(--nova-text-tertiary)] mt-1">Select the best model for your task</p>
               </div>
 
               {/* Categories */}
@@ -247,26 +232,26 @@ export default function ModelSelector({
                   if (categoryModels.length === 0) return null
 
                   return (
-                    <div key={category.id} className="border border-white/10 rounded-lg bg-white/5">
+                    <div key={category.id} className="border border-[var(--nova-border-primary)] rounded-lg bg-[var(--nova-bg-secondary)]">
                       <button
                         onClick={() => toggleCategory(category.id)}
-                        className="w-full p-3 flex items-center gap-3 hover:bg-white/10 transition-colors rounded-t-lg"
+                        className="w-full p-3 flex items-center gap-3 hover:bg-[var(--nova-bg-hover)] transition-colors rounded-t-lg"
                       >
                         <div className="flex items-center gap-2 flex-1">
-                          <div className="text-[#00FF7F]">
+                          <div className="text-[var(--nova-primary)]">
                             {getCategoryIcon(category.icon)}
                           </div>
                           <div className="text-left">
-                            <div className="font-medium text-sm text-white">{category.name}</div>
-                            <div className="text-xs text-white/60">{category.description}</div>
+                            <div className="font-medium text-sm text-[var(--nova-text-primary)]">{category.name}</div>
+                            <div className="text-xs text-[var(--nova-text-tertiary)]">{category.description}</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
+                          <span className="text-xs text-[var(--nova-text-tertiary)] bg-[var(--nova-bg-tertiary)] px-2 py-1 rounded">
                             {categoryModels.length}
                           </span>
                           <ChevronRight 
-                            className={`h-4 w-4 text-white/60 transition-transform ${
+                            className={`h-4 w-4 text-[var(--nova-text-tertiary)] transition-transform ${
                               expandedCategories.has(category.id) ? 'rotate-90' : ''
                             }`} 
                           />
@@ -274,46 +259,32 @@ export default function ModelSelector({
                       </button>
 
                       {expandedCategories.has(category.id) && (
-                        <div className="border-t border-white/10 p-2 space-y-1">
+                        <div className="border-t border-[var(--nova-border-primary)] p-2 space-y-1">
                           {categoryModels.map((model) => (
                             <button
                               key={model.id}
                               onClick={() => handleSelectModel(model)}
-                              className={`w-full text-left p-3 rounded-md hover:bg-white/10 transition-colors ${
-                                selectedModel?.id === model.id ? 'bg-[#00FF7F]/20 text-white' : ''
+                              className={`w-full text-left p-3 rounded-md hover:bg-[var(--nova-bg-hover)] transition-colors ${
+                                selectedModel?.id === model.id ? 'bg-[var(--nova-primary)]/20' : ''
                               }`}
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex-1 min-w-0">
-                                  <div className="font-medium text-sm truncate text-white">
+                                  <div className="font-medium text-sm truncate text-[var(--nova-text-primary)]">
                                     {model.name}
                                   </div>
-                                  <div className="text-xs text-white/60 mt-1 line-clamp-2">
+                                  <div className="text-xs text-[var(--nova-text-tertiary)] mt-1 line-clamp-2">
                                     {model.description}
                                   </div>
                                   <div className="flex items-center gap-3 mt-2">
-                                    <div className="flex items-center gap-1">
-                                      {model.capabilities.slice(0, 3).map((cap) => (
-                                        <div
-                                          key={cap}
-                                          className="flex items-center gap-1 text-xs text-white/40"
-                                          title={cap}
-                                        >
-                                          {getCapabilityIcon(cap)}
-                                        </div>
-                                      ))}
-                                      {model.capabilities.length > 3 && (
-                                        <span className="text-xs text-white/40">+{model.capabilities.length - 3}</span>
-                                      )}
-                                    </div>
-                                    <div className="text-xs text-white/40">
+                                    <div className="text-xs text-[var(--nova-text-tertiary)]">
                                       {formatContextSize(model.contextSize)} context
                                     </div>
                                   </div>
                                 </div>
                                 {selectedModel?.id === model.id && (
                                   <div className="flex-shrink-0 mt-1">
-                                    <div className="h-2 w-2 rounded-full bg-[#00FF7F]" />
+                                    <div className="h-2 w-2 rounded-full bg-[var(--nova-primary)]" />
                                   </div>
                                 )}
                               </div>
@@ -327,7 +298,7 @@ export default function ModelSelector({
               </div>
 
               {/* Footer */}
-              <div className="mt-3 pt-2 border-t border-white/10 text-xs text-white/60 text-center">
+              <div className="mt-3 pt-2 border-t border-[var(--nova-border-primary)] text-xs text-[var(--nova-text-tertiary)] text-center">
                 {Object.values(categorizedModels).flat().length} models available
               </div>
             </div>
@@ -337,12 +308,12 @@ export default function ModelSelector({
 
       {/* Thinking Toggle */}
       {selectedModelSupportsThinking && onReasoningChange && (
-        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+        <div className="flex items-center justify-between p-3 rounded-xl bg-[#40414F] border border-[#565869]">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-purple-400" />
+            <Lightbulb className="h-4 w-4 text-purple-400" />
             <div>
-              <div className="text-sm font-medium text-white">Enable Reasoning</div>
-              <div className="text-xs text-white/60">Show step-by-step thinking process</div>
+              <div className="text-sm font-medium text-gray-200">Enable Reasoning</div>
+              <div className="text-xs text-gray-500">Show step-by-step thinking process</div>
             </div>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
@@ -352,7 +323,7 @@ export default function ModelSelector({
               onChange={(e) => onReasoningChange(e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-400/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-400"></div>
+            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-400/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-400"></div>
           </label>
         </div>
       )}

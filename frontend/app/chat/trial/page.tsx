@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Send, AlertCircle, Sparkles, Paperclip, X, Search, Microscope, FileText, Image as ImageIcon } from 'lucide-react'
+import { ArrowLeft, Send, AlertCircle, Paperclip, X, Search, Microscope, FileText, Image as ImageIcon } from 'lucide-react'
 
 interface TrialMessage {
   id: string
@@ -112,7 +112,7 @@ export default function TrialChatPage() {
   }
 
   const handleFileSelect = async (files: FileList | null, type: 'image' | 'document') => {
-    if (!files) return
+    if (!files || files.length === 0) return
 
     const newAttachments: Attachment[] = []
     
@@ -349,7 +349,6 @@ export default function TrialChatPage() {
                 <h1 className="text-lg font-semibold flex items-center gap-2">
                   Nova Trial Chat
                   <span className="nova-badge-primary text-xs">
-                    <Sparkles className="h-3 w-3 mr-1 inline" />
                     Free Trial
                   </span>
                 </h1>
@@ -385,7 +384,9 @@ export default function TrialChatPage() {
             {messages.length === 0 && (
               <div className="text-center py-12">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--nova-primary)]/10 mb-4">
-                  <Sparkles className="h-8 w-8 text-[var(--nova-primary)]" />
+                  <svg className="h-8 w-8 text-[var(--nova-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16h6M12 3C6.5 3 2 6.5 2 10c0 1.4.5 2.7 1.3 3.8L2 21l7.2-1.3c1.1.8 2.4 1.3 3.8 1.3 3.5 0 7-3.5 7-7s-3.5-7-7-7z" />
+                  </svg>
                 </div>
                 <h2 className="text-xl font-semibold mb-2">Welcome to Nova Trial Chat!</h2>
                 <p className="nova-text-muted max-w-md mx-auto">
@@ -569,7 +570,11 @@ export default function TrialChatPage() {
                   />
                   <button
                     type="button"
-                    onClick={() => imageInputRef.current?.click()}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      imageInputRef.current?.click()
+                    }}
                     className="p-1.5 rounded hover:bg-[var(--nova-bg-tertiary)] transition-colors"
                     title="Attach images"
                   >
@@ -582,10 +587,15 @@ export default function TrialChatPage() {
                     multiple
                     className="hidden"
                     onChange={(e) => handleFileSelect(e.target.files, 'document')}
+                    accept=".pdf,.doc,.docx,.txt,.md,.csv,.json"
                   />
                   <button
                     type="button"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      fileInputRef.current?.click()
+                    }}
                     className="p-1.5 rounded hover:bg-[var(--nova-bg-tertiary)] transition-colors"
                     title="Attach files"
                   >
