@@ -237,25 +237,26 @@
 /* Light Mode Theme */
 [data-theme="light"] {
   /* Background Colors - Light Theme */
-  --nova-bg-primary: #ffffff;       /* Pure white */
-  --nova-bg-secondary: #f8f8f7;     /* Off-white */
-  --nova-bg-tertiary: #f0f0ef;      /* Light gray */
-  --nova-bg-elevated: #e8e8e7;     /* Elevated surfaces */
-  --nova-bg-hover: #e0e0df;         /* Hover states */
+  --nova-bg-primary: #fafafa;       /* Very light gray */
+  --nova-bg-secondary: #ffffff;     /* Pure white */
+  --nova-bg-tertiary: #f5f5f5;      /* Light gray */
+  --nova-bg-elevated: #ffffff;      /* White elevated surfaces */
+  --nova-bg-hover: #eeeeee;         /* Light hover states */
   
   /* Text Colors - Light Theme */
-  --nova-text-primary: #1a1a19;     /* Almost black */
-  --nova-text-secondary: #323230;   /* Dark gray */
-  --nova-text-tertiary: #505050;    /* Medium gray */
+  --nova-text-primary: #0a0a0a;     /* Almost black */
+  --nova-text-secondary: #404040;   /* Dark gray */
+  --nova-text-tertiary: #737373;    /* Medium gray */
   --nova-text-inverse: #ffffff;     /* White text on dark backgrounds */
   
   /* Border Colors - Light Theme */
-  --nova-border-primary: #e0e0df;   /* Light gray borders */
-  --nova-border-secondary: #d0d0cf; /* Medium light gray borders */
+  --nova-border-primary: #e5e5e5;   /* Light gray borders */
+  --nova-border-secondary: #d4d4d4; /* Medium light gray borders */
   
   /* Adjusted Primary Colors for Light Mode */
-  --nova-primary: #00D96A;          /* Darker green for better contrast */
-  --nova-primary-dark: #00B358;     /* Even darker for hover states */
+  --nova-primary: #00C55E;          /* Slightly darker green for better contrast */
+  --nova-primary-dark: #00A34D;     /* Even darker for hover states */
+  --nova-primary-light: #00FF7F;    /* Bright green for accents */
   
   /* Shadows for Light Mode */
   --nova-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);

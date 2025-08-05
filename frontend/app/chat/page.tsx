@@ -797,7 +797,7 @@ export default function ChatPage() {
       />
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col bg-[#343541]">
+      <div className="flex-1 flex flex-col bg-[var(--nova-bg-primary)]">
         {/* Header */}
         <div className="h-14 border-b border-[var(--nova-border-primary)] bg-[var(--nova-bg-secondary)] flex items-center justify-between px-6">
           <h2 className="font-semibold text-[var(--nova-text-primary)]">

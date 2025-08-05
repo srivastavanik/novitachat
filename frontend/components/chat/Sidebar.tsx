@@ -129,7 +129,7 @@ export default function Sidebar({
       {/* Sidebar */}
       <div className={`${
         isOpen ? 'translate-x-0' : '-translate-x-full'
-      } fixed md:relative md:translate-x-0 z-40 w-64 h-full bg-[var(--nova-bg-secondary)] border-r border-[var(--nova-border-primary)] transition-transform duration-300 flex flex-col`}>
+      } fixed md:relative md:translate-x-0 z-40 w-64 h-full bg-[var(--nova-bg-primary)] border-r border-[var(--nova-border-primary)] transition-transform duration-300 flex flex-col`}>
         
         {/* Header */}
         <div className="p-4 flex items-center justify-between">
