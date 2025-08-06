@@ -92,7 +92,7 @@ export default function ApiKeySelector({
             className="fixed inset-0 z-40" 
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-black border border-gray-200 dark:border-white/20 rounded-lg shadow-xl z-50 overflow-hidden max-h-96 overflow-y-auto">
+          <div className="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-black border border-gray-200 dark:border-white/20 rounded-lg shadow-xl z-50 overflow-hidden max-h-96 overflow-y-auto">
             {/* Novita Key Option */}
             <button
               onClick={() => {

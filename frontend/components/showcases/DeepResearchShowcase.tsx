@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Brain, Search, FileSearch, Database, Sparkles, CheckCircle, Loader2 } from 'lucide-react'
+import { Search, FileSearch, Database, Sparkles, CheckCircle, Loader2 } from 'lucide-react'
 
 const researchSteps = [
   { 
     id: 'initial', 
     label: 'Understanding Query', 
-    icon: Brain, 
+    icon: Search, 
     duration: 1500,
     detail: 'Analyzing question complexity...'
   },
@@ -93,8 +93,7 @@ export default function DeepResearchShowcase() {
       
       <div className="relative bg-black/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-medium text-white flex items-center gap-2">
-            <Brain className="h-5 w-5 text-[#00FF7F]" />
+          <h3 className="text-lg font-medium text-white">
             Deep Research Mode
           </h3>
           {isActive && (

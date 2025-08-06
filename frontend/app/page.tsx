@@ -79,12 +79,6 @@ export default function LandingPage() {
       <div className="radial-glow"></div>
       
       <nav className="navbar relative">
-        {/* Glowing green ring background */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-20 -left-20 w-96 h-96 bg-[#00FF7F] rounded-full blur-[120px] opacity-20 animate-pulse"></div>
-          <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#00D96A] rounded-full blur-[120px] opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
-        </div>
-        
         <div className="max-w-6xl mx-auto px-6 py-8 relative z-10">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
@@ -104,7 +98,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="nova-hero-background">
+      <section className="nova-hero-background relative">
         {/* Dynamic Grid Overlay */}
         <div className="nova-dynamic-grid"></div>
         
@@ -123,12 +117,63 @@ export default function LandingPage() {
           ))}
         </div>
         
-        <div className="px-6 max-w-6xl mx-auto mt-20 md:mt-32">
-          <div className="md:max-w-2xl mx-auto text-center">
-            <h1 className="hero-headline select-text">
+        <div className="px-6 max-w-6xl mx-auto mt-20 md:mt-32 relative">
+          <div className="md:max-w-2xl mx-auto text-center relative">
+            {/* Oscillating ring animation */}
+            <div className="absolute inset-0 -inset-x-32 -inset-y-16 flex items-center justify-center pointer-events-none">
+              <div className="relative w-[600px] h-[400px]">
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 600 400">
+                  <defs>
+                    <linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#00FF7F" stopOpacity="0.3" />
+                      <stop offset="50%" stopColor="#00D96A" stopOpacity="0.5" />
+                      <stop offset="100%" stopColor="#00FF7F" stopOpacity="0.3" />
+                    </linearGradient>
+                  </defs>
+                  <ellipse
+                    cx="300"
+                    cy="200"
+                    rx="280"
+                    ry="180"
+                    fill="none"
+                    stroke="url(#ring-gradient)"
+                    strokeWidth="2"
+                    strokeDasharray="20 10"
+                    opacity="0.6"
+                    className="animate-[spin_20s_linear_infinite]"
+                  />
+                  <ellipse
+                    cx="300"
+                    cy="200"
+                    rx="260"
+                    ry="160"
+                    fill="none"
+                    stroke="url(#ring-gradient)"
+                    strokeWidth="1.5"
+                    strokeDasharray="15 15"
+                    opacity="0.4"
+                    className="animate-[spin_25s_linear_infinite_reverse]"
+                  />
+                  <ellipse
+                    cx="300"
+                    cy="200"
+                    rx="240"
+                    ry="140"
+                    fill="none"
+                    stroke="url(#ring-gradient)"
+                    strokeWidth="1"
+                    strokeDasharray="10 20"
+                    opacity="0.3"
+                    className="animate-[spin_30s_linear_infinite]"
+                  />
+                </svg>
+              </div>
+            </div>
+            
+            <h1 className="hero-headline select-text relative z-10">
               Open Source <span className="accent" data-text="AI Chat">AI Chat</span>
             </h1>
-            <p className="text-white/70 mt-6 text-lg select-text">
+            <p className="text-white/70 mt-6 text-lg select-text relative z-10">
               Powered by cutting-edge models including Kimi K2, OpenAI OSS, and more. 
               Built with transparency, customizable with style prompts, and enhanced with real-time web search.
             </p>
