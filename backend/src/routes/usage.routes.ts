@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { Request, Response } from 'express'
-import { authenticateToken } from '../middleware/auth'
+import { authenticate } from '../middleware/auth'
 import { getUserApiKey } from './apikey.routes'
 
 const router = Router()
@@ -35,7 +35,7 @@ const getOrCreateUsage = (userId: string) => {
 }
 
 // Get current usage
-router.get('/usage', authenticateToken, (req: Request, res: Response) => {
+router.get('/usage', authenticate, (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id
     const usage = getOrCreateUsage(userId)

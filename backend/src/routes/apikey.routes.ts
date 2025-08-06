@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { Request, Response } from 'express'
-import { authenticateToken } from '../middleware/auth'
+import { authenticate } from '../middleware/auth'
 import axios from 'axios'
 
 const router = Router()
@@ -9,7 +9,7 @@ const router = Router()
 const userApiKeys = new Map<string, string>()
 
 // Validate API key with Novita
-router.post('/validate-api-key', authenticateToken, async (req: Request, res: Response) => {
+router.post('/validate-api-key', authenticate, async (req: Request, res: Response) => {
   try {
     const { apiKey } = req.body
 
@@ -61,7 +61,7 @@ router.post('/validate-api-key', authenticateToken, async (req: Request, res: Re
 })
 
 // Save API key for user
-router.post('/save-api-key', authenticateToken, async (req: Request, res: Response) => {
+router.post('/save-api-key', authenticate, async (req: Request, res: Response) => {
   try {
     const { apiKey } = req.body
     const userId = (req as any).user.id
@@ -89,7 +89,7 @@ export const getUserApiKey = (userId: string): string | undefined => {
 }
 
 // Remove user's API key
-router.delete('/api-key', authenticateToken, (req: Request, res: Response) => {
+router.delete('/api-key', authenticate, (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id
     userApiKeys.delete(userId)
