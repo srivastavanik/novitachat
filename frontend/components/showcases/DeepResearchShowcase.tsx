@@ -60,7 +60,11 @@ export default function DeepResearchShowcase() {
           setCurrentStep(index)
           
           setTimeout(() => {
-            setCompletedSteps(prev => new Set([...prev, index]))
+            setCompletedSteps(prev => {
+              const newSet = new Set(prev)
+              newSet.add(index)
+              return newSet
+            })
             
             if (index === researchSteps.length - 1) {
               setTimeout(() => {
