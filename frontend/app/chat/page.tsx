@@ -1063,6 +1063,7 @@ export default function ChatPage() {
                 currentModel={currentModel}
                 onModelChange={handleModelChange}
                 modelCapabilities={modelCapabilities}
+                onRateLimitCheck={(type) => checkUsageLimits(type)}
                 placeholder={thinkingMessage && thinkingMessage.isThinking ? "Chat is thinking..." : undefined}
               />
               <ChatFooter />

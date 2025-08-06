@@ -20,6 +20,7 @@ interface ChatInputProps {
   modelCapabilities?: string[]
   placeholder?: string
   isTrialMode?: boolean
+  onRateLimitCheck?: (type: 'webSearch' | 'deepResearch' | 'normal') => boolean
 }
 
 export default function ChatInput({
@@ -32,7 +33,8 @@ export default function ChatInput({
   onModelChange,
   modelCapabilities = [],
   placeholder,
-  isTrialMode = false
+  isTrialMode = false,
+  onRateLimitCheck
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -65,43 +67,34 @@ export default function ChatInput({
   // Intelligent web search auto-detection for queries that need real-time information
   const shouldEnableWebSearch = (query: string): boolean => {
     const searchKeywords = [
-      // Direct search requests
-      'search', 'google', 'find', 'look up', 'check', 'verify',
+      // Direct search requests only
+      'search for', 'google', 'look up', 'find information about',
       
-      // Current information requests  
-      'latest', 'current', 'recent', 'today', 'now', 'breaking', 'update',
-      'news', 'weather', 'price', 'stock', 'market',
+      // Very specific current information requests  
+      'latest news', 'breaking news', 'today\'s', 'current price',
+      'weather today', 'weather forecast', 'stock price',
       
-      // Time-sensitive queries
-      '2024', '2025', 'this week', 'this month', 'this year',
-      'yesterday', 'tomorrow', 'forecast',
+      // Explicit time-sensitive queries
+      'what happened today', 'news from', 'events in 2024', 'events in 2025',
       
-      // Specific information needs
-      'hours', 'location', 'address', 'phone', 'website',
-      'reviews', 'ratings', 'score', 'results',
-      
-      // Questions about current state
-      'is it', 'are there', 'can i', 'should i', 'where can',
-      'how much', 'how many', 'when does', 'when is'
+      // Very specific information needs
+      'opening hours', 'store hours', 'restaurant hours', 'business hours',
+      'phone number', 'contact information', 'website url', 'official website'
     ]
     
     const lowerQuery = query.toLowerCase().trim()
     
-    // Check if query contains any search keywords
+    // Much stricter: require exact phrase matches for keywords
     const hasSearchKeyword = searchKeywords.some(keyword => lowerQuery.includes(keyword))
     
-    // Check if it's a question (contains ?)
-    const isQuestion = lowerQuery.includes('?')
+    // Only consider it a search-worthy question if it explicitly asks for current/recent info
+    const isCurrentInfoQuestion = lowerQuery.includes('?') && 
+      (lowerQuery.includes('today') || lowerQuery.includes('now') || 
+       lowerQuery.includes('current') || lowerQuery.includes('latest') ||
+       lowerQuery.includes('2024') || lowerQuery.includes('2025'))
     
-    // Check if it's asking about something specific (starts with question words)
-    const startsWithQuestion = ['what', 'who', 'when', 'where', 'why', 'how', 'which', 'whose', 'whom']
-      .some(q => lowerQuery.startsWith(q))
-    
-    // Enable if:
-    // 1. Has search keywords OR
-    // 2. Is a question mark query OR  
-    // 3. Starts with question word and is longer than 10 chars
-    return hasSearchKeyword || isQuestion || (startsWithQuestion && lowerQuery.length > 10)
+    // Much stricter: only enable for very clear search requests
+    return hasSearchKeyword || isCurrentInfoQuestion
   }
 
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
@@ -141,10 +134,11 @@ export default function ChatInput({
         style: currentStyle
       })
       setAttachments([])
-      setDeepResearchEnabled(false)
-      setManualWebSearchOverride(false)
-      setWebSearchEnabled(false) // Reset web search after sending
-      // Keep thinking enabled for future queries
+      // Don't reset any toggles - they persist until manually turned off
+      // Only reset auto-detected web search if it wasn't manually enabled
+      if (!manualWebSearchOverride) {
+        setWebSearchEnabled(false)
+      }
     }
   }
 
@@ -234,6 +228,12 @@ export default function ChatInput({
             <button
               type="button"
               onClick={() => {
+                // If turning on and rate limit check exists, check it
+                if (!manualWebSearchOverride && onRateLimitCheck) {
+                  const canEnable = onRateLimitCheck('webSearch')
+                  if (!canEnable) return // Modal will be shown
+                }
+                
                 setManualWebSearchOverride(!manualWebSearchOverride)
                 if (!manualWebSearchOverride) {
                   setWebSearchEnabled(true)
@@ -255,7 +255,14 @@ export default function ChatInput({
             {/* Deep Research Button */}
             <button
               type="button"
-              onClick={() => setDeepResearchEnabled(!deepResearchEnabled)}
+              onClick={() => {
+                // If turning on and rate limit check exists, check it
+                if (!deepResearchEnabled && onRateLimitCheck) {
+                  const canEnable = onRateLimitCheck('deepResearch')
+                  if (!canEnable) return // Modal will be shown
+                }
+                setDeepResearchEnabled(!deepResearchEnabled)
+              }}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                 deepResearchEnabled 
                   ? 'bg-[#8B5CF6] text-white shadow-lg shadow-[#8B5CF6]/25' 
