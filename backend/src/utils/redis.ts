@@ -13,7 +13,7 @@ class RedisClient {
       retryStrategy: (times) => {
         // Stop retrying after 3 attempts
         if (times > 3) {
-          console.log('⚠️  Redis not available - running without caching');
+          console.log('WARNING: Redis not available - running without caching');
           console.log('   To enable Redis, install Docker and run: docker compose up -d redis');
           return null;
         }
@@ -25,11 +25,11 @@ class RedisClient {
     });
 
     this.client.on('connect', () => {
-      console.log('✅ Redis connected successfully');
+      console.log('Redis connected successfully');
     });
 
     this.client.on('error', (err) => {
-      console.error('❌ Redis Client Error:', err);
+      console.error('ERROR: Redis Client Error:', err);
     });
   }
 

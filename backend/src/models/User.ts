@@ -36,24 +36,24 @@ export class UserModel {
     
     try {
       // Test Supabase connection first
-      console.log('🔍 Testing Supabase connection...');
+      console.log('Testing Supabase connection...');
       const testQuery = await supabaseAdmin
         .from('users')
         .select('count')
         .limit(0);
       
       if (testQuery.error) {
-        console.error('❌ Supabase connection test failed:', testQuery.error);
+        console.error('ERROR: Supabase connection test failed:', testQuery.error);
         throw new Error(`Database connection failed: ${testQuery.error.message}`);
       }
-      console.log('✅ Supabase connection OK');
+      console.log('Supabase connection OK');
       
       // Hash password
       const saltRounds = 10;
       const password_hash = await bcrypt.hash(password, saltRounds);
       
-      console.log('🔐 Password hashed, inserting user into database...');
-      console.log('📋 Insert data:', { email, username, password_hash: '***', full_name });
+      console.log('Password hashed, inserting user into database...');
+      console.log('Insert data:', { email, username, password_hash: '***', full_name });
       
       const { data, error } = await supabaseAdmin
         .from('users')
@@ -67,7 +67,7 @@ export class UserModel {
         .single();
       
       if (error) {
-        console.error('❌ Supabase insert error:', {
+        console.error('ERROR: Supabase insert error:', {
           message: error.message,
           details: error.details,
           hint: error.hint,
@@ -80,10 +80,10 @@ export class UserModel {
         throw new Error('No data returned from insert');
       }
       
-      console.log('✅ User created in database:', data.id);
+      console.log('User created in database:', data.id);
       return data;
     } catch (error: any) {
-      console.error('❌ UserModel.create error:', {
+      console.error('ERROR: UserModel.create error:', {
         name: error.name,
         message: error.message,
         stack: error.stack

@@ -54,8 +54,8 @@ const envSchema = z.object({
   RATE_LIMIT_MAX_REQUESTS: z.string().transform(Number).default('100'),
 
   // JWT
-  JWT_ACCESS_SECRET: z.string().default('your-super-secret-jwt-access-key'),
-  JWT_REFRESH_SECRET: z.string().default('your-super-secret-jwt-refresh-key'),
+  JWT_ACCESS_SECRET: z.string(),
+  JWT_REFRESH_SECRET: z.string(),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 });
@@ -64,7 +64,7 @@ const envSchema = z.object({
 const parsedEnv = envSchema.safeParse(process.env);
 
 if (!parsedEnv.success) {
-  console.error('❌ Invalid environment variables:', parsedEnv.error.format());
+  console.error('ERROR: Invalid environment variables:', parsedEnv.error.format());
   process.exit(1);
 }
 

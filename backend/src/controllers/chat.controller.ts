@@ -25,7 +25,7 @@ export class ChatController {
       let searchResults = '';
       if (webSearch) {
         try {
-          console.log('🔍 Performing web search for trial user:', message);
+          console.log('Performing web search for trial user:', message);
           // Simple web search without progress callbacks for trial
           searchResults = await searchService.webSearch(message, 5);
           systemPrompt += '\n\nYou have access to web search results. Use this information to provide accurate, up-to-date responses. When citing sources, format them as clickable links using markdown: [Source Title](URL).';
@@ -561,7 +561,7 @@ export class ChatController {
       try {
         // Get context AFTER saving the user message to include full conversation history
         context = await MessageModel.getConversationContext(conversationId, 30, 4000);
-        console.log('📝 Retrieved context messages:', context.length);
+        console.log('Retrieved context messages:', context.length);
         
         // If still no context, try alternative method
         if (context.length === 0) {
@@ -571,10 +571,10 @@ export class ChatController {
             content: msg.content,
             attachments: []
           }));
-          console.log('📝 Fallback - retrieved messages:', context.length);
+          console.log('Fallback - retrieved messages:', context.length);
         }
       } catch (error) {
-        console.error('❌ Error retrieving context:', error);
+        console.error('ERROR: Error retrieving context:', error);
         // Try basic message retrieval as last resort
         try {
           const basicMessages = await MessageModel.findByConversationId(conversationId, 10, 0);
@@ -583,9 +583,9 @@ export class ChatController {
             content: msg.content,
             attachments: []
           }));
-          console.log('📝 Emergency fallback - retrieved messages:', context.length);
+          console.log('Emergency fallback - retrieved messages:', context.length);
         } catch (fallbackError) {
-          console.error('❌ Emergency fallback also failed:', fallbackError);
+          console.error('ERROR: Emergency fallback also failed:', fallbackError);
           context = []; // Absolutely final fallback
         }
       }
@@ -601,7 +601,7 @@ export class ChatController {
             conversation_id: conversationId,
             user_id: userId,
             role: 'system',
-            content: deepResearch ? '🔬 Performing deep research...' : '🔍 Performing web search...',
+            content: deepResearch ? 'Performing deep research...' : 'Performing web search...',
             metadata: { isSearchProgress: true }
           });
 
@@ -624,7 +624,7 @@ export class ChatController {
           };
 
           if (deepResearch) {
-            console.log('📚 Performing deep research for:', content);
+            console.log('Performing deep research for:', content);
             const deepResearchResult = await searchService.deepResearch(content, progressCallback);
             searchResults = deepResearchResult.content;
             // Add the unique sources to link previews
@@ -632,14 +632,14 @@ export class ChatController {
               linkPreviews = [...linkPreviews, ...deepResearchResult.sources];
             }
           } else if (webSearch) {
-            console.log('🔍 Performing web search for:', content);
+            console.log('Performing web search for:', content);
             searchResults = await searchService.webSearch(content, 5, progressCallback);
           }
 
           // Update search message with results summary
           const finalUpdate = deepResearch 
-            ? '✅ Deep research completed! Analyzed multiple sources to provide comprehensive insights.' 
-            : '✅ Web search completed! Results from top sources included in response.';
+            ? 'Deep research completed! Analyzed multiple sources to provide comprehensive insights.'
+            : 'Web search completed! Results from top sources included in response.';
           
           socket.emit('search_update', {
             messageId: searchMessage.id,

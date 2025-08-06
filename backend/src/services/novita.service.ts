@@ -73,11 +73,11 @@ class NovitaService {
     // Add request interceptor for logging
     this.client.interceptors.request.use(
       (config) => {
-        console.log(`📤 Novita API Request: ${config.method?.toUpperCase()} ${config.url}`);
+        console.log(`Novita API Request: ${config.method?.toUpperCase()} ${config.url}`);
         return config;
       },
       (error) => {
-        console.error('❌ Novita API Request Error:', error);
+        console.error('ERROR: Novita API Request Error:', error);
         return Promise.reject(error);
       }
     );
@@ -85,11 +85,11 @@ class NovitaService {
     // Add response interceptor for logging
     this.client.interceptors.response.use(
       (response) => {
-        console.log(`📥 Novita API Response: ${response.status} ${response.statusText}`);
+        console.log(`Novita API Response: ${response.status} ${response.statusText}`);
         return response;
       },
       (error) => {
-        console.error('❌ Novita API Response Error:', error.response?.data || error.message);
+        console.error('ERROR: Novita API Response Error:', error.response?.data || error.message);
         return Promise.reject(error);
       }
     );
@@ -263,10 +263,10 @@ class NovitaService {
   async testConnection(): Promise<boolean> {
     try {
       await this.listModels();
-      console.log('✅ Novita AI API connected successfully');
+      console.log('Novita AI API connected successfully');
       return true;
     } catch (error) {
-      console.error('❌ Novita AI API connection failed:', error);
+      console.error('ERROR: Novita AI API connection failed:', error);
       return false;
     }
   }

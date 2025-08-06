@@ -129,14 +129,22 @@ export class ModelsController {
       'reasoning'
     ];
     
-    // DeepSeek V3 and regular DeepSeek models do NOT support thinking
     const modelLower = modelId.toLowerCase();
-    if (modelLower.includes('deepseek-v3') || 
-        modelLower.includes('deepseek/deepseek-v3') ||
-        (modelLower.includes('deepseek') && !modelLower.includes('r1'))) {
+    
+    // Explicitly exclude models that don't support thinking
+    const nonThinkingModels = [
+      'deepseek-v3',
+      'deepseek/deepseek-v3',
+      'deepseek-chat',
+      'deepseek-coder'
+    ];
+    
+    // Check if it's a non-thinking model first
+    if (nonThinkingModels.some(model => modelLower.includes(model))) {
       return false;
     }
     
+    // Check if it's in the thinking models list
     return thinkingModels.some(model => modelLower.includes(model.toLowerCase()));
   }
 

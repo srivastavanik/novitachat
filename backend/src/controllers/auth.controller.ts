@@ -11,21 +11,21 @@ export class AuthController {
    */
   async register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      console.log('📝 Register attempt for:', req.body.email);
+      console.log('Register attempt for:', req.body.email);
       
       // Validate request
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log('❌ Validation errors:', errors.array());
+        console.log('ERROR: Validation errors:', errors.array());
         res.status(400).json({ errors: errors.array() });
         return;
       }
 
       const { email, password, username } = req.body;
-      console.log('✅ Validation passed');
+      console.log('Validation passed');
 
       // Check if user already exists
-      console.log('🔍 Checking if user exists...');
+      console.log('Checking if user exists...');
       const existingUser = await UserModel.findByEmail(email);
       if (existingUser) {
         res.status(409).json({ 
@@ -35,13 +35,13 @@ export class AuthController {
       }
 
       // Create new user
-      console.log('🆕 Creating new user...');
+      console.log('Creating new user...');
       const user = await UserModel.create({
         email,
         password,
         username
       });
-      console.log('✅ User created:', user.id);
+      console.log('User created:', user.id);
 
       // Generate tokens
       const accessToken = generateAccessToken(user.id, user.email, user.role);
@@ -55,7 +55,7 @@ export class AuthController {
           30 * 24 * 60 * 60 // 30 days
         );
       } catch (redisError: any) {
-        console.warn('⚠️  Could not store refresh token in Redis:', redisError.message);
+        console.warn('WARNING: Could not store refresh token in Redis:', redisError.message);
         // Continue without Redis - tokens will still work but won't be revocable
       }
 
@@ -73,7 +73,7 @@ export class AuthController {
         }
       });
     } catch (error: any) {
-      console.error('❌ Registration error:', {
+      console.error('ERROR: Registration error:', {
         message: error?.message,
         code: error?.code,
         details: error?.details,
@@ -132,7 +132,7 @@ export class AuthController {
           30 * 24 * 60 * 60 // 30 days
         );
       } catch (redisError: any) {
-        console.warn('⚠️  Could not store refresh token in Redis:', redisError.message);
+        console.warn('WARNING: Could not store refresh token in Redis:', redisError.message);
         // Continue without Redis - tokens will still work but won't be revocable
       }
 
@@ -187,7 +187,7 @@ export class AuthController {
           return;
         }
       } catch (redisError: any) {
-        console.warn('⚠️  Could not check refresh token in Redis:', redisError.message);
+        console.warn('WARNING: Could not check refresh token in Redis:', redisError.message);
         // Continue without Redis validation
       }
 
@@ -220,7 +220,7 @@ export class AuthController {
       try {
         await redisClient.del(`refresh_token:${userInfo.userId}`);
       } catch (redisError: any) {
-        console.warn('⚠️  Could not remove refresh token from Redis:', redisError.message);
+        console.warn('WARNING: Could not remove refresh token from Redis:', redisError.message);
       }
 
       res.json({
@@ -316,7 +316,7 @@ export class AuthController {
       try {
         await redisClient.del(`refresh_token:${userInfo.userId}`);
       } catch (redisError: any) {
-        console.warn('⚠️  Could not invalidate refresh tokens in Redis:', redisError.message);
+        console.warn('WARNING: Could not invalidate refresh tokens in Redis:', redisError.message);
       }
 
       res.json({

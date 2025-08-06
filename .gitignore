@@ -69,3 +69,7 @@ temp/
 # Uploaded files
 uploads/
 public/uploads/
+
+# Documentation files (for public repo)
+*.md
+*.MD

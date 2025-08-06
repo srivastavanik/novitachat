@@ -15,7 +15,7 @@ async function startServer() {
     if (error) {
       throw new Error(`Supabase connection failed: ${error.message}`);
     }
-    console.log('✅ Supabase connected successfully');
+    console.log('Supabase connected successfully');
 
     // Test Redis connection (optional)
     try {
@@ -23,27 +23,27 @@ async function startServer() {
       const testValue = await redisClient.get('test');
       if (testValue === 'connected') {
         await redisClient.del('test');
-        console.log('✅ Redis connected successfully');
+        console.log('Redis connected successfully');
       }
     } catch (error) {
-      console.warn('⚠️  Redis not available - running without caching');
+      console.warn('WARNING: Redis not available - running without caching');
       console.warn('   To enable Redis, install Docker and run: docker compose up -d redis');
     }
 
     // Start the server
     httpServer.listen(PORT, HOST, () => {
       console.log(`
-🚀 Nova Backend Server is running!
-📍 Server: http://${HOST}:${PORT}
-🏥 Health: http://${HOST}:${PORT}/health
-🔐 Auth:   http://${HOST}:${PORT}/api/auth
-🌍 Environment: ${config.NODE_ENV}
-⏰ Started at: ${new Date().toISOString()}
+Nova Backend Server is running!
+Server: http://${HOST}:${PORT}
+Health: http://${HOST}:${PORT}/health
+Auth:   http://${HOST}:${PORT}/api/auth
+Environment: ${config.NODE_ENV}
+Started at: ${new Date().toISOString()}
       `);
     });
 
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    console.error('ERROR: Failed to start server:', error);
     process.exit(1);
   }
 }
