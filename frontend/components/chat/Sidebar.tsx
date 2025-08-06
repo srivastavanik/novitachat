@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { isToday, isYesterday, isThisWeek, isThisMonth, format } from 'date-fns'
 import ConversationItem from './ConversationItem'
+import UsageIndicator from './UsageIndicator'
 import axios from '@/lib/axios-config'
 import { useTheme } from '../ThemeProvider'
 import { Sun, Moon } from 'lucide-react'
@@ -14,6 +15,14 @@ interface SidebarProps {
   onNewConversation: () => void
   onSelectConversation: (conversation: any) => void
   onLogout: () => void
+  dailyUsage?: {
+    totalQueries: number
+    webSearchQueries: number
+    deepResearchQueries: number
+    maxTotal: number
+    maxWebSearch: number
+    maxDeepResearch: number
+  }
 }
 
 export default function Sidebar({
@@ -24,7 +33,8 @@ export default function Sidebar({
   onToggle,
   onNewConversation,
   onSelectConversation,
-  onLogout
+  onLogout,
+  dailyUsage
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
@@ -195,6 +205,14 @@ export default function Sidebar({
               {searchQuery ? (isSearching ? 'Searching...' : 'No conversations found') : 'No conversations yet. Start a new chat!'}
             </div>
           )}
+        </div>
+
+        {/* Usage Indicator */}
+        <div className="px-4">
+          <UsageIndicator
+            isTrialMode={false}
+            dailyUsage={dailyUsage}
+          />
         </div>
 
         {/* User Profile & Settings */}

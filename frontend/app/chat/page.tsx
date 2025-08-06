@@ -12,6 +12,9 @@ import MessageList from '@/components/chat/MessageList'
 import ChatInput from '@/components/chat/ChatInput'
 import ConversationSettings from '@/components/chat/ConversationSettings'
 import ThinkingDisplay from '@/components/chat/ThinkingDisplay'
+import TrialLimitModal from '@/components/chat/TrialLimitModal'
+import UsageIndicator from '@/components/chat/UsageIndicator'
+import ChatFooter from '@/components/chat/ChatFooter'
 import { getCookie } from '@/lib/utils'
 
 interface TrialMessage {
@@ -56,8 +59,19 @@ export default function ChatPage() {
   // Trial mode states
   const [trialMessages, setTrialMessages] = useState<TrialMessage[]>([])
   const [trialMessageCount, setTrialMessageCount] = useState(0)
+  const [showTrialLimitModal, setShowTrialLimitModal] = useState(false)
   const [showDeepResearchModal, setShowDeepResearchModal] = useState(false)
   const hasInitialized = useRef(false)
+  
+  // Daily usage tracking for authenticated users
+  const [dailyUsage, setDailyUsage] = useState({
+    totalQueries: 0,
+    webSearchQueries: 0,
+    deepResearchQueries: 0,
+    maxTotal: 100,
+    maxWebSearch: 20,
+    maxDeepResearch: 3
+  })
   
   // Thinking state for trial mode
   const [trialThinkingContent, setTrialThinkingContent] = useState<string>('')
@@ -100,7 +114,7 @@ export default function ChatPage() {
         
         // Check if trial is exhausted
         if (count >= TRIAL_MESSAGE_LIMIT) {
-          router.push('/register?exhausted=true')
+          setShowTrialLimitModal(true)
           return
         }
       }
@@ -255,12 +269,33 @@ export default function ChatPage() {
     }
   }, [user, isTrialMode])
 
-  // Load conversations (only for authenticated users)
+  // Load conversations and daily usage (only for authenticated users)
   useEffect(() => {
     if (user && !isTrialMode) {
       loadConversations()
+      loadDailyUsage()
     }
   }, [user, isTrialMode])
+
+  const loadDailyUsage = async () => {
+    try {
+      const response = await axios.get('/api/auth/usage')
+      if (response.data.usage) {
+        setDailyUsage(response.data.usage)
+      }
+    } catch (error) {
+      console.error('Failed to load daily usage:', error)
+      // Set default values if API fails
+      setDailyUsage({
+        totalQueries: 0,
+        webSearchQueries: 0,
+        deepResearchQueries: 0,
+        maxTotal: 100,
+        maxWebSearch: 20,
+        maxDeepResearch: 3
+      })
+    }
+  }
 
   const loadConversations = async () => {
     try {
@@ -342,20 +377,9 @@ export default function ChatPage() {
       setTrialMessages(prev => [...prev, userMessage])
       setTrialMessageCount(prev => prev + 1)
       
-      // Show limit reached message
+      // Show limit reached modal
       setTimeout(() => {
-        const limitMessage: TrialMessage = {
-          id: (Date.now() + 1).toString(),
-          content: "You've reached the 10 message limit for the free trial. Please sign up to continue chatting with Nova and unlock unlimited conversations!",
-          role: 'assistant',
-          timestamp: new Date()
-        }
-        setTrialMessages(prev => [...prev, limitMessage])
-        
-        // Redirect to register after 3 seconds
-        setTimeout(() => {
-          router.push('/register?exhausted=true&preserveTrial=true')
-        }, 3000)
+        setShowTrialLimitModal(true)
       }, 1000)
       
       return
@@ -673,56 +697,67 @@ export default function ChatPage() {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto">
-            {trialMessages.length === 0 && (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center py-12">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--nova-primary)]/10 mb-4">
-                    <MessageSquare className="h-8 w-8 text-[var(--nova-primary)]" />
-                  </div>
-                  <h2 className="text-xl font-semibold mb-2">Welcome to Nova Trial Chat!</h2>
-                  <p className="nova-text-muted max-w-md mx-auto">
-                    You have {TRIAL_MESSAGE_LIMIT} free messages to experience Nova's capabilities. 
-                    Ask me anything to get started!
-                  </p>
-                </div>
-              </div>
-            )}
-            
-            {trialMessages.length > 0 && (
-              <MessageList
-                messages={trialMessages.map(msg => ({
-                  ...msg,
-                  created_at: msg.timestamp.toISOString()
-                }))}
-                streamingMessage={streamingMessage}
-                isStreaming={isStreaming}
-                loading={false}
+            <div className="max-w-4xl mx-auto p-4">
+              {/* Usage Indicator for Trial */}
+              <UsageIndicator
+                isTrialMode={true}
+                trialMessageCount={trialMessageCount}
               />
-            )}
+              
+              {trialMessages.length === 0 && (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center py-12">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--nova-primary)]/10 mb-4">
+                      <MessageSquare className="h-8 w-8 text-[var(--nova-primary)]" />
+                    </div>
+                    <h2 className="text-xl font-semibold mb-2">Welcome to Nova Trial Chat!</h2>
+                    <p className="nova-text-muted max-w-md mx-auto">
+                      You have {TRIAL_MESSAGE_LIMIT} free messages to experience Nova's capabilities. 
+                      Ask me anything to get started!
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {trialMessages.length > 0 && (
+                <MessageList
+                  messages={trialMessages.map(msg => ({
+                    ...msg,
+                    created_at: msg.timestamp.toISOString()
+                  }))}
+                  streamingMessage={streamingMessage}
+                  isStreaming={isStreaming}
+                  loading={false}
+                />
+              )}
+            </div>
           </div>
 
           {/* Input */}
-          <ChatInput
-            value={inputMessage}
-            onChange={setInputMessage}
-            onSend={(attachments, options) => {
-              if (inputMessage.trim()) {
-                handleSendMessage(attachments, options)
-                setInputMessage('')
+          <div className="px-4">
+            <ChatInput
+              value={inputMessage}
+              onChange={setInputMessage}
+              onSend={(attachments, options) => {
+                if (inputMessage.trim()) {
+                  handleSendMessage(attachments, options)
+                  setInputMessage('')
+                }
+              }}
+              isStreaming={isStreaming || trialMessageCount >= TRIAL_MESSAGE_LIMIT}
+              disabled={isStreaming || trialMessageCount >= TRIAL_MESSAGE_LIMIT}
+              currentModel="openai/gpt-oss-120b"
+              onModelChange={() => {}}
+              modelCapabilities={['chat']}
+              placeholder={
+                trialMessageCount >= TRIAL_MESSAGE_LIMIT
+                  ? "Trial limit reached. Sign up to continue..."
+                  : "Type your message..."
               }
-            }}
-            isStreaming={isStreaming || trialMessageCount >= TRIAL_MESSAGE_LIMIT}
-            disabled={isStreaming || trialMessageCount >= TRIAL_MESSAGE_LIMIT}
-            currentModel="openai/gpt-oss-120b"
-            onModelChange={() => {}}
-            modelCapabilities={['chat']}
-            placeholder={
-              trialMessageCount >= TRIAL_MESSAGE_LIMIT
-                ? "Trial limit reached. Sign up to continue..."
-                : "Type your message..."
-            }
-            isTrialMode={true}
-          />
+              isTrialMode={true}
+            />
+            <ChatFooter />
+          </div>
         </div>
 
         {/* Deep Research Modal */}
@@ -780,6 +815,13 @@ export default function ChatPage() {
             </div>
           </div>
         )}
+
+        {/* Trial Limit Modal */}
+        <TrialLimitModal
+          isOpen={showTrialLimitModal}
+          onClose={() => setShowTrialLimitModal(false)}
+          messageCount={trialMessageCount}
+        />
       </div>
     )
   }
@@ -796,6 +838,7 @@ export default function ChatPage() {
         onNewConversation={createNewConversation}
         onSelectConversation={selectConversation}
         onLogout={handleLogout}
+        dailyUsage={dailyUsage}
       />
 
       {/* Main Chat Area */}
@@ -835,21 +878,24 @@ export default function ChatPage() {
               isStreaming={isStreaming}
               loading={messagesLoading}
             />
-            <ChatInput
-              value={inputMessage}
-              onChange={setInputMessage}
-              onSend={(attachments, options) => {
-                if (inputMessage.trim()) {
-                  handleSendMessage(attachments, options)
-                  setInputMessage('')
-                }
-              }}
-              isStreaming={isStreaming}
-              currentModel={currentModel}
-              onModelChange={handleModelChange}
-              modelCapabilities={modelCapabilities}
-              placeholder={thinkingMessage && thinkingMessage.isThinking ? "Nova is thinking..." : undefined}
-            />
+            <div className="px-4">
+              <ChatInput
+                value={inputMessage}
+                onChange={setInputMessage}
+                onSend={(attachments, options) => {
+                  if (inputMessage.trim()) {
+                    handleSendMessage(attachments, options)
+                    setInputMessage('')
+                  }
+                }}
+                isStreaming={isStreaming}
+                currentModel={currentModel}
+                onModelChange={handleModelChange}
+                modelCapabilities={modelCapabilities}
+                placeholder={thinkingMessage && thinkingMessage.isThinking ? "Nova is thinking..." : undefined}
+              />
+              <ChatFooter />
+            </div>
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center">

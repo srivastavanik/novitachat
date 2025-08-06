@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authController } from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth';
 import { body } from 'express-validator';
+import usageRoutes from './usage.routes';
 
 const router = Router();
 
@@ -29,5 +30,8 @@ router.post('/refresh', authController.refresh);
 router.post('/logout', authenticate, authController.logout);
 router.get('/me', authenticate, authController.me);
 router.post('/change-password', authenticate, changePasswordValidation, authController.changePassword);
+
+// Usage tracking routes
+router.use('/', usageRoutes);
 
 export default router;
