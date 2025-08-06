@@ -2,10 +2,9 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Sparkles, MessageSquare, Zap, Shield, ArrowRight, Code2, Search, Brain, Lock, GitBranch, BarChart3, Globe, Cpu, Layers, Moon, Sun, Send, Paperclip } from 'lucide-react'
+import { Send, Paperclip } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTheme } from '@/components/ThemeProvider'
-import SearchDemo from '@/components/SearchDemo'
 import { useRouter } from 'next/navigation'
 
 export default function LandingPage() {
@@ -78,13 +77,9 @@ export default function LandingPage() {
       <nav className="navbar">
         <div className="max-w-6xl mx-auto px-6 py-8">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <span className="text-white font-medium">Nova</span>
-              <div className="hidden md:flex space-x-6 text-white/80 text-sm">
-                <Link href="/" className="nav-link">Home</Link>
-                <Link href="/docs" className="nav-link">Docs</Link>
-                <Link href="/about" className="nav-link">About</Link>
-              </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-white font-medium">Chat by</span>
+              <img src="/novita-logo.png" alt="Novita" className="h-6 object-contain brightness-0 invert" />
             </div>
             <div className="flex items-center space-x-4">
               <Link href="/login" className="text-white text-sm border border-white/20 rounded-full px-5 py-2 hover:bg-white/10 transition-all">
@@ -121,11 +116,11 @@ export default function LandingPage() {
         <div className="px-6 max-w-6xl mx-auto mt-20 md:mt-32">
           <div className="md:max-w-2xl mx-auto text-center">
             <h1 className="hero-headline select-text">
-              Chat with <span className="accent" data-text="Intelligence">Intelligence</span>
+              Open Source <span className="accent" data-text="AI Chat">AI Chat</span>
             </h1>
             <p className="text-white/70 mt-6 text-lg select-text">
-              Experience the future of AI conversation with Nova – powered by advanced language models
-              that understand context, remember your preferences, and deliver brilliant responses.
+              Powered by cutting-edge models including Kimi K2, ChatGPT O1, and more. 
+              Built with transparency, customizable with style prompts, and enhanced with real-time web search.
             </p>
             
             <div className="mt-10 flex flex-wrap gap-4 justify-center">
@@ -145,7 +140,7 @@ export default function LandingPage() {
                     <textarea
                       value={trialQuery}
                       onChange={(e) => setTrialQuery(e.target.value)}
-                      placeholder="Ask Nova anything..."
+                      placeholder="Ask anything..."
                       className="flex-1 bg-transparent border-none outline-none resize-none text-white placeholder:text-white/50 text-base min-h-[24px] max-h-[200px]"
                       rows={1}
                       onKeyDown={(e) => {
@@ -180,21 +175,7 @@ export default function LandingPage() {
               </form>
             </div>
             
-            {/* Minimal Stats */}
-            <div className="grid grid-cols-3 gap-8 mt-20 text-white max-w-md mx-auto">
-              <div className="text-center">
-                <p className="text-2xl font-light">12K+</p>
-                <p className="text-white/50 text-sm mt-1">Active Users</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-light">99.9%</p>
-                <p className="text-white/50 text-sm mt-1">Uptime</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-light">4.9</p>
-                <p className="text-white/50 text-sm mt-1">User Rating</p>
-              </div>
-            </div>
+
           </div>
         </div>
       </section>
@@ -205,43 +186,31 @@ export default function LandingPage() {
       <section className="relative z-10 py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-light mb-4 select-text">Why Choose Nova?</h2>
+            <h2 className="text-4xl font-light mb-4 select-text">Powerful AI Models</h2>
             <p className="text-white/70 text-lg max-w-2xl mx-auto select-text">
-              Built for developers, designers, and thinkers who demand more from their AI assistant.
+              Access state-of-the-art language models through a single, unified interface.
             </p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
             <div className="feature-card">
-              <div className="flex items-center mb-4">
-                <MessageSquare className="h-8 w-8 text-[#00FF7F]" />
-              </div>
-              <h3 className="text-xl font-medium mb-3 select-text">Smart Conversations</h3>
+              <h3 className="text-xl font-medium mb-3 select-text">Kimi K2</h3>
               <p className="text-white/60 text-sm leading-relaxed select-text">
-                Contextual understanding that feels natural. Nova remembers your conversation history 
-                and provides relevant, thoughtful responses.
+                Advanced reasoning capabilities with extended context understanding. Perfect for complex analysis and deep research tasks.
               </p>
             </div>
 
             <div className="feature-card">
-              <div className="flex items-center mb-4">
-                <Zap className="h-8 w-8 text-[#00FF7F]" />
-              </div>
-              <h3 className="text-xl font-medium mb-3 select-text">Lightning Fast</h3>
+              <h3 className="text-xl font-medium mb-3 select-text">ChatGPT O1</h3>
               <p className="text-white/60 text-sm leading-relaxed select-text">
-                Streaming responses that appear in real-time. No more waiting for complete responses – 
-                see thoughts form as they're generated.
+                OpenAI's latest model with enhanced reasoning and problem-solving abilities. Ideal for coding and technical discussions.
               </p>
             </div>
 
             <div className="feature-card">
-              <div className="flex items-center mb-4">
-                <Shield className="h-8 w-8 text-[#00FF7F]" />
-              </div>
-              <h3 className="text-xl font-medium mb-3 select-text">Privacy First</h3>
+              <h3 className="text-xl font-medium mb-3 select-text">Claude & More</h3>
               <p className="text-white/60 text-sm leading-relaxed select-text">
-                Your conversations stay yours. Enterprise-grade security with end-to-end encryption 
-                and zero data retention policies.
+                Access to Claude, Llama, and other cutting-edge models. Switch between models based on your specific needs.
               </p>
             </div>
           </div>
@@ -251,91 +220,87 @@ export default function LandingPage() {
       {/* Divider */}
       <div className="relative z-10 h-px bg-gradient-to-r from-transparent via-[var(--nova-border-primary)] to-transparent"></div>
 
-      {/* Intelligent Web Search Section */}
-      <section className="relative z-10 py-24 px-4 sm:px-6 lg:px-8 bg-black/50">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-[#00FF7F]/10 text-[#00FF7F] text-sm font-medium mb-6">
-                <Search className="h-4 w-4 mr-2" />
-                Intelligent Search Detection
-              </div>
-              <h2 className="text-4xl font-light mb-6 select-text">Web Search That Just Works</h2>
-              <p className="text-white/70 text-lg mb-8 select-text">
-                Nova automatically detects when you need web search – no buttons, no toggles, no hassle. 
-                Just ask naturally and watch Nova understand your intent.
-              </p>
-              <div className="space-y-6">
-                <div>
-                  <p className="font-medium text-white mb-2">Context-Aware Detection</p>
-                  <p className="text-sm text-white/60">Recognizes questions, searches, and information requests automatically</p>
-                </div>
-                <div>
-                  <p className="font-medium text-white mb-2">Smart Results Integration</p>
-                  <p className="text-sm text-white/60">Seamlessly blends web results with AI-powered analysis</p>
-                </div>
-                <div>
-                  <p className="font-medium text-white mb-2">Real-Time Progress</p>
-                  <p className="text-sm text-white/60">See exactly what Nova is searching for and finding</p>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <SearchDemo />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Divider */}
-      <div className="relative z-10 h-px bg-gradient-to-r from-transparent via-[var(--nova-border-primary)] to-transparent"></div>
-
-      {/* Developer Features Section */}
+      {/* Key Features Section */}
       <section className="relative z-10 py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-light mb-4">Built for Developers</h2>
+            <h2 className="text-4xl font-light mb-4">Core Features</h2>
             <p className="text-white/70 text-lg max-w-2xl mx-auto">
-              All the features you need to accelerate your workflow.
+              Everything you need for productive AI conversations.
             </p>
           </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="feature-card">
-              <Code2 className="h-8 w-8 text-[#00FF7F] mb-4" />
-              <h3 className="font-medium mb-2">Code Generation</h3>
-              <p className="text-xs text-white/60">
-                Generate code snippets, debug issues, and refactor with AI assistance.
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Style System */}
+            <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300">
+              <h3 className="text-lg font-medium mb-3">Custom Style Prompts</h3>
+              <p className="text-white/60 text-sm mb-4">
+                Personalize AI responses with custom system prompts. Choose from professional, creative, or technical styles.
               </p>
+              <div className="bg-black/50 rounded-lg p-3 border border-white/10">
+                <p className="text-xs text-[#00FF7F] font-mono">styles: ["Professional", "Creative", "Technical", "Custom"]</p>
+              </div>
             </div>
-
-            <div className="feature-card">
-              <GitBranch className="h-8 w-8 text-[#00FF7F] mb-4" />
-              <h3 className="font-medium mb-2">Version Control</h3>
-              <p className="text-xs text-white/60">
-                Understand git commands, resolve conflicts, and manage branches effortlessly.
+            
+            {/* Web Search */}
+            <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300">
+              <h3 className="text-lg font-medium mb-3">Real-time Web Search</h3>
+              <p className="text-white/60 text-sm mb-4">
+                Get current information with integrated web search. Perfect for news, research, and fact-checking.
               </p>
+              <div className="bg-black/50 rounded-lg p-3 border border-white/10">
+                <p className="text-xs text-[#00FF7F] font-mono">search: enabled | sources: verified</p>
+              </div>
             </div>
-
-            <div className="feature-card">
-              <Globe className="h-8 w-8 text-[#00FF7F] mb-4" />
-              <h3 className="font-medium mb-2">API Integration</h3>
-              <p className="text-xs text-white/60">
-                Build and test API calls, understand documentation, and debug responses.
+            
+            {/* Deep Research */}
+            <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300">
+              <h3 className="text-lg font-medium mb-3">Deep Research Mode</h3>
+              <p className="text-white/60 text-sm mb-4">
+                Comprehensive analysis with multiple searches and cross-referenced sources for thorough answers.
               </p>
+              <div className="bg-black/50 rounded-lg p-3 border border-white/10">
+                <p className="text-xs text-[#00FF7F] font-mono">depth: maximum | accuracy: enhanced</p>
+              </div>
             </div>
-
-            <div className="feature-card">
-              <Layers className="h-8 w-8 text-[#00FF7F] mb-4" />
-              <h3 className="font-medium mb-2">Architecture</h3>
-              <p className="text-xs text-white/60">
-                Design patterns, system architecture, and best practices guidance.
+            
+            {/* File Attachments */}
+            <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300">
+              <h3 className="text-lg font-medium mb-3">File Analysis</h3>
+              <p className="text-white/60 text-sm mb-4">
+                Upload documents, images, and code files for AI analysis and discussion.
               </p>
+              <div className="bg-black/50 rounded-lg p-3 border border-white/10">
+                <p className="text-xs text-[#00FF7F] font-mono">formats: [pdf, txt, jpg, png, code]</p>
+              </div>
+            </div>
+            
+            {/* API Keys */}
+            <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300">
+              <h3 className="text-lg font-medium mb-3">Bring Your Own Key</h3>
+              <p className="text-white/60 text-sm mb-4">
+                Use your own Novita API key for unlimited access and custom rate limits.
+              </p>
+              <div className="bg-black/50 rounded-lg p-3 border border-white/10">
+                <p className="text-xs text-[#00FF7F] font-mono">api: flexible | limits: customizable</p>
+              </div>
+            </div>
+            
+            {/* Open Source */}
+            <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300">
+              <h3 className="text-lg font-medium mb-3">100% Open Source</h3>
+              <p className="text-white/60 text-sm mb-4">
+                Full transparency with open source code. Self-host, modify, and contribute to the project.
+              </p>
+              <div className="bg-black/50 rounded-lg p-3 border border-white/10">
+                <p className="text-xs text-[#00FF7F] font-mono">license: MIT | github: available</p>
+              </div>
             </div>
           </div>
         </div>
       </section>
+
+
 
       {/* Divider */}
       <div className="relative z-10 h-px bg-gradient-to-r from-transparent via-[var(--nova-border-primary)] to-transparent"></div>
@@ -344,17 +309,16 @@ export default function LandingPage() {
       <section className="relative z-10 py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <div className="feature-card bg-gradient-to-br from-[#00FF7F]/5 to-[#00D96A]/5 border-[#00FF7F]/20">
-            <h2 className="text-4xl font-light mb-4">Ready to Experience the Future?</h2>
+            <h2 className="text-4xl font-light mb-4">Start Your AI Journey</h2>
             <p className="text-white/70 text-lg mb-8">
-              Join thousands of developers, designers, and teams who've already made the switch.
+              Try 10 free messages without signup. Experience the power of advanced AI models today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/register" className="btn-primary">
-                Get Started Free
-                <ArrowRight className="inline-block ml-2 h-4 w-4" />
+              <Link href="/chat?trial=true" className="btn-primary">
+                Try Free Now
               </Link>
-              <Link href="/demo" className="btn-secondary">
-                Watch Demo
+              <Link href="/register" className="btn-secondary">
+                Create Account
               </Link>
             </div>
           </div>
@@ -363,19 +327,37 @@ export default function LandingPage() {
 
       {/* Minimal Footer */}
       <footer className="relative z-10 py-8 px-6">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <p className="text-white/40 text-xs">© 2024 Nova. All rights reserved.</p>
-          <div className="flex space-x-4">
-            <a href="#" className="text-white/40 hover:text-white transition-colors">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"></path>
-              </svg>
-            </a>
-            <a href="#" className="text-white/40 hover:text-white transition-colors">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
-              </svg>
-            </a>
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-center gap-4 text-xs text-white/40">
+            <span>By Nick Srivastava</span>
+            <span>|</span>
+            <div className="flex items-center gap-2">
+              <span>Made with</span>
+              <img src="/novita-logo.png" alt="Novita" className="h-4 object-contain brightness-0 invert opacity-60" />
+            </div>
+            <span>|</span>
+            <div className="flex items-center gap-3">
+              <a 
+                href="https://www.linkedin.com/company/novita-ai-labs" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-white/40 hover:text-white/60 transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+              </a>
+              <a 
+                href="https://x.com/novita_labs" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-white/40 hover:text-white/60 transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+              </a>
+            </div>
           </div>
         </div>
       </footer>
