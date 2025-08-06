@@ -42,7 +42,7 @@ export default function RegisterPage() {
           <Link href="/" className="inline-flex items-center space-x-2 mb-8">
             <span className="text-2xl font-medium">Chat</span>
           </Link>
-          <h2 className="text-4xl font-light">Create an account</h2>
+                        <h2 className="text-3xl font-semibold tracking-tight">Create an account</h2>
           <p className="mt-2 text-sm text-white/60">
                           Get started with Chat today
           </p>

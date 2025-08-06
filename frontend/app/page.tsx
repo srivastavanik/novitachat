@@ -86,10 +86,10 @@ export default function LandingPage() {
               <img src="/novita-logo.png" alt="Novita" className="h-7 object-contain brightness-0 invert" />
             </div>
             <div className="flex items-center space-x-4">
-              <Link href="/login" className="text-white text-sm border border-white/20 rounded-full px-5 py-2 hover:bg-white/10 transition-all">
+              <Link href="/login" className="text-white text-sm font-medium border border-white/20 rounded-full px-6 py-2.5 hover:bg-white/10 transition-all">
                 Sign In
               </Link>
-              <Link href="/register" className="btn-primary">
+              <Link href="/register" className="bg-[#00FF7F] text-black text-sm font-medium rounded-full px-6 py-2.5 hover:bg-[#00E572] transition-all">
                 Get Started
               </Link>
             </div>
@@ -119,70 +119,28 @@ export default function LandingPage() {
         
         <div className="px-6 max-w-6xl mx-auto mt-20 md:mt-32 relative">
           <div className="md:max-w-2xl mx-auto text-center relative">
-            {/* Oscillating ring animation */}
-            <div className="absolute inset-0 -inset-x-32 -inset-y-16 flex items-center justify-center pointer-events-none">
-              <div className="relative w-[600px] h-[400px]">
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 600 400">
-                  <defs>
-                    <linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#00FF7F" stopOpacity="0.3" />
-                      <stop offset="50%" stopColor="#00D96A" stopOpacity="0.5" />
-                      <stop offset="100%" stopColor="#00FF7F" stopOpacity="0.3" />
-                    </linearGradient>
-                  </defs>
-                  <ellipse
-                    cx="300"
-                    cy="200"
-                    rx="280"
-                    ry="180"
-                    fill="none"
-                    stroke="url(#ring-gradient)"
-                    strokeWidth="2"
-                    strokeDasharray="20 10"
-                    opacity="0.6"
-                    className="animate-[spin_20s_linear_infinite]"
-                  />
-                  <ellipse
-                    cx="300"
-                    cy="200"
-                    rx="260"
-                    ry="160"
-                    fill="none"
-                    stroke="url(#ring-gradient)"
-                    strokeWidth="1.5"
-                    strokeDasharray="15 15"
-                    opacity="0.4"
-                    className="animate-[spin_25s_linear_infinite_reverse]"
-                  />
-                  <ellipse
-                    cx="300"
-                    cy="200"
-                    rx="240"
-                    ry="140"
-                    fill="none"
-                    stroke="url(#ring-gradient)"
-                    strokeWidth="1"
-                    strokeDasharray="10 20"
-                    opacity="0.3"
-                    className="animate-[spin_30s_linear_infinite]"
-                  />
-                </svg>
+            {/* Glowing green ring */}
+            <div className="absolute inset-0 -inset-x-32 -inset-y-20 flex items-center justify-center pointer-events-none">
+              <div className="relative">
+                <div className="absolute inset-0 w-[600px] h-[350px] rounded-full border-[3px] border-[#00FF7F] opacity-60 blur-sm"></div>
+                <div className="absolute inset-0 w-[600px] h-[350px] rounded-full border-[2px] border-[#00FF7F] opacity-40"></div>
+                <div className="absolute inset-0 w-[600px] h-[350px] rounded-full bg-[#00FF7F] opacity-10 blur-3xl"></div>
               </div>
             </div>
             
-            <h1 className="hero-headline select-text relative z-10">
-              Open Source <span className="accent" data-text="AI Chat">AI Chat</span>
+            <h1 className="text-6xl md:text-7xl font-semibold tracking-tight text-white select-text relative z-10">
+              Open Source <span className="text-[#00FF7F]">AI Chat</span>
             </h1>
-            <p className="text-white/70 mt-6 text-lg select-text relative z-10">
+            <p className="text-white/60 mt-8 text-lg font-normal leading-relaxed select-text relative z-10 max-w-2xl mx-auto">
               Powered by cutting-edge models including Kimi K2, OpenAI OSS, and more. 
               Built with transparency, customizable with style prompts, and enhanced with real-time web search.
             </p>
             
             <div className="mt-10 flex flex-wrap gap-4 justify-center">
-              <Link href="/register" className="btn-primary">
+              <Link href="/register" className="bg-[#00FF7F] text-black text-base font-medium rounded-full px-8 py-3 hover:bg-[#00E572] transition-all">
                 Get Started
               </Link>
-              <Link href="/demo" className="btn-secondary">
+              <Link href="#features" className="border border-white/20 text-white text-base font-medium rounded-full px-8 py-3 hover:bg-white/10 transition-all">
                 Learn More
               </Link>
             </div>
@@ -241,8 +199,8 @@ export default function LandingPage() {
       <section className="relative z-10 py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-light mb-4 select-text">Powerful AI Models</h2>
-            <p className="text-white/70 text-lg max-w-2xl mx-auto select-text">
+            <h2 className="text-4xl font-semibold tracking-tight mb-4 select-text">Powerful AI Models</h2>
+            <p className="text-white/60 text-lg font-normal max-w-2xl mx-auto select-text">
               Access state-of-the-art language models through a single, unified interface.
             </p>
           </div>
@@ -279,7 +237,7 @@ export default function LandingPage() {
       <section className="relative z-10 py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-light mb-4">Experience the Features</h2>
+            <h2 className="text-4xl font-semibold tracking-tight mb-4">Experience the Features</h2>
             <p className="text-white/70 text-lg max-w-2xl mx-auto">
               Interactive demonstrations of our most powerful capabilities.
             </p>
@@ -310,7 +268,7 @@ export default function LandingPage() {
       <section className="relative z-10 py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-light mb-4">Core Features</h2>
+            <h2 className="text-4xl font-semibold tracking-tight mb-4">Core Features</h2>
             <p className="text-white/70 text-lg max-w-2xl mx-auto">
               Everything you need for productive AI conversations.
             </p>
@@ -395,7 +353,7 @@ export default function LandingPage() {
       <section className="relative z-10 py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <div className="feature-card bg-gradient-to-br from-[#00FF7F]/5 to-[#00D96A]/5 border-[#00FF7F]/20">
-            <h2 className="text-4xl font-light mb-4">Start Your AI Journey</h2>
+            <h2 className="text-4xl font-semibold tracking-tight mb-4">Start Your AI Journey</h2>
             <p className="text-white/70 text-lg mb-8">
               Try 10 free messages without signup. Experience the power of advanced AI models today.
             </p>
