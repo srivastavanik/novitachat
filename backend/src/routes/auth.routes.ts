@@ -3,6 +3,7 @@ import { authController } from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth';
 import { body } from 'express-validator';
 import usageRoutes from './usage.routes';
+import apiKeyRoutes from './apikey.routes';
 
 const router = Router();
 
@@ -33,5 +34,8 @@ router.post('/change-password', authenticate, changePasswordValidation, authCont
 
 // Usage tracking routes
 router.use('/', usageRoutes);
+
+// API key management routes
+router.use('/', apiKeyRoutes);
 
 export default router;

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { MessageSquare, Search, Globe, BarChart3, ChevronDown, ChevronUp } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { MessageSquare, Search, Globe, BarChart3, ChevronDown, ChevronUp, Clock } from 'lucide-react'
 
 interface UsageIndicatorProps {
   isTrialMode: boolean
@@ -18,6 +18,31 @@ interface UsageIndicatorProps {
 
 export default function UsageIndicator({ isTrialMode, trialMessageCount = 0, dailyUsage }: UsageIndicatorProps) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const [timeUntilReset, setTimeUntilReset] = useState<string>('')
+
+  useEffect(() => {
+    const calculateTimeUntilReset = () => {
+      const now = new Date()
+      const tomorrow = new Date(now)
+      tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+      tomorrow.setUTCHours(0, 0, 0, 0)
+      
+      const diff = tomorrow.getTime() - now.getTime()
+      const hours = Math.floor(diff / (1000 * 60 * 60))
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+      
+      if (hours > 0) {
+        setTimeUntilReset(`${hours}h ${minutes}m`)
+      } else {
+        setTimeUntilReset(`${minutes}m`)
+      }
+    }
+
+    calculateTimeUntilReset()
+    const interval = setInterval(calculateTimeUntilReset, 60000) // Update every minute
+
+    return () => clearInterval(interval)
+  }, [])
 
   if (isTrialMode) {
     const remaining = Math.max(0, 10 - trialMessageCount)
@@ -193,8 +218,9 @@ export default function UsageIndicator({ isTrialMode, trialMessageCount = 0, dai
 
       {/* Reset time */}
       <div className="mt-3 pt-2 border-t border-white/10">
-        <div className="text-xs text-white/40 text-center">
-          Usage resets daily at midnight UTC
+        <div className="flex items-center justify-center gap-2 text-xs text-white/40">
+          <Clock className="h-3 w-3" />
+          <span>Resets in {timeUntilReset || 'calculating...'}</span>
         </div>
       </div>
     </div>

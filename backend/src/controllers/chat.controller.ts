@@ -5,6 +5,8 @@ import searchService from '../services/search.service';
 import { ConversationModel } from '../models/Conversation';
 import { MessageModel } from '../models/Message';
 import { AuthRequest } from '../types/auth';
+import { updateUsage, hasRemainingQuota } from '../routes/usage.routes';
+import { getUserApiKey } from '../routes/apikey.routes';
 
 export class ChatController {
   // Trial chat handler (no auth required)

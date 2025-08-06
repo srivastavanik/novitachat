@@ -15,6 +15,7 @@ import ThinkingDisplay from '@/components/chat/ThinkingDisplay'
 import TrialLimitModal from '@/components/chat/TrialLimitModal'
 import UsageIndicator from '@/components/chat/UsageIndicator'
 import ChatFooter from '@/components/chat/ChatFooter'
+import ApiKeyModal from '@/components/chat/ApiKeyModal'
 import { getCookie } from '@/lib/utils'
 
 interface TrialMessage {
@@ -72,6 +73,12 @@ export default function ChatPage() {
     maxWebSearch: 20,
     maxDeepResearch: 3
   })
+  
+  // API key management
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false)
+  const [apiKeyModalReason, setApiKeyModalReason] = useState<'limit_exceeded' | 'no_credits' | 'setup'>('setup')
+  const [apiKeyLimitType, setApiKeyLimitType] = useState<'total' | 'webSearch' | 'deepResearch'>('total')
+  const [userApiKey, setUserApiKey] = useState<string | null>(null)
   
   // Thinking state for trial mode
   const [trialThinkingContent, setTrialThinkingContent] = useState<string>('')
@@ -283,6 +290,9 @@ export default function ChatPage() {
       if (response.data.usage) {
         setDailyUsage(response.data.usage)
       }
+      if (response.data.userApiKey) {
+        setUserApiKey(response.data.userApiKey)
+      }
     } catch (error) {
       console.error('Failed to load daily usage:', error)
       // Set default values if API fails
@@ -295,6 +305,44 @@ export default function ChatPage() {
         maxDeepResearch: 3
       })
     }
+  }
+
+  const updateUsageAfterMessage = (type: 'webSearch' | 'deepResearch' | 'normal' = 'normal') => {
+    setDailyUsage(prev => ({
+      ...prev,
+      totalQueries: prev.totalQueries + 1,
+      webSearchQueries: type === 'webSearch' ? prev.webSearchQueries + 1 : prev.webSearchQueries,
+      deepResearchQueries: type === 'deepResearch' ? prev.deepResearchQueries + 1 : prev.deepResearchQueries
+    }))
+  }
+
+  const checkUsageLimits = (type: 'webSearch' | 'deepResearch' | 'normal' = 'normal'): boolean => {
+    // If user has their own API key, no limits apply
+    if (userApiKey) return true
+
+    // Check limits
+    if (dailyUsage.totalQueries >= dailyUsage.maxTotal) {
+      setApiKeyModalReason('limit_exceeded')
+      setApiKeyLimitType('total')
+      setShowApiKeyModal(true)
+      return false
+    }
+
+    if (type === 'webSearch' && dailyUsage.webSearchQueries >= dailyUsage.maxWebSearch) {
+      setApiKeyModalReason('limit_exceeded')
+      setApiKeyLimitType('webSearch')
+      setShowApiKeyModal(true)
+      return false
+    }
+
+    if (type === 'deepResearch' && dailyUsage.deepResearchQueries >= dailyUsage.maxDeepResearch) {
+      setApiKeyModalReason('limit_exceeded')
+      setApiKeyLimitType('deepResearch')
+      setShowApiKeyModal(true)
+      return false
+    }
+
+    return true
   }
 
   const loadConversations = async () => {
@@ -430,7 +478,8 @@ export default function ChatPage() {
 
     try {
       // Make API call to get response
-      const response = await fetch('http://localhost:3001/api/chat/trial', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+      const response = await fetch(`${apiUrl}/api/chat/trial`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -547,6 +596,14 @@ export default function ChatPage() {
     // Normal authenticated flow
     if (!inputMessage.trim() || !currentConversation || isStreaming) return
 
+    // Check usage limits for authenticated users
+    const messageType = options?.deepResearch ? 'deepResearch' : 
+                       options?.webSearch ? 'webSearch' : 'normal'
+    
+    if (!checkUsageLimits(messageType)) {
+      return // Modal will be shown by checkUsageLimits
+    }
+
     // Prepare the message data
     const messageData: any = {
       conversationId: currentConversation.id,
@@ -586,8 +643,18 @@ export default function ChatPage() {
       messageData.attachments = processedAttachments
     }
 
+    // Include user's API key if they have one
+    if (userApiKey) {
+      messageData.userApiKey = userApiKey
+    }
+
     if (socket) {
       socket.emit('chat:stream', messageData)
+      
+      // Update usage after sending message (only if not using personal API key)
+      if (!userApiKey) {
+        updateUsageAfterMessage(messageType)
+      }
     }
   }
 
@@ -822,6 +889,21 @@ export default function ChatPage() {
           onClose={() => setShowTrialLimitModal(false)}
           messageCount={trialMessageCount}
         />
+
+        {/* API Key Modal */}
+        <ApiKeyModal
+          isOpen={showApiKeyModal}
+          onClose={() => setShowApiKeyModal(false)}
+          onSave={(apiKey) => {
+            setUserApiKey(apiKey)
+            setShowApiKeyModal(false)
+            // Reload usage to reflect API key status
+            loadDailyUsage()
+          }}
+          currentKey={userApiKey || ''}
+          reason={apiKeyModalReason}
+          limitType={apiKeyLimitType}
+        />
       </div>
     )
   }
@@ -922,6 +1004,21 @@ export default function ChatPage() {
             )
           )
         }}
+      />
+
+      {/* API Key Modal */}
+      <ApiKeyModal
+        isOpen={showApiKeyModal}
+        onClose={() => setShowApiKeyModal(false)}
+        onSave={(apiKey) => {
+          setUserApiKey(apiKey)
+          setShowApiKeyModal(false)
+          // Reload usage to reflect API key status
+          loadDailyUsage()
+        }}
+        currentKey={userApiKey || ''}
+        reason={apiKeyModalReason}
+        limitType={apiKeyLimitType}
       />
     </div>
   )

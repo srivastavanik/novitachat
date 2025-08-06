@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { Request, Response } from 'express'
 import { authenticateToken } from '../middleware/auth'
+import { getUserApiKey } from './apikey.routes'
 
 const router = Router()
 
@@ -38,6 +39,7 @@ router.get('/usage', authenticateToken, (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id
     const usage = getOrCreateUsage(userId)
+    const userApiKey = getUserApiKey(userId)
     
     res.json({
       usage: {
@@ -47,7 +49,8 @@ router.get('/usage', authenticateToken, (req: Request, res: Response) => {
         maxTotal: 100,
         maxWebSearch: 20,
         maxDeepResearch: 3
-      }
+      },
+      userApiKey: userApiKey ? '***' + userApiKey.slice(-4) : null // Send masked version for security
     })
   } catch (error) {
     console.error('Error fetching usage:', error)
