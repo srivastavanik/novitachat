@@ -6,6 +6,10 @@ import { Send, Paperclip } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTheme } from '@/components/ThemeProvider'
 import { useRouter } from 'next/navigation'
+import StyleShowcase from '@/components/showcases/StyleShowcase'
+import SearchShowcase from '@/components/showcases/SearchShowcase'
+import DeepResearchShowcase from '@/components/showcases/DeepResearchShowcase'
+import ModelShowcase from '@/components/showcases/ModelShowcase'
 
 export default function LandingPage() {
   const gradientRef = useRef<HTMLDivElement>(null)
@@ -194,25 +198,56 @@ export default function LandingPage() {
           
           <div className="grid md:grid-cols-3 gap-8">
             <div className="feature-card">
-              <h3 className="text-xl font-medium mb-3 select-text">Kimi K2</h3>
+              <h3 className="text-xl font-medium mb-3 select-text">ChatGPT OSS 120B</h3>
               <p className="text-white/60 text-sm leading-relaxed select-text">
-                Advanced reasoning capabilities with extended context understanding. Perfect for complex analysis and deep research tasks.
+                OpenAI's open-source model with 120B parameters, thinking capabilities, and 131K context window for complex reasoning.
               </p>
             </div>
 
             <div className="feature-card">
-              <h3 className="text-xl font-medium mb-3 select-text">ChatGPT O1</h3>
+              <h3 className="text-xl font-medium mb-3 select-text">Kimi K2 & DeepSeek</h3>
               <p className="text-white/60 text-sm leading-relaxed select-text">
-                OpenAI's latest model with enhanced reasoning and problem-solving abilities. Ideal for coding and technical discussions.
+                Advanced models from Moonshot AI and DeepSeek with extended context, multi-step reasoning, and code expertise.
               </p>
             </div>
 
             <div className="feature-card">
-              <h3 className="text-xl font-medium mb-3 select-text">Claude & More</h3>
+              <h3 className="text-xl font-medium mb-3 select-text">GLM-4 & More</h3>
               <p className="text-white/60 text-sm leading-relaxed select-text">
-                Access to Claude, Llama, and other cutting-edge models. Switch between models based on your specific needs.
+                Zhipu AI's GLM-4, Claude, Llama, and 20+ other models. Each optimized for different use cases and languages.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Divider */}
+      <div className="relative z-10 h-px bg-gradient-to-r from-transparent via-[var(--nova-border-primary)] to-transparent"></div>
+
+      {/* Interactive Showcases Section */}
+      <section className="relative z-10 py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-light mb-4">Experience the Features</h2>
+            <p className="text-white/70 text-lg max-w-2xl mx-auto">
+              Interactive demonstrations of our most powerful capabilities.
+            </p>
+          </div>
+          
+          <div className="grid lg:grid-cols-2 gap-8 mb-8">
+            {/* Style System Showcase */}
+            <StyleShowcase />
+            
+            {/* Model Showcase */}
+            <ModelShowcase />
+          </div>
+          
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Search Showcase */}
+            <SearchShowcase />
+            
+            {/* Deep Research Showcase */}
+            <DeepResearchShowcase />
           </div>
         </div>
       </section>
