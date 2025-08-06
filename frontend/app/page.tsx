@@ -120,11 +120,43 @@ export default function LandingPage() {
         <div className="px-6 max-w-6xl mx-auto mt-20 md:mt-32 relative">
           <div className="md:max-w-2xl mx-auto text-center relative">
             {/* Glowing green ring */}
-            <div className="absolute inset-0 -inset-x-32 -inset-y-20 flex items-center justify-center pointer-events-none">
-              <div className="relative">
-                <div className="absolute inset-0 w-[600px] h-[350px] rounded-full border-[3px] border-[#00FF7F] opacity-60 blur-sm"></div>
-                <div className="absolute inset-0 w-[600px] h-[350px] rounded-full border-[2px] border-[#00FF7F] opacity-40"></div>
-                <div className="absolute inset-0 w-[600px] h-[350px] rounded-full bg-[#00FF7F] opacity-10 blur-3xl"></div>
+            <div className="absolute inset-0 -inset-x-40 -inset-y-24 flex items-center justify-center pointer-events-none">
+              <div className="relative w-[500px] h-[500px]">
+                {/* Outer glow */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#00FF7F] to-[#00D96A] opacity-30 blur-3xl"></div>
+                
+                {/* Main thick ring */}
+                <div className="absolute inset-0 rounded-full" 
+                     style={{
+                       background: `radial-gradient(circle at center, 
+                         transparent 35%, 
+                         transparent 40%, 
+                         #00FF7F 45%, 
+                         #00FF7F 55%, 
+                         transparent 60%, 
+                         transparent 65%)`
+                     }}>
+                </div>
+                
+                {/* Bright inner glow */}
+                <div className="absolute inset-0 rounded-full"
+                     style={{
+                       background: `radial-gradient(circle at center, 
+                         transparent 30%, 
+                         rgba(0, 255, 127, 0.4) 40%, 
+                         rgba(0, 255, 127, 0.8) 50%, 
+                         rgba(0, 255, 127, 0.4) 60%, 
+                         transparent 70%)`
+                     }}>
+                </div>
+                
+                {/* Additional bright glow effect */}
+                <div className="absolute inset-0 rounded-full border-[20px] border-[#00FF7F] opacity-60 blur-xl"
+                     style={{
+                       boxShadow: `0 0 80px rgba(0, 255, 127, 0.8), 
+                                   inset 0 0 80px rgba(0, 255, 127, 0.4)`
+                     }}>
+                </div>
               </div>
             </div>
             
