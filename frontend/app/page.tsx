@@ -119,24 +119,25 @@ export default function LandingPage() {
         
         <div className="px-6 max-w-6xl mx-auto mt-20 md:mt-32 relative">
           <div className="md:max-w-2xl mx-auto text-center relative">
-            {/* Clean glowing ring */}
-            <div className="absolute inset-0 -inset-x-40 -inset-y-24 flex items-center justify-center pointer-events-none">
-              <div className="relative w-[480px] h-[480px]">
-                {/* Clean hollow ring with glow */}
-                <div className="absolute inset-0 rounded-full border-[24px] border-[#00FF7F]"
+            {/* Clean glowing ring with pulse */}
+            <div className="absolute inset-0 -inset-x-40 -inset-y-32 flex items-center justify-center pointer-events-none">
+              <div className="relative w-[720px] h-[720px]">
+                {/* Clean hollow ring with glow and pulse animation */}
+                <div className="absolute inset-0 rounded-full border-[32px] border-[#00FF7F] animate-pulse-slow"
                      style={{
-                       boxShadow: `0 0 40px #00FF7F, 
-                                   0 0 80px #00FF7F,
-                                   inset 0 0 40px #00FF7F`
+                       boxShadow: `0 0 60px #00FF7F, 
+                                   0 0 120px #00FF7F,
+                                   inset 0 0 60px #00FF7F`,
+                       animation: 'pulse-glow 4s ease-in-out infinite'
                      }}>
                 </div>
               </div>
             </div>
             
-            <h1 className="text-6xl md:text-7xl font-semibold tracking-tight text-white select-text relative z-10">
+            <h1 className="text-7xl md:text-8xl font-semibold tracking-tight text-white select-text relative z-10">
               Open Source <span className="text-[#00FF7F]">AI Chat</span>
             </h1>
-            <p className="text-white/60 mt-8 text-lg font-normal leading-relaxed select-text relative z-10 max-w-2xl mx-auto">
+            <p className="text-white/60 mt-8 text-xl md:text-2xl font-normal leading-relaxed select-text relative z-10 max-w-3xl mx-auto">
               Powered by cutting-edge models including Kimi K2, OpenAI OSS, and more. 
               Built with transparency, customizable with style prompts, and enhanced with real-time web search.
             </p>
@@ -151,15 +152,15 @@ export default function LandingPage() {
             </div>
             
             {/* Trial Chat Input - Liquid Glass Design */}
-            <div className="mt-20 max-w-3xl mx-auto">
+            <div className="mt-20 max-w-4xl mx-auto">
               <form onSubmit={handleTrialSubmit}>
                 <div className="chat-input-container">
-                  <div className="flex items-end gap-3 p-4">
+                  <div className="flex items-end gap-4 p-6">
                     <textarea
                       value={trialQuery}
                       onChange={(e) => setTrialQuery(e.target.value)}
                       placeholder="Ask anything..."
-                      className="flex-1 bg-transparent border-none outline-none resize-none text-white placeholder:text-white/50 text-base min-h-[24px] max-h-[200px]"
+                      className="flex-1 bg-transparent border-none outline-none resize-none text-white placeholder:text-white/50 text-lg min-h-[32px] max-h-[200px]"
                       rows={1}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {

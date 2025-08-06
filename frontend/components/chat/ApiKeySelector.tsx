@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Key, ChevronDown, Check, AlertCircle, Trash2, Plus } from 'lucide-react'
+import { ChevronDown, Check, AlertCircle, Trash2, Plus } from 'lucide-react'
 
 interface ApiKeySelectorProps {
   activeKey: 'novita' | 'user'
@@ -52,10 +52,9 @@ export default function ApiKeySelector({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-3 py-2 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <Key className="h-4 w-4 text-[#00FF7F]" />
           <div className="text-left">
             <div className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
               {activeKey === 'novita' ? 'Chat Platform Key' : 'Your API Key'}

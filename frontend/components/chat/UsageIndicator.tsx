@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MessageSquare, Search, Globe, BarChart3, ChevronDown, ChevronUp, Clock } from 'lucide-react'
+import { MessageSquare, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface UsageIndicatorProps {
   isTrialMode: boolean
@@ -122,13 +122,12 @@ export default function UsageIndicator({ isTrialMode, trialMessageCount = 0, dai
   const deepResearchBarColor = getProgressBarColor(deepResearchQueries, maxDeepResearch)
 
   return (
-    <div className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg p-3 mb-4">
+    <div className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-3 mb-4">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between hover:bg-gray-200 dark:hover:bg-white/5 rounded-lg p-2 transition-colors"
+        className="w-full flex items-center justify-between hover:bg-gray-200 dark:hover:bg-white/5 rounded-xl p-2 transition-colors"
       >
         <div className="flex items-center gap-2 min-w-0">
-          <BarChart3 className="h-4 w-4 text-[#00FF7F] flex-shrink-0" />
           <span className="text-sm font-medium text-gray-900 dark:text-white truncate">Daily Usage</span>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -162,7 +161,6 @@ export default function UsageIndicator({ isTrialMode, trialMessageCount = 0, dai
           <div>
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
-                <Search className="h-3 w-3 text-blue-400" />
                 <span className="text-xs text-gray-700 dark:text-white/80">Web Search</span>
               </div>
               <span className="text-xs text-gray-600 dark:text-white/60">
@@ -185,7 +183,6 @@ export default function UsageIndicator({ isTrialMode, trialMessageCount = 0, dai
           <div>
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
-                <Globe className="h-3 w-3 text-purple-400" />
                 <span className="text-xs text-gray-700 dark:text-white/80">Deep Research</span>
               </div>
               <span className="text-xs text-gray-600 dark:text-white/60">
@@ -231,7 +228,6 @@ export default function UsageIndicator({ isTrialMode, trialMessageCount = 0, dai
       {/* Reset time */}
       <div className="mt-3 pt-2 border-t border-gray-200 dark:border-white/10">
         <div className="flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-white/40">
-          <Clock className="h-3 w-3" />
           <span>Resets in {timeUntilReset || 'calculating...'}</span>
         </div>
       </div>
