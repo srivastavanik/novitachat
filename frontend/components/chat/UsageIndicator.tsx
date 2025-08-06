@@ -125,14 +125,14 @@ export default function UsageIndicator({ isTrialMode, trialMessageCount = 0, dai
     <div className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg p-3 mb-4">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between hover:bg-gray-200 dark:hover:bg-white/5 rounded-lg p-1 -m-1 transition-colors"
+        className="w-full flex items-center justify-between hover:bg-gray-200 dark:hover:bg-white/5 rounded-lg p-2 transition-colors"
       >
-        <div className="flex items-center gap-2">
-          <BarChart3 className="h-4 w-4 text-[#00FF7F]" />
-          <span className="text-sm font-medium text-gray-900 dark:text-white">Daily Usage</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <BarChart3 className="h-4 w-4 text-[#00FF7F] flex-shrink-0" />
+          <span className="text-sm font-medium text-gray-900 dark:text-white truncate">Daily Usage</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600 dark:text-white/60">{totalRemaining} left</span>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-sm text-gray-600 dark:text-white/60 whitespace-nowrap">{totalRemaining} left</span>
           {isExpanded ? (
             <ChevronUp className="h-4 w-4 text-gray-400 dark:text-white/40" />
           ) : (

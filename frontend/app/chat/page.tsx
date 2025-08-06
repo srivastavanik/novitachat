@@ -261,7 +261,7 @@ export default function ChatPage() {
         } else if (data.error?.includes('Invalid API key') || data.error?.includes('Unauthorized')) {
           // Invalid API key - remove it and switch back to Novita
           handleRemoveApiKey()
-          alert('Your API key is invalid or expired. Switching back to Nova platform key.')
+          alert('Your API key is invalid or expired. Switching back to Chat platform key.')
         }
       })
 
@@ -785,7 +785,7 @@ export default function ChatPage() {
                   href="/" 
                   className="text-xl font-bold nova-text-gradient"
                 >
-                  Nova
+                                      Chat
                 </Link>
                 <div className="flex items-center gap-2">
                   <span className="nova-badge-primary text-xs">
@@ -842,9 +842,9 @@ export default function ChatPage() {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--nova-primary)]/10 mb-4">
                       <MessageSquare className="h-8 w-8 text-[var(--nova-primary)]" />
                     </div>
-                    <h2 className="text-xl font-semibold mb-2">Welcome to Nova Trial Chat!</h2>
+                    <h2 className="text-xl font-semibold mb-2">Welcome to Chat Trial!</h2>
                     <p className="nova-text-muted max-w-md mx-auto">
-                      You have {TRIAL_MESSAGE_LIMIT} free messages to experience Nova's capabilities. 
+                      You have {TRIAL_MESSAGE_LIMIT} free messages to experience Chat's capabilities. 
                       Ask me anything to get started!
                     </p>
                   </div>
@@ -1040,7 +1040,7 @@ export default function ChatPage() {
                   <div className="flex items-center gap-2 text-xs">
                     <div className={`w-2 h-2 rounded-full ${activeKey === 'user' ? 'bg-green-400' : 'bg-blue-400'}`} />
                     <span className="text-gray-600 dark:text-white/60">
-                      Using: {activeKey === 'user' ? 'Your API Key' : 'Nova Platform Key'}
+                      Using: {activeKey === 'user' ? 'Your API Key' : 'Chat Platform Key'}
                     </span>
                     {activeKey === 'novita' && dailyUsage && (
                       <span className="text-gray-500 dark:text-white/40">
@@ -1063,7 +1063,7 @@ export default function ChatPage() {
                 currentModel={currentModel}
                 onModelChange={handleModelChange}
                 modelCapabilities={modelCapabilities}
-                placeholder={thinkingMessage && thinkingMessage.isThinking ? "Nova is thinking..." : undefined}
+                placeholder={thinkingMessage && thinkingMessage.isThinking ? "Chat is thinking..." : undefined}
               />
               <ChatFooter />
             </div>
@@ -1071,7 +1071,7 @@ export default function ChatPage() {
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center space-y-2">
-              <h3 className="text-lg font-medium text-[var(--nova-text-primary)]">Welcome to Nova</h3>
+              <h3 className="text-lg font-medium text-[var(--nova-text-primary)]">Welcome to Chat</h3>
               <p className="text-sm text-[var(--nova-text-tertiary)]">
                 Create a new chat or select an existing conversation to get started
               </p>

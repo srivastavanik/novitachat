@@ -92,7 +92,7 @@ export default function Message({ message, isStreaming = false }: MessageProps) 
         <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-[var(--nova-bg-tertiary)] mr-3">
           <Image 
             src="/novita-logo-only.png" 
-            alt="Nova" 
+                          alt="Chat" 
             width={28} 
             height={28}
             className="object-contain"
@@ -112,7 +112,7 @@ export default function Message({ message, isStreaming = false }: MessageProps) 
           
           <div className="flex items-center gap-2">
             {!isUser && (
-              <span className="font-medium text-sm text-[var(--nova-text-primary)]">Nova</span>
+              <span className="font-medium text-sm text-[var(--nova-text-primary)]">Chat</span>
             )}
             {!isStreaming && (
               <span className="text-xs text-[var(--nova-text-tertiary)]">
@@ -145,7 +145,7 @@ export default function Message({ message, isStreaming = false }: MessageProps) 
               ) : (
                 <>
                   {isStreaming && !message.content ? (
-                    <p className="m-0 text-gray-400 italic">Nova is thinking...</p>
+                    <p className="m-0 text-gray-400 italic">Chat is thinking...</p>
                   ) : (
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm]}

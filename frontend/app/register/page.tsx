@@ -40,11 +40,11 @@ export default function RegisterPage() {
       <div className="w-full max-w-md space-y-8 relative z-10">
         <div className="text-center">
           <Link href="/" className="inline-flex items-center space-x-2 mb-8">
-            <span className="text-2xl font-medium">Nova</span>
+            <span className="text-2xl font-medium">Chat</span>
           </Link>
           <h2 className="text-4xl font-light">Create an account</h2>
           <p className="mt-2 text-sm text-white/60">
-            Get started with Nova today
+                          Get started with Chat today
           </p>
         </div>
 

@@ -185,7 +185,7 @@ export default function ApiKeyModal({
             </ol>
             
             <a
-              href="https://novita.ai/dashboard/api-keys"
+              href="https://novita.ai/"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-[#00FF7F] hover:text-[#00FF7F]/80 transition-colors text-sm font-medium mt-2"

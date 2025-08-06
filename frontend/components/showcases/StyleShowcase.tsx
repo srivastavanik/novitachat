@@ -1,31 +1,26 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Sparkles, Briefcase, Palette, Code } from 'lucide-react'
-
 const styles = [
   {
     id: 'professional',
     name: 'Professional',
-    icon: Briefcase,
     prompt: 'You are a professional assistant...',
-    color: 'from-blue-500 to-indigo-600',
+    color: 'from-[#00FF7F]/20 to-[#00D96A]/20',
     response: 'I understand you need a comprehensive analysis. Let me break this down systematically with clear action items and measurable outcomes.'
   },
   {
     id: 'creative',
     name: 'Creative',
-    icon: Palette,
     prompt: 'You are a creative thinker...',
-    color: 'from-purple-500 to-pink-600',
+    color: 'from-[#00FF7F]/20 to-[#00D96A]/20',
     response: 'What if we approached this from a completely different angle? Imagine combining unexpected elements to create something truly unique!'
   },
   {
     id: 'technical',
     name: 'Technical',
-    icon: Code,
     prompt: 'You are a technical expert...',
-    color: 'from-green-500 to-emerald-600',
+    color: 'from-[#00FF7F]/20 to-[#00D96A]/20',
     response: 'Based on the technical specifications, the optimal solution involves implementing a microservices architecture with async message queuing.'
   }
 ]
@@ -70,28 +65,9 @@ export default function StyleShowcase() {
       
       <div className="relative bg-black/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-white flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-[#00FF7F]" />
+          <h3 className="text-lg font-medium text-white">
             Style System
           </h3>
-          <div className="flex gap-2">
-            {styles.map((style, index) => {
-              const Icon = style.icon
-              return (
-                <button
-                  key={style.id}
-                  onClick={() => setActiveStyle(index)}
-                  className={`p-2 rounded-lg transition-all ${
-                    activeStyle === index 
-                      ? 'bg-gradient-to-r ' + style.color + ' text-white shadow-lg' 
-                      : 'bg-white/5 text-white/60 hover:bg-white/10'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                </button>
-              )
-            })}
-          </div>
         </div>
 
         <div className="space-y-4">
@@ -116,7 +92,7 @@ export default function StyleShowcase() {
           <div className="bg-black/30 rounded-lg p-4 min-h-[100px]">
             <div className="flex items-start gap-3">
               <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${styles[activeStyle].color} flex items-center justify-center flex-shrink-0`}>
-                <Sparkles className="h-4 w-4 text-white" />
+                <div className="w-2 h-2 bg-[#00FF7F] rounded-full" />
               </div>
               <div className="flex-1">
                 <p className="text-sm text-white/90 leading-relaxed">

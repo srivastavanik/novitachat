@@ -58,7 +58,7 @@ export default function ApiKeySelector({
           <Key className="h-4 w-4 text-[#00FF7F]" />
           <div className="text-left">
             <div className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-              {activeKey === 'novita' ? 'Nova Platform Key' : 'Your API Key'}
+              {activeKey === 'novita' ? 'Chat Platform Key' : 'Your API Key'}
               {activeKey === 'novita' && novitaStatus === 'exhausted' && (
                 <span className="text-xs px-1.5 py-0.5 bg-red-500/20 text-red-400 rounded-full">
                   Limit Reached
@@ -92,7 +92,7 @@ export default function ApiKeySelector({
             className="fixed inset-0 z-40" 
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-black border border-gray-200 dark:border-white/20 rounded-lg shadow-xl z-50 overflow-hidden">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-black border border-gray-200 dark:border-white/20 rounded-lg shadow-xl z-50 overflow-hidden max-h-96 overflow-y-auto">
             {/* Novita Key Option */}
             <button
               onClick={() => {
@@ -112,7 +112,7 @@ export default function ApiKeySelector({
                   }`} />
                 </div>
                 <div className="text-left">
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">Nova Platform Key</div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">Chat Platform Key</div>
                   <div className="text-xs text-gray-600 dark:text-white/60">
                     {remaining !== null 
                       ? `${remaining}/${dailyUsage?.maxTotal || 100} queries remaining`
@@ -204,7 +204,7 @@ export default function ApiKeySelector({
               <div className="text-xs text-white/60">
                 {activeKey === 'novita' ? (
                   <>
-                    <strong>Nova Platform Key:</strong> Free tier with daily limits. 
+                    <strong>Chat Platform Key:</strong> Free tier with daily limits. 
                     Resets at midnight UTC.
                   </>
                 ) : (

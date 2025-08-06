@@ -78,12 +78,18 @@ export default function LandingPage() {
       <div className="gradient-grid"></div>
       <div className="radial-glow"></div>
       
-      <nav className="navbar">
-        <div className="max-w-6xl mx-auto px-6 py-8">
+      <nav className="navbar relative">
+        {/* Glowing green ring background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-20 -left-20 w-96 h-96 bg-[#00FF7F] rounded-full blur-[120px] opacity-20 animate-pulse"></div>
+          <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#00D96A] rounded-full blur-[120px] opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
+        </div>
+        
+        <div className="max-w-6xl mx-auto px-6 py-8 relative z-10">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              <span className="text-white font-medium">Chat by</span>
-              <img src="/novita-logo.png" alt="Novita" className="h-6 object-contain brightness-0 invert" />
+            <div className="flex items-center gap-3">
+              <span className="text-white text-lg font-normal tracking-wide">Chat by</span>
+              <img src="/novita-logo.png" alt="Novita" className="h-7 object-contain brightness-0 invert" />
             </div>
             <div className="flex items-center space-x-4">
               <Link href="/login" className="text-white text-sm border border-white/20 rounded-full px-5 py-2 hover:bg-white/10 transition-all">
@@ -123,7 +129,7 @@ export default function LandingPage() {
               Open Source <span className="accent" data-text="AI Chat">AI Chat</span>
             </h1>
             <p className="text-white/70 mt-6 text-lg select-text">
-              Powered by cutting-edge models including Kimi K2, ChatGPT O1, and more. 
+              Powered by cutting-edge models including Kimi K2, OpenAI OSS, and more. 
               Built with transparency, customizable with style prompts, and enhanced with real-time web search.
             </p>
             
@@ -174,7 +180,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <p className="text-xs text-center text-white/50 mt-3">
-                  Try Nova free – 10 messages, no signup required
+                  Try Chat free – 10 messages, no signup required
                 </p>
               </form>
             </div>

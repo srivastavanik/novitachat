@@ -475,7 +475,7 @@ export default function ChatInput({
         </div>
         {isStreaming && (
           <p className="mt-2 text-xs text-[var(--nova-text-tertiary)] text-center">
-            Nova is thinking...
+            Chat is thinking...
           </p>
         )}
       </div>

@@ -17,7 +17,7 @@ const michroma = Michroma({ subsets: ['latin'], weight: '400', variable: '--font
 const oxanium = Oxanium({ subsets: ['latin'], variable: '--font-oxanium' })
 
 export const metadata: Metadata = {
-  title: 'Nova - AI-Powered Chat',
+      title: 'Chat - AI-Powered Assistant',
   description: 'Chat with AI powered by Novita',
 }
 

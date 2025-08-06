@@ -69,11 +69,11 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8 relative z-10">
         <div className="text-center">
           <Link href="/" className="inline-flex items-center space-x-2 mb-8">
-            <span className="text-2xl font-medium">Nova</span>
+            <span className="text-2xl font-medium">Chat</span>
           </Link>
           <h2 className="text-4xl font-light">Welcome back</h2>
           <p className="mt-2 text-sm text-white/60">
-            Sign in to your Nova account
+                            Sign in to your Chat account
           </p>
         </div>
 
@@ -87,7 +87,7 @@ export default function LoginPage() {
               )}
 
               <p className="text-center text-sm text-white/60 mb-6">
-                Sign in to your Nova account
+                Sign in to your Chat account
               </p>
 
               <div className="text-center text-xs text-white/40 mb-6 p-3 bg-white/5 rounded-lg border border-white/10">

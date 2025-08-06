@@ -159,7 +159,7 @@ export default function StyleSelector({ onStyleChange, defaultStyle = 'normal' }
           <div className="absolute bottom-full right-0 mb-2 w-80 rounded-xl border border-[var(--nova-border-primary)] bg-[var(--nova-bg-tertiary)] shadow-2xl z-50">
             <div className="p-3 border-b border-[var(--nova-border-primary)]">
               <h3 className="font-medium text-sm text-[var(--nova-text-primary)]">Conversation Style</h3>
-              <p className="text-xs text-[var(--nova-text-tertiary)] mt-1">Choose how Nova responds to you</p>
+              <p className="text-xs text-[var(--nova-text-tertiary)] mt-1">Choose how Chat responds to you</p>
             </div>
             
             <div className="p-2 max-h-96 overflow-y-auto">

@@ -21,7 +21,7 @@ export default function TrialChatPage() {
     <div className="flex h-screen bg-[var(--nova-bg-primary)] items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--nova-primary)] mx-auto"></div>
-        <p className="text-sm text-[var(--nova-text-secondary)] mt-2">Redirecting to Nova Chat...</p>
+        <p className="text-sm text-[var(--nova-text-secondary)] mt-2">Redirecting to Chat...</p>
       </div>
     </div>
   )
