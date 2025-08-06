@@ -39,7 +39,12 @@ This guide covers deploying Nova with the frontend on Vercel and the backend on 
 
 ## Step 2.5: Copy-Paste Ready Environment Variables
 
-Below are the complete environment variable configurations with all values pre-populated from your project.
+Below are the complete environment variable configurations with **ALL VALUES UPDATED** from your actual deployment.
+
+### ✅ **YOUR ACTUAL DEPLOYMENT URLS**
+- **Frontend**: `https://nova-frontend-zeta.vercel.app`
+- **Backend**: `https://nova-backend-2usm.onrender.com`
+- **Redis**: `redis-15633.fcrce190.us-east-1-1.ec2.redns.redis-cloud.com:15633`
 
 ### 🔗 **IMPORTANT: Find Your Actual Deployment URLs**
 
@@ -47,9 +52,7 @@ Below are the complete environment variable configurations with all values pre-p
 ✅ **ALREADY UPDATED**: Your Vercel URL is `https://nova-frontend-zeta.vercel.app/`
 
 #### **For Render Backend URL:**
-1. After deploying to Render, go to your [Render Dashboard](https://dashboard.render.com/)
-2. Click on your backend service
-3. Copy the URL shown (e.g., `https://nova-backend-xyz789.onrender.com`)
+✅ **ALREADY UPDATED**: Your Render backend URL is `https://nova-backend-2usm.onrender.com`
 
 ### 🚀 **RENDER BACKEND ENVIRONMENT VARIABLES** (Copy-Paste Ready)
 
@@ -70,10 +73,10 @@ SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppcXdwZG5lbHpoZHd0aGN1cWF2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjUxNjM5MCwiZXhwIjoyMDY4MDkyMzkwfQ.CWXC5LMmPZrt0GqVQwCvA8rkFmmSYWpUSsgt9PmSJv0
 SUPABASE_DB_PASSWORD=N0v@Ch@t25
 
-# Redis Configuration (Update with your production Redis instance)
-REDIS_HOST=your_production_redis_host
-REDIS_PORT=6379
-REDIS_PASSWORD=your_production_redis_password
+# Redis Configuration (UPDATED with your production Redis instance)
+REDIS_HOST=redis-15633.fcrce190.us-east-1-1.ec2.redns.redis-cloud.com
+REDIS_PORT=15633
+REDIS_PASSWORD=d8xc27XbrdNnSiOCBFKc3GMep3FYbEh0
 
 # Novita AI Configuration (Pre-populated from your project)
 NOVITA_API_KEY=sk_kEz6nAcYjVd5Nk3lQ3Y5SEJnvWICJI4wieGzBYQgGyc
@@ -84,7 +87,7 @@ OAUTH_CLIENT_ID=2a743b89a0a645dc88635c85
 OAUTH_APP_SECRET=15348a76f29b47f983e7bd78f18fa9c2
 OAUTH_AUTH_URL=https://novita.ai/oauth/authorize
 OAUTH_TOKEN_EXCHANGE_URL=https://api-server.novita.ai/oauth/token
-OAUTH_REDIRECT_URI=https://nova-backend-[your-service-name].onrender.com/api/external-auth/callback
+OAUTH_REDIRECT_URI=https://nova-backend-2usm.onrender.com/api/external-auth/callback
 OAUTH_SCOPE=openid+profile
 OAUTH_USERINFO_URL=https://api-server.novita.ai/oauth/userinfo
 
@@ -108,8 +111,8 @@ SERPER_API_KEY=bcab8c3c0d97018ce8e931110e296b64ecb5f269
 ### 🌐 **VERCEL FRONTEND ENVIRONMENT VARIABLES** (Copy-Paste Ready)
 
 ```bash
-# Backend API Configuration (Update with your actual Render backend URL)
-NEXT_PUBLIC_API_URL=https://nova-backend-[your-service-name].onrender.com
+# Backend API Configuration (UPDATED with your actual Render backend URL)
+NEXT_PUBLIC_API_URL=https://nova-backend-2usm.onrender.com
 ```
 
 ## Step 3: Deploy Backend to Render
