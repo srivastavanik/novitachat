@@ -26,11 +26,11 @@
   --nova-primary-light: #40FFB7;    /* Light mint */
   
   /* Background Colors - Dark Theme Default */
-  --nova-bg-primary: #202020;       /* Base dark - true black-gray */
-  --nova-bg-secondary: #252525;     /* Main gray - darker */
-  --nova-bg-tertiary: #2A2A2A;      /* Lighter gray for cards */
-  --nova-bg-elevated: #303030;      /* Elevated surfaces */
-  --nova-bg-hover: #353535;         /* Hover states */
+  --nova-bg-primary: #1a1a1a;       /* Base dark - darker black-gray */
+  --nova-bg-secondary: #262624;     /* Main gray - as requested */
+  --nova-bg-tertiary: #2e2e2c;      /* Lighter gray for cards */
+  --nova-bg-elevated: #333331;      /* Elevated surfaces */
+  --nova-bg-hover: #3a3a38;         /* Hover states */
   
   /* Text Colors - Dark Theme Default */
   --nova-text-primary: #FFFFFF;     /* Pure white */
@@ -163,11 +163,11 @@
 /* Dark Mode Theme - Refined Design */
 [data-theme="dark"] {
   /* Background Colors - Dark Theme */
-  --nova-bg-primary: #202020;       /* Base dark - true black-gray */
-  --nova-bg-secondary: #252525;     /* Main gray - darker */
-  --nova-bg-tertiary: #2A2A2A;      /* Lighter gray for cards */
-  --nova-bg-elevated: #303030;      /* Elevated surfaces */
-  --nova-bg-hover: #353535;         /* Hover states */
+  --nova-bg-primary: #1a1a1a;       /* Base dark - darker black-gray */
+  --nova-bg-secondary: #262624;     /* Main gray - as requested */
+  --nova-bg-tertiary: #2e2e2c;      /* Lighter gray for cards */
+  --nova-bg-elevated: #333331;      /* Elevated surfaces */
+  --nova-bg-hover: #3a3a38;         /* Hover states */
   
   /* Text Colors - Dark Theme */
   --nova-text-primary: #ECECF1;     /* Softer white */
