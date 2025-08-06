@@ -70,19 +70,19 @@ export default function TrialLimitModal({ isOpen, onClose, messageCount }: Trial
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-black border border-white/20 rounded-2xl max-w-md w-full p-8 relative">
+    <div className="fixed inset-0 bg-black/80 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-black border border-gray-200 dark:border-white/20 rounded-2xl max-w-md w-full p-8 relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-white/60 hover:text-white/80 transition-colors"
+          className="absolute top-4 right-4 text-gray-500 dark:text-white/60 hover:text-gray-700 dark:hover:text-white/80 transition-colors"
         >
           <X className="h-5 w-5" />
         </button>
 
         <div className="text-center mb-6">
           <div className="text-4xl mb-4">🎉</div>
-          <h2 className="text-2xl font-light mb-2">Trial Complete!</h2>
-          <p className="text-white/60 text-sm">
+          <h2 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-white">Trial Complete!</h2>
+          <p className="text-gray-600 dark:text-white/60 text-sm">
             You've used all {messageCount} free messages. Sign up to continue with unlimited access!
           </p>
         </div>

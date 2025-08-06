@@ -156,7 +156,7 @@ export default function Sidebar({
         <div className="p-4 flex items-center justify-between">
           <div className="flex items-center">
             <img 
-              src={theme === 'light' ? "/Logo + wordmark (1).png" : "/nova-logo-wordmark.png"} 
+              src={theme === 'light' ? "/Logo%20%2B%20wordmark%20(1).png" : "/nova-logo-wordmark.png"} 
               alt="Nova" 
               className="h-5 object-contain" 
             />

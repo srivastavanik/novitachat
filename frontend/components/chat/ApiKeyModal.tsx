@@ -110,11 +110,11 @@ export default function ApiKeyModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-black border border-white/20 rounded-2xl max-w-md w-full p-8 relative">
+    <div className="fixed inset-0 bg-black/80 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-black border border-gray-200 dark:border-white/20 rounded-2xl max-w-md w-full p-8 relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-white/60 hover:text-white/80 transition-colors"
+          className="absolute top-4 right-4 text-gray-500 dark:text-white/60 hover:text-gray-700 dark:hover:text-white/80 transition-colors"
         >
           <X className="h-5 w-5" />
         </button>
@@ -124,11 +124,11 @@ export default function ApiKeyModal({
             <Key className="h-8 w-8 text-[#00FF7F]" />
           </div>
           
-          <h2 className="text-2xl font-light mb-2">
+          <h2 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-white">
             {reason === 'no_credits' ? 'API Key Out of Credits' : 'Add Your API Key'}
           </h2>
           
-          <p className="text-white/60 text-sm">
+          <p className="text-gray-600 dark:text-white/60 text-sm">
             {getReasonMessage()}
           </p>
         </div>
@@ -149,7 +149,7 @@ export default function ApiKeyModal({
 
         <div className="space-y-4">
           <div>
-            <label htmlFor="apiKey" className="block text-sm font-medium text-white/80 mb-2">
+            <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 dark:text-white/80 mb-2">
               Novita API Key
             </label>
             <input
@@ -158,14 +158,14 @@ export default function ApiKeyModal({
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="nvapi-..."
-              className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-[#00FF7F]/50 focus:ring-1 focus:ring-[#00FF7F]/50 font-mono text-sm"
+              className="w-full px-3 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 focus:outline-none focus:border-[#00FF7F]/50 focus:ring-1 focus:ring-[#00FF7F]/50 font-mono text-sm"
               disabled={isValidating || isSaving}
             />
           </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-3">
-            <h3 className="text-sm font-medium text-white/80">How to get your API key:</h3>
-            <ol className="space-y-2 text-sm text-white/60">
+          <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg p-4 space-y-3">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-white/80">How to get your API key:</h3>
+            <ol className="space-y-2 text-sm text-gray-600 dark:text-white/60">
               <li className="flex items-start gap-2">
                 <span className="text-[#00FF7F] font-medium">1.</span>
                 <span>Visit the Novita AI dashboard</span>

@@ -207,23 +207,23 @@ export default function LandingPage() {
           
           <div className="grid md:grid-cols-3 gap-8">
             <div className="feature-card">
-              <h3 className="text-xl font-medium mb-3 select-text">ChatGPT OSS 120B</h3>
+              <h3 className="text-xl font-medium mb-3 select-text">Reasoning Models</h3>
               <p className="text-white/60 text-sm leading-relaxed select-text">
-                OpenAI's open-source model with 120B parameters, thinking capabilities, and 131K context window for complex reasoning.
+                ChatGPT OSS 120B, Kimi K2, DeepSeek R1, and GLM 4.1V with thinking capabilities for complex multi-step reasoning and research.
               </p>
             </div>
 
             <div className="feature-card">
-              <h3 className="text-xl font-medium mb-3 select-text">Kimi K2 & DeepSeek</h3>
+              <h3 className="text-xl font-medium mb-3 select-text">General Purpose</h3>
               <p className="text-white/60 text-sm leading-relaxed select-text">
-                Advanced models from Moonshot AI and DeepSeek with extended context, multi-step reasoning, and code expertise.
+                Claude 3.5, GPT-4o, Gemini Pro, GLM-4.5, and Llama 3.3 for fast, efficient responses across various tasks and languages.
               </p>
             </div>
 
             <div className="feature-card">
-              <h3 className="text-xl font-medium mb-3 select-text">GLM-4 & More</h3>
+              <h3 className="text-xl font-medium mb-3 select-text">Specialized Models</h3>
               <p className="text-white/60 text-sm leading-relaxed select-text">
-                Zhipu AI's GLM-4, Claude, Llama, and 20+ other models. Each optimized for different use cases and languages.
+                Vision models for image analysis, code-optimized models for development, and math models for complex calculations.
               </p>
             </div>
           </div>
