@@ -16,6 +16,7 @@ import TrialLimitModal from '@/components/chat/TrialLimitModal'
 import UsageIndicator from '@/components/chat/UsageIndicator'
 import ChatFooter from '@/components/chat/ChatFooter'
 import ApiKeyModal from '@/components/chat/ApiKeyModal'
+import ApiKeySelector from '@/components/chat/ApiKeySelector'
 import { getCookie } from '@/lib/utils'
 
 interface TrialMessage {
@@ -79,6 +80,8 @@ export default function ChatPage() {
   const [apiKeyModalReason, setApiKeyModalReason] = useState<'limit_exceeded' | 'no_credits' | 'setup'>('setup')
   const [apiKeyLimitType, setApiKeyLimitType] = useState<'total' | 'webSearch' | 'deepResearch'>('total')
   const [userApiKey, setUserApiKey] = useState<string | null>(null)
+  const [activeKey, setActiveKey] = useState<'novita' | 'user'>('novita')
+  const [useUserKey, setUseUserKey] = useState(false)
   
   // Thinking state for trial mode
   const [trialThinkingContent, setTrialThinkingContent] = useState<string>('')
@@ -250,6 +253,16 @@ export default function ChatPage() {
         setIsStreaming(false)
         console.error('Stream error:', data.error)
         setStreamingMessage('')
+        
+        // Check if it's an API key error
+        if (data.error?.includes('insufficient') || data.error?.includes('credits') || data.error?.includes('quota')) {
+          setApiKeyModalReason('no_credits')
+          setShowApiKeyModal(true)
+        } else if (data.error?.includes('Invalid API key') || data.error?.includes('Unauthorized')) {
+          // Invalid API key - remove it and switch back to Novita
+          handleRemoveApiKey()
+          alert('Your API key is invalid or expired. Switching back to Nova platform key.')
+        }
       })
 
       socketInstance.on('conversation_title_updated', (data) => {
@@ -284,6 +297,24 @@ export default function ChatPage() {
     }
   }, [user, isTrialMode])
 
+  const handleRemoveApiKey = async () => {
+    try {
+      await axios.delete('/api/auth/api-key')
+      setUserApiKey(null)
+      setActiveKey('novita')
+      setUseUserKey(false)
+      // Reload usage after removing key
+      loadDailyUsage()
+    } catch (error) {
+      console.error('Failed to remove API key:', error)
+    }
+  }
+
+  const handleKeySwitch = (key: 'novita' | 'user') => {
+    setActiveKey(key)
+    setUseUserKey(key === 'user')
+  }
+
   const loadDailyUsage = async () => {
     try {
       const response = await axios.get('/api/auth/usage')
@@ -292,6 +323,11 @@ export default function ChatPage() {
       }
       if (response.data.userApiKey) {
         setUserApiKey(response.data.userApiKey)
+        // If user has API key and Novita key is exhausted, auto-switch to user key
+        if (response.data.usage.totalQueries >= response.data.usage.maxTotal) {
+          setActiveKey('user')
+          setUseUserKey(true)
+        }
       }
     } catch (error) {
       console.error('Failed to load daily usage:', error)
@@ -317,29 +353,55 @@ export default function ChatPage() {
   }
 
   const checkUsageLimits = (type: 'webSearch' | 'deepResearch' | 'normal' = 'normal'): boolean => {
-    // If user has their own API key, no limits apply
-    if (userApiKey) return true
+    // If using user's own API key, no limits apply
+    if (activeKey === 'user' && userApiKey) return true
 
-    // Check limits
-    if (dailyUsage.totalQueries >= dailyUsage.maxTotal) {
-      setApiKeyModalReason('limit_exceeded')
-      setApiKeyLimitType('total')
-      setShowApiKeyModal(true)
-      return false
-    }
+    // Only check limits when using Novita platform key
+    if (activeKey === 'novita') {
+      // Check limits
+      if (dailyUsage.totalQueries >= dailyUsage.maxTotal) {
+        // If user has their own key, suggest switching
+        if (userApiKey) {
+          setApiKeyModalReason('limit_exceeded')
+          setApiKeyLimitType('total')
+          // Auto-switch to user key
+          setActiveKey('user')
+          setUseUserKey(true)
+          return true // Allow sending with user key
+        } else {
+          // Show modal to add key
+          setApiKeyModalReason('limit_exceeded')
+          setApiKeyLimitType('total')
+          setShowApiKeyModal(true)
+          return false
+        }
+      }
 
-    if (type === 'webSearch' && dailyUsage.webSearchQueries >= dailyUsage.maxWebSearch) {
-      setApiKeyModalReason('limit_exceeded')
-      setApiKeyLimitType('webSearch')
-      setShowApiKeyModal(true)
-      return false
-    }
+      if (type === 'webSearch' && dailyUsage.webSearchQueries >= dailyUsage.maxWebSearch) {
+        if (userApiKey) {
+          setActiveKey('user')
+          setUseUserKey(true)
+          return true
+        } else {
+          setApiKeyModalReason('limit_exceeded')
+          setApiKeyLimitType('webSearch')
+          setShowApiKeyModal(true)
+          return false
+        }
+      }
 
-    if (type === 'deepResearch' && dailyUsage.deepResearchQueries >= dailyUsage.maxDeepResearch) {
-      setApiKeyModalReason('limit_exceeded')
-      setApiKeyLimitType('deepResearch')
-      setShowApiKeyModal(true)
-      return false
+      if (type === 'deepResearch' && dailyUsage.deepResearchQueries >= dailyUsage.maxDeepResearch) {
+        if (userApiKey) {
+          setActiveKey('user')
+          setUseUserKey(true)
+          return true
+        } else {
+          setApiKeyModalReason('limit_exceeded')
+          setApiKeyLimitType('deepResearch')
+          setShowApiKeyModal(true)
+          return false
+        }
+      }
     }
 
     return true
@@ -643,16 +705,19 @@ export default function ChatPage() {
       messageData.attachments = processedAttachments
     }
 
-    // Include user's API key if they have one
-    if (userApiKey) {
+    // Include user's API key if they're using it
+    if (activeKey === 'user' && userApiKey) {
       messageData.userApiKey = userApiKey
+      messageData.useUserKey = true
+    } else {
+      messageData.useNovitaKey = true
     }
 
     if (socket) {
       socket.emit('chat:stream', messageData)
       
-      // Update usage after sending message (only if not using personal API key)
-      if (!userApiKey) {
+      // Update usage after sending message (only if using Novita platform key)
+      if (activeKey === 'novita') {
         updateUsageAfterMessage(messageType)
       }
     }
@@ -921,6 +986,14 @@ export default function ChatPage() {
         onSelectConversation={selectConversation}
         onLogout={handleLogout}
         dailyUsage={dailyUsage}
+        activeKey={activeKey}
+        userApiKey={userApiKey}
+        onKeyChange={handleKeySwitch}
+        onAddApiKey={() => {
+          setApiKeyModalReason('setup')
+          setShowApiKeyModal(true)
+        }}
+        onRemoveApiKey={handleRemoveApiKey}
       />
 
       {/* Main Chat Area */}
@@ -961,6 +1034,22 @@ export default function ChatPage() {
               loading={messagesLoading}
             />
             <div className="px-4">
+              {/* Active Key Indicator */}
+              {user && (
+                <div className="flex items-center justify-between mb-2 px-2">
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className={`w-2 h-2 rounded-full ${activeKey === 'user' ? 'bg-green-400' : 'bg-blue-400'}`} />
+                    <span className="text-white/60">
+                      Using: {activeKey === 'user' ? 'Your API Key' : 'Nova Platform Key'}
+                    </span>
+                    {activeKey === 'novita' && dailyUsage && (
+                      <span className="text-white/40">
+                        ({dailyUsage.maxTotal - dailyUsage.totalQueries} queries left)
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
               <ChatInput
                 value={inputMessage}
                 onChange={setInputMessage}

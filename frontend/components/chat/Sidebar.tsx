@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { isToday, isYesterday, isThisWeek, isThisMonth, format } from 'date-fns'
 import ConversationItem from './ConversationItem'
 import UsageIndicator from './UsageIndicator'
+import ApiKeySelector from './ApiKeySelector'
 import axios from '@/lib/axios-config'
 import { useTheme } from '../ThemeProvider'
 import { Sun, Moon } from 'lucide-react'
@@ -23,6 +24,11 @@ interface SidebarProps {
     maxWebSearch: number
     maxDeepResearch: number
   }
+  activeKey?: 'novita' | 'user'
+  userApiKey?: string | null
+  onKeyChange?: (key: 'novita' | 'user') => void
+  onAddApiKey?: () => void
+  onRemoveApiKey?: () => void
 }
 
 export default function Sidebar({
@@ -34,7 +40,12 @@ export default function Sidebar({
   onNewConversation,
   onSelectConversation,
   onLogout,
-  dailyUsage
+  dailyUsage,
+  activeKey = 'novita',
+  userApiKey = null,
+  onKeyChange,
+  onAddApiKey,
+  onRemoveApiKey
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
@@ -207,13 +218,29 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* Usage Indicator */}
-        <div className="px-4">
-          <UsageIndicator
-            isTrialMode={false}
-            dailyUsage={dailyUsage}
-          />
-        </div>
+        {/* API Key Selector */}
+        {onKeyChange && onAddApiKey && onRemoveApiKey && (
+          <div className="px-4 pb-3">
+            <ApiKeySelector
+              activeKey={activeKey}
+              userApiKey={userApiKey}
+              onKeyChange={onKeyChange}
+              onAddKey={onAddApiKey}
+              onRemoveKey={onRemoveApiKey}
+              dailyUsage={dailyUsage}
+            />
+          </div>
+        )}
+
+        {/* Usage Indicator - only show for Novita key */}
+        {activeKey === 'novita' && (
+          <div className="px-4">
+            <UsageIndicator
+              isTrialMode={false}
+              dailyUsage={dailyUsage}
+            />
+          </div>
+        )}
 
         {/* User Profile & Settings */}
         <div className="p-4 border-t border-[var(--nova-border-primary)] space-y-3">
