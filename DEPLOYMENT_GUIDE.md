@@ -1,189 +1,123 @@
 # Nova Deployment Guide
 
-This guide covers deploying Nova with the frontend on Vercel and the backend on Render.
+## Environment Variables Configuration
 
-## Prerequisites
+### Frontend (Vercel)
 
-1. **Accounts Required:**
-   - [Vercel Account](https://vercel.com/signup)
-   - [Render Account](https://render.com/register)
-   - [Supabase Account](https://supabase.com) (for database)
-   - [Redis Cloud Account](https://redis.com/try-free/) or similar Redis provider
+Add these environment variables in your Vercel project settings:
 
-2. **Required API Keys:**
-   - Novita AI API Key (from your Novita account)
-   - Supabase project credentials
-   - Redis connection details
-   - Strong JWT secrets (can be generated during setup)
+```env
+# Backend API URL (your deployed backend URL)
+NEXT_PUBLIC_API_URL=https://your-backend-url.com
 
-## Step 1: Set up Supabase Database
+# Example for Render:
+# NEXT_PUBLIC_API_URL=https://nova-backend.onrender.com
 
-1. Create a new Supabase project
-2. Go to SQL Editor and run the database setup scripts in order:
-   ```sql
-   -- Run nova/backend/src/database/schema.sql
-   -- Then run each migration file in nova/backend/src/database/migrations/
-   ```
-3. Note down:
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
+# Example for Railway:
+# NEXT_PUBLIC_API_URL=https://nova-backend.up.railway.app
+```
 
-## Step 2: Set up Redis
+### Backend (Render/Railway/etc)
 
-1. Create a Redis instance (Redis Cloud, Upstash, or Railway)
-2. Note down:
-   - `REDIS_HOST`
-   - `REDIS_PORT`
-   - `REDIS_PASSWORD`
+Add these environment variables in your backend hosting service:
 
-## Step 2.5: Copy-Paste Ready Environment Variables
+```env
+# Database
+DATABASE_URL=your_supabase_connection_string
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_KEY=your_supabase_service_key
 
-Below are the complete environment variable configurations with **ALL VALUES UPDATED** from your actual deployment.
+# JWT Secrets (generate secure random strings)
+JWT_SECRET=your_secure_jwt_secret
+JWT_REFRESH_SECRET=your_secure_refresh_secret
 
-### ✅ **YOUR ACTUAL DEPLOYMENT URLS**
-- **Frontend**: `https://nova-frontend-zeta.vercel.app`
-- **Backend**: `https://nova-backend-2usm.onrender.com`
-- **Redis**: `redis-15633.fcrce190.us-east-1-1.ec2.redns.redis-cloud.com:15633`
+# Redis (optional - for refresh token storage)
+REDIS_URL=redis://your-redis-url
 
-### 🔗 **IMPORTANT: Find Your Actual Deployment URLs**
+# Novita AI
+NOVITA_API_KEY=your_novita_api_key
 
-#### **For Vercel Frontend URL:**
-✅ **ALREADY UPDATED**: Your Vercel URL is `https://nova-frontend-zeta.vercel.app/`
+# OAuth (for Novita login)
+OAUTH_CLIENT_ID=your_oauth_client_id
+OAUTH_APP_SECRET=your_oauth_app_secret
+OAUTH_REDIRECT_URI=https://your-backend-url.com/api/external-auth/callback
 
-#### **For Render Backend URL:**
-✅ **ALREADY UPDATED**: Your Render backend URL is `https://nova-backend-2usm.onrender.com`
+# Search
+SERPER_API_KEY=your_serper_api_key
 
-### 🚀 **RENDER BACKEND ENVIRONMENT VARIABLES** (Copy-Paste Ready)
+# CORS - Add your frontend URLs
+ALLOWED_ORIGINS=https://your-frontend.vercel.app,http://localhost:3000
 
-```bash
-# Core Server Settings
+# Node Environment
 NODE_ENV=production
-PORT=5000
-HOST=0.0.0.0
-
-# Vercel Frontend URL (UPDATED with your actual domain)
-CORS_ORIGIN=https://nova-frontend-zeta.vercel.app
-SOCKET_CORS_ORIGIN=https://nova-frontend-zeta.vercel.app
-WEB_ORIGIN=https://nova-frontend-zeta.vercel.app
-
-# Supabase Database Configuration (Pre-populated from your project)
-SUPABASE_URL=https://jiqwpdnelzhdwthcuqav.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppcXdwZG5lbHpoZHd0aGN1cWF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTYzOTAsImV4cCI6MjA2ODA5MjM5MH0.bpS0SlrH13SXrq6tEOfaLSZ8CfyL8IZ50Zt2ktC0YoE
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppcXdwZG5lbHpoZHd0aGN1cWF2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjUxNjM5MCwiZXhwIjoyMDY4MDkyMzkwfQ.CWXC5LMmPZrt0GqVQwCvA8rkFmmSYWpUSsgt9PmSJv0
-SUPABASE_DB_PASSWORD=N0v@Ch@t25
-
-# Redis Configuration (UPDATED with your production Redis instance)
-REDIS_HOST=redis-15633.fcrce190.us-east-1-1.ec2.redns.redis-cloud.com
-REDIS_PORT=15633
-REDIS_PASSWORD=d8xc27XbrdNnSiOCBFKc3GMep3FYbEh0
-
-# Novita AI Configuration (Pre-populated from your project)
-NOVITA_API_KEY=sk_kEz6nAcYjVd5Nk3lQ3Y5SEJnvWICJI4wieGzBYQgGyc
-NOVITA_API_BASE_URL=https://api.novita.ai/v3/openai
-
-# OAuth Configuration (Current development values - update with production when received)
-OAUTH_CLIENT_ID=2a743b89a0a645dc88635c85
-OAUTH_APP_SECRET=15348a76f29b47f983e7bd78f18fa9c2
-OAUTH_AUTH_URL=https://novita.ai/oauth/authorize
-OAUTH_TOKEN_EXCHANGE_URL=https://api-server.novita.ai/oauth/token
-OAUTH_REDIRECT_URI=https://nova-backend-2usm.onrender.com/api/external-auth/callback
-OAUTH_SCOPE=openid+profile
-OAUTH_USERINFO_URL=https://api-server.novita.ai/oauth/userinfo
-
-# JWT Authentication (Production-ready secrets generated)
-JWT_ACCESS_SECRET=1e2b1fa24632f36cc2130cb792a26a269f7d1efff1639a71c076f1346283a94c
-JWT_REFRESH_SECRET=8b336553e17d477cc662ffb8a3412987fdc250fe4ba47b67b66e09d5244a9660
-JWT_ACCESS_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN=7d
-
-# Application Configuration
-LOG_LEVEL=info
-MAX_FILE_SIZE=10485760
-UPLOAD_DIR=uploads
-RATE_LIMIT_WINDOW=15
-RATE_LIMIT_MAX_REQUESTS=100
-
-# Search API (Pre-populated from your project)
-SERPER_API_KEY=bcab8c3c0d97018ce8e931110e296b64ecb5f269
+PORT=3001
 ```
 
-### 🌐 **VERCEL FRONTEND ENVIRONMENT VARIABLES** (Copy-Paste Ready)
+## CORS Configuration
 
-```bash
-# Backend API Configuration (UPDATED with your actual Render backend URL)
-NEXT_PUBLIC_API_URL=https://nova-backend-2usm.onrender.com
+The backend is configured to use the `ALLOWED_ORIGINS` environment variable for CORS. Make sure to:
+
+1. Include your Vercel frontend URL in `ALLOWED_ORIGINS`
+2. Separate multiple origins with commas
+3. Don't include trailing slashes
+
+Example:
+```
+ALLOWED_ORIGINS=https://nova-frontend.vercel.app,https://nova.ai,http://localhost:3000
 ```
 
-## Step 3: Deploy Backend to Render
+## Authentication Options
 
-1. Fork or push the Nova repository to your GitHub account
+Nova now supports two authentication methods:
 
-2. Go to [Render Dashboard](https://dashboard.render.com/)
+### 1. OAuth with Novita Account
+- Uses the external OAuth provider
+- Requires `OAUTH_CLIENT_ID` and `OAUTH_APP_SECRET` to be configured
+- Redirect URI must match what's configured in your OAuth provider
 
-3. Click "New +" → "Web Service"
+### 2. Email/Password Authentication
+- Uses Supabase authentication
+- Users can register with email/password on the signup page
+- Same credentials work for login
 
-4. Connect your GitHub repository and select the Nova repo
+## Deployment Steps
 
-5. Configure the service:
-   - **Name**: nova-backend
-   - **Root Directory**: nova/backend
-   - **Environment**: Node
-   - **Build Command**: `npm install && npm run build`
-   - **Start Command**: `npm start`
+### 1. Deploy Backend
+1. Push your code to GitHub
+2. Connect your repo to Render/Railway
+3. Add all environment variables
+4. Deploy
 
-6. **Add Environment Variables:**
-   
-   📋 **Copy the complete environment variables from Step 2.5 above** - all values are pre-populated from your project configuration.
+### 2. Deploy Frontend
+1. Push your code to GitHub
+2. Import project to Vercel
+3. Add `NEXT_PUBLIC_API_URL` environment variable pointing to your backend
+4. Deploy
 
-7. Click "Create Web Service"
-
-8. Wait for the build and deployment to complete
-
-9. Note your backend URL: `https://your-service.onrender.com`
+### 3. Test Authentication
+1. Try OAuth login with "Continue with Novita"
+2. Try email/password login with "Continue with Email"
+3. Verify both methods work
 
 ## Troubleshooting
 
-### ✅ **FIXED: TypeScript Build Errors**
+### CORS Errors
+- Check that your frontend URL is in `ALLOWED_ORIGINS`
+- Ensure no trailing slashes in URLs
+- Verify the backend is running and accessible
 
-**Issue**: `Could not find a declaration file for module 'compression'` or similar TypeScript errors
+### OAuth Login Failed
+- Verify `OAUTH_CLIENT_ID` and `OAUTH_APP_SECRET` are correct
+- Check that `OAUTH_REDIRECT_URI` matches your OAuth provider settings
+- Ensure the backend URL in frontend env is correct
 
-**Solution Applied**: Moved all TypeScript type packages from `devDependencies` to `dependencies` in `package.json`:
-```json
-{
-  "dependencies": {
-    "@types/compression": "^1.8.1",
-    "@types/morgan": "^1.9.10",
-    "@types/pg": "^8.15.4"
-  }
-}
-```
+### Database Connection Failed
+- Verify `DATABASE_URL` is correct
+- Check Supabase service is running
+- Ensure `SUPABASE_SERVICE_KEY` has proper permissions
 
-**Why**: Render doesn't install `devDependencies` in production builds, so TypeScript types must be in main dependencies.
-
-### Other Common Issues
-
-#### Build Command Issues
-- Ensure build command is: `npm install && npm run build`
-- Ensure start command is: `npm start`
-- Root directory should be: `nova/backend`
-
-#### WebSocket Connection Issues
-- Ensure CORS origins are correctly set
-- Render supports WebSocket connections on all plans
-
-#### Database Connection Issues
-- Verify Supabase credentials
-- Check if database migrations were run successfully
-
-#### Redis Connection Issues
-- Ensure Redis instance is accessible from Render
-- Check firewall rules if using Redis Cloud
-
-## Support
-
-For issues specific to:
-- Render deployment: [Render Support](https://render.com/docs)
-- Vercel deployment: [Vercel Support](https://vercel.com/support)
-- Supabase: [Supabase Support](https://supabase.com/docs)
-- Nova application: Create an issue in the GitHub repository
+### 404 Errors on API Calls
+- Check `NEXT_PUBLIC_API_URL` doesn't have trailing slash
+- Verify backend routes are correctly configured
+- Ensure backend is deployed and running
