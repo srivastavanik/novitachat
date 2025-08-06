@@ -44,43 +44,64 @@ export default function ChatInput({
   
   // Check if current model supports thinking (based on Novita AI models)
   const supportsThinking = currentModel?.includes('thinking') || 
+                          currentModel?.includes('gpt-oss') ||  // GPT OSS models support thinking
                           currentModel?.includes('deepseek-r1') || 
-                          currentModel?.includes('deepseek-v3') ||
                           currentModel?.includes('glm-4.1v-9b-thinking') ||
                           currentModel?.includes('qwen3-235b-a22b-thinking') ||
                           currentModel?.includes('qwen-2.5-72b-instruct-thinking') ||
+                          currentModel?.includes('kimi-k2') ||
+                          currentModel?.includes('kimi/k2') ||
                           currentModel?.includes('reflection') ||
                           currentModel?.includes('reasoning') ||
                           false
 
-  // Much stricter web search auto-detection - only for clearly search-oriented queries
+  // Check if current model supports image input
+  const supportsImages = modelCapabilities.includes('image') ||
+                        currentModel?.includes('vision') ||
+                        currentModel?.includes('-vl-') ||
+                        currentModel?.includes('llava') ||
+                        false
+
+  // Intelligent web search auto-detection for queries that need real-time information
   const shouldEnableWebSearch = (query: string): boolean => {
-    const strictSearchKeywords = [
-      'search for', 'google', 'find me', 'look up', 'current price of', 'latest news about',
-      'weather in', 'today\'s weather', 'stock price', 'breaking news', 'recent events',
-      'what happened', 'current status of', 'real-time', 'live updates', 'browse',
-      'search the web', 'check online', 'verify online', 'current information'
-    ]
-    
-    const timeRelatedQueries = [
-      'today', 'yesterday', 'this week', 'this month', 'this year', '2024', '2025',
-      'current', 'latest', 'recent', 'now', 'right now'
+    const searchKeywords = [
+      // Direct search requests
+      'search', 'google', 'find', 'look up', 'check', 'verify',
+      
+      // Current information requests  
+      'latest', 'current', 'recent', 'today', 'now', 'breaking', 'update',
+      'news', 'weather', 'price', 'stock', 'market',
+      
+      // Time-sensitive queries
+      '2024', '2025', 'this week', 'this month', 'this year',
+      'yesterday', 'tomorrow', 'forecast',
+      
+      // Specific information needs
+      'hours', 'location', 'address', 'phone', 'website',
+      'reviews', 'ratings', 'score', 'results',
+      
+      // Questions about current state
+      'is it', 'are there', 'can i', 'should i', 'where can',
+      'how much', 'how many', 'when does', 'when is'
     ]
     
     const lowerQuery = query.toLowerCase().trim()
     
-    // Check for strict search keywords
-    if (strictSearchKeywords.some(keyword => lowerQuery.includes(keyword))) {
-      return true
-    }
+    // Check if query contains any search keywords
+    const hasSearchKeyword = searchKeywords.some(keyword => lowerQuery.includes(keyword))
     
-    // Check for time-related queries combined with factual requests
-    const hasTimeReference = timeRelatedQueries.some(time => lowerQuery.includes(time))
-    const isFactualQuery = lowerQuery.startsWith('what') || lowerQuery.startsWith('who') || 
-                          lowerQuery.startsWith('when') || lowerQuery.startsWith('where') ||
-                          lowerQuery.includes('price') || lowerQuery.includes('cost')
+    // Check if it's a question (contains ?)
+    const isQuestion = lowerQuery.includes('?')
     
-    return hasTimeReference && isFactualQuery && lowerQuery.length > 20
+    // Check if it's asking about something specific (starts with question words)
+    const startsWithQuestion = ['what', 'who', 'when', 'where', 'why', 'how', 'which', 'whose', 'whom']
+      .some(q => lowerQuery.startsWith(q))
+    
+    // Enable if:
+    // 1. Has search keywords OR
+    // 2. Is a question mark query OR  
+    // 3. Starts with question word and is longer than 10 chars
+    return hasSearchKeyword || isQuestion || (startsWithQuestion && lowerQuery.length > 10)
   }
 
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
@@ -112,7 +133,8 @@ export default function ChatInput({
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if (!disabled && !isStreaming && value.trim()) {
-      onSend(attachments, { 
+      // Pass attachments to onSend
+      onSend(attachments.length > 0 ? attachments : undefined, { 
         webSearch: webSearchEnabled || manualWebSearchOverride, 
         deepResearch: deepResearchEnabled,
         thinking: supportsThinking && thinkingEnabled,
@@ -121,6 +143,7 @@ export default function ChatInput({
       setAttachments([])
       setDeepResearchEnabled(false)
       setManualWebSearchOverride(false)
+      setWebSearchEnabled(false) // Reset web search after sending
       // Keep thinking enabled for future queries
     }
   }
@@ -186,7 +209,7 @@ export default function ChatInput({
             <div />
           )}
           <div className="flex items-center gap-3">
-            {/* Thinking Toggle (only for supported models) - moved to left */}
+            {/* Thinking Toggle (only for supported models) */}
             {supportsThinking && (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-[var(--nova-text-tertiary)]">Thinking</span>
@@ -196,7 +219,7 @@ export default function ChatInput({
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--nova-primary)] focus:ring-offset-2 focus:ring-offset-[var(--nova-bg-secondary)] ${
                     thinkingEnabled ? 'bg-gradient-to-r from-[var(--nova-primary)] to-[var(--nova-primary-dark)]' : 'bg-[var(--nova-bg-tertiary)]'
                   }`}
-                  title="Toggle thinking mode for reasoning-enabled models"
+                  title={`Toggle thinking mode (${currentModel?.includes('gpt-oss') ? 'GPT OSS' : 'Reasoning'} model)`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -361,7 +384,7 @@ export default function ChatInput({
             multiple
           />
           
-          {/* Attachment buttons */}
+          {/* Attachment buttons - only show if model supports them */}
           <div className="flex items-center gap-1 mb-[1px]">
             <button
               type="button"
@@ -377,20 +400,32 @@ export default function ChatInput({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
               </svg>
             </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                imageInputRef.current?.click()
-              }}
-              className="p-2 rounded-lg hover:bg-[var(--nova-bg-hover)] transition-colors text-[var(--nova-text-tertiary)] hover:text-[var(--nova-text-secondary)]"
-              title="Attach images"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </button>
+            {supportsImages && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  imageInputRef.current?.click()
+                }}
+                className="p-2 rounded-lg hover:bg-[var(--nova-bg-hover)] transition-colors text-[var(--nova-text-tertiary)] hover:text-[var(--nova-text-secondary)] relative group"
+                title="Attach images (vision model required)"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 text-xs bg-[var(--nova-bg-primary)] border border-[var(--nova-border-primary)] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  Vision model only
+                </span>
+              </button>
+            )}
+            {!supportsImages && (
+              <div className="p-2 opacity-30 cursor-not-allowed" title="Select a vision model to attach images">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            )}
           </div>
           
           <div className="flex-1 relative">

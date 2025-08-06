@@ -83,15 +83,16 @@ export class ChatController {
       res.setHeader('Access-Control-Allow-Origin', '*');
 
       // Check if model supports thinking (use a thinking model for trial)
-      const model = 'deepseek-v3';
+      const model = 'openai/gpt-oss-20b';  // Use GPT OSS 20B for trial (supports thinking)
       const isThinkingModel = (
         model.includes('thinking') || 
+        model.includes('gpt-oss') ||  // GPT OSS models support thinking
         model.includes('deepseek-r1') ||
-        model.includes('deepseek-v3') ||
         model.includes('glm-4.1v-9b-thinking') ||
         model.includes('qwen3-235b-a22b-thinking') ||
         model.includes('qwen-2.5-72b-instruct-thinking') ||
         model.includes('kimi-k2') ||
+        model.includes('kimi/k2') ||
         model.includes('reflection') ||
         model.includes('reasoning')
       );
@@ -661,15 +662,16 @@ export class ChatController {
         }
       }
 
-      // Check if model supports thinking (expanded list and auto-enable for web search)  
+      // Check if model supports thinking (expanded list)  
       const isThinkingModel = (
         conversation.model.includes('thinking') || 
+        conversation.model.includes('gpt-oss') ||  // GPT OSS models support thinking
         conversation.model.includes('deepseek-r1') ||
-        conversation.model.includes('deepseek-v3') ||
         conversation.model.includes('glm-4.1v-9b-thinking') ||
         conversation.model.includes('qwen3-235b-a22b-thinking') ||
         conversation.model.includes('qwen-2.5-72b-instruct-thinking') ||
         conversation.model.includes('kimi-k2') ||
+        conversation.model.includes('kimi/k2') ||
         conversation.model.includes('reflection') ||
         conversation.model.includes('reasoning')
       );
@@ -762,7 +764,7 @@ export class ChatController {
           model: conversation.model,
           messages,
           temperature: conversation.temperature,
-          max_tokens: conversation.max_tokens || (isThinkingModel ? 4000 : 2048),
+          max_tokens: conversation.max_tokens || (deepResearch ? 16384 : isThinkingModel ? 8192 : 4096),
           stream: true,
           ...(supportsThinking && { thinking: true })
         },
@@ -874,22 +876,34 @@ export class ChatController {
           }
           
           // Update the message with the full content and link previews
+          const finalMetadata: any = { 
+            streaming: false,
+            ...(linkPreviews.length > 0 && { 
+              linkPreviews,
+              searchSources: linkPreviews  // Also include as searchSources for compatibility
+            })
+          };
+          
           await MessageModel.update(streamingMessage.id, {
             content: fullContent,
-            metadata: { 
-              streaming: false,
-              ...(linkPreviews.length > 0 && { 
-                linkPreviews,
-                searchSources: linkPreviews  // Also include as searchSources for compatibility
-              })
-            }
+            metadata: finalMetadata
           });
           
-          // Finalize the message
+          // Finalize the message with all metadata
           const finalizedMessage = await MessageModel.finalizeStreamingMessage(
             streamingMessage.id,
             novitaService.estimateTokens(fullContent)
           );
+          
+          // Get the message with metadata included
+          const messageWithMetadata = await MessageModel.findById(streamingMessage.id);
+          if (messageWithMetadata && linkPreviews.length > 0) {
+            messageWithMetadata.metadata = {
+              ...messageWithMetadata.metadata,
+              linkPreviews,
+              searchSources: linkPreviews
+            };
+          }
 
           // Update conversation timestamp
           await ConversationModel.updateLastMessageAt(conversationId);
@@ -922,10 +936,31 @@ export class ChatController {
             }
           }
 
-          socket.emit('stream_complete', { 
-            messageId: streamingMessage.id,
-            message: finalizedMessage 
-          });
+          // Send the complete message with all metadata
+          if (finalizedMessage) {
+            const completeMessage = {
+              ...finalizedMessage,
+              metadata: {
+                ...finalizedMessage.metadata,
+                ...finalMetadata
+              }
+            };
+            
+            socket.emit('stream_complete', { 
+              messageId: streamingMessage.id,
+              message: completeMessage 
+            });
+          } else {
+            // If finalization failed, still send the message with metadata
+            const messageWithAllMetadata = await MessageModel.findById(streamingMessage.id);
+            if (messageWithAllMetadata) {
+              messageWithAllMetadata.metadata = finalMetadata;
+              socket.emit('stream_complete', { 
+                messageId: streamingMessage.id,
+                message: messageWithAllMetadata 
+              });
+            }
+          }
         }
       );
 

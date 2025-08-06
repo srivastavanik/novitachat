@@ -281,11 +281,12 @@ export default function ChatPage() {
       const response = await axios.post('/api/chat/conversations', {
         title: 'New Chat',
         model: currentModel || 'openai/gpt-oss-120b',  // Default to ChatGPT OSS 120B
-        max_tokens: 4096  // Default to 4096 tokens for better conversations
+        max_tokens: 8192  // Increased for better deep research
       })
       const newConversation = response.data.conversation
       setConversations(prev => [newConversation, ...(prev || [])])
       setCurrentConversation(newConversation)
+      setCurrentModel('openai/gpt-oss-120b')  // Ensure default model is set
       setMessages([])
     } catch (error) {
       console.error('Failed to create conversation:', error)
@@ -509,26 +510,23 @@ export default function ChatPage() {
     }
   }
 
-  const handleSendMessage = async (message: string, options?: { webSearch?: boolean; attachments?: File[]; style?: any; deepResearch?: boolean }) => {
+  const handleSendMessage = async (attachments?: any[], options?: { webSearch?: boolean; deepResearch?: boolean; thinking?: boolean; style?: any }) => {
     // Handle trial mode
     if (isTrialMode) {
-      // Convert File[] to the format expected by handleTrialSendMessage
-      const attachments = options?.attachments?.map((file, index) => ({
-        id: `${Date.now()}-${index}`,
-        file: file,
-        type: file.type.startsWith('image/') ? 'image' as const : 'document' as const
-      }))
-      return handleTrialSendMessage(message, attachments, { webSearch: options?.webSearch })
+      return handleTrialSendMessage(inputMessage, attachments, { 
+        webSearch: options?.webSearch,
+        deepResearch: options?.deepResearch 
+      })
     }
 
     // Normal authenticated flow
-    if (!message.trim() || !currentConversation || isStreaming) return
+    if (!inputMessage.trim() || !currentConversation || isStreaming) return
 
     // Prepare the message data
     const messageData: any = {
       conversationId: currentConversation.id,
-      content: message,
-      userId: user?.id // Add userId which is required by backend
+      content: inputMessage.trim(),
+      userId: user?.id
     }
 
     // Add options if provided
@@ -538,21 +536,24 @@ export default function ChatPage() {
     if (options?.deepResearch) {
       messageData.deepResearch = true
     }
+    if (options?.thinking) {
+      messageData.thinking = true
+    }
     if (options?.style) {
       messageData.style = options.style
     }
 
     // Handle attachments if provided
-    if (options?.attachments && options.attachments.length > 0) {
+    if (attachments && attachments.length > 0) {
       // Convert attachments to the format expected by backend
       const processedAttachments = await Promise.all(
-        options.attachments.map(async (file) => {
-          const base64 = await fileToBase64(file)
+        attachments.map(async (att) => {
+          const base64 = await fileToBase64(att.file)
           return {
-            name: file.name,
-            type: file.type.startsWith('image/') ? 'image' : 'document',
-            mimeType: file.type,
-            size: file.size,
+            name: att.file.name,
+            type: att.type === 'image' ? 'image' : 'document',
+            mimeType: att.file.type,
+            size: att.file.size,
             data: base64
           }
         })
@@ -705,10 +706,7 @@ export default function ChatPage() {
             onChange={setInputMessage}
             onSend={(attachments, options) => {
               if (inputMessage.trim()) {
-                handleSendMessage(inputMessage.trim(), { 
-                  webSearch: options?.webSearch,
-                  attachments: attachments?.map(a => a.file)
-                })
+                handleSendMessage(attachments, options)
                 setInputMessage('')
               }
             }}
@@ -841,12 +839,7 @@ export default function ChatPage() {
               onChange={setInputMessage}
               onSend={(attachments, options) => {
                 if (inputMessage.trim()) {
-                  handleSendMessage(inputMessage.trim(), { 
-                    webSearch: options?.webSearch,
-                    deepResearch: options?.deepResearch,
-                    attachments: attachments?.map(a => a.file),
-                    style: options?.style
-                  })
+                  handleSendMessage(attachments, options)
                   setInputMessage('')
                 }
               }}

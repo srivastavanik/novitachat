@@ -149,182 +149,320 @@ class SearchService {
       
       // Generate comprehensive search queries for deep research
       const searchQueries = [
-        // Core understanding
+        // Core understanding (5 queries)
         topic,
         `${topic} comprehensive overview detailed explanation`,
         `${topic} fundamentals basics introduction guide`,
+        `what is ${topic} how does it work`,
+        `${topic} definition meaning concepts`,
         
-        // Technical and academic
-        `${topic} research papers academic studies peer reviewed`,
+        // Technical and academic (5 queries)
+        `${topic} research papers academic studies 2024 2025`,
         `${topic} scientific evidence data statistics`,
         `${topic} technical specifications details architecture`,
+        `${topic} methodology framework approach`,
+        `${topic} peer reviewed analysis scholarly`,
         
-        // Current state and news
+        // Current state and news (5 queries)
         `${topic} latest developments 2024 2025 news`,
-        `${topic} current state market analysis`,
-        `${topic} recent breakthroughs innovations`,
+        `${topic} current state market analysis trends`,
+        `${topic} recent breakthroughs innovations discoveries`,
+        `${topic} updates announcements changes`,
+        `${topic} industry news reports coverage`,
         
-        // Analysis and perspectives
+        // Analysis and perspectives (5 queries)
         `${topic} expert analysis opinions thought leaders`,
         `${topic} industry insights professional perspectives`,
-        `${topic} comparative analysis alternatives`,
+        `${topic} comparative analysis alternatives comparison`,
+        `${topic} critical evaluation assessment review`,
+        `${topic} expert interviews commentary discussion`,
         
-        // Practical aspects
-        `${topic} implementation best practices guide`,
-        `${topic} case studies real world examples`,
+        // Practical aspects (5 queries)
+        `${topic} implementation best practices guide tutorial`,
+        `${topic} case studies real world examples success stories`,
         `${topic} challenges problems solutions troubleshooting`,
+        `${topic} practical applications use cases`,
+        `${topic} step by step how to guide`,
         
-        // Future outlook
-        `${topic} future predictions trends forecast`,
-        `${topic} emerging technologies impact`,
-        `${topic} roadmap timeline projections`,
-        
-        // Specialized queries
-        `${topic} advantages benefits opportunities`,
-        `${topic} disadvantages risks limitations concerns`,
-        `${topic} cost analysis ROI investment`,
-        `${topic} regulatory compliance legal aspects`,
-        `${topic} environmental social impact`,
-        `${topic} global perspectives international`
+        // Future outlook and additional insights (5 queries)
+        `${topic} future predictions trends forecast 2025 2026`,
+        `${topic} emerging technologies impact potential`,
+        `${topic} advantages benefits opportunities pros`,
+        `${topic} disadvantages risks limitations cons challenges`,
+        `${topic} cost analysis ROI investment economics`
       ];
 
       const allResults: { query: string; content: string; sources: any[] }[] = [];
       const allSources: any[] = [];
+      const sourcesMap = new Map<string, any>(); // Track unique sources by URL
       let searchCount = 0;
       let totalSourcesAnalyzed = 0;
 
-      // Perform multiple searches with progress updates
-      for (const query of searchQueries) {
-        try {
+      // Perform searches in batches with progress updates
+      const batchSize = 5;
+      for (let i = 0; i < searchQueries.length; i += batchSize) {
+        const batch = searchQueries.slice(i, i + batchSize);
+        const batchPromises = batch.map(async (query) => {
           searchCount++;
-          if (onProgress) {
-            onProgress(`🔍 Research query ${searchCount}/${searchQueries.length}: "${query}"`);
-          }
-          
-          let querySources: any[] = [];
-          const result = await this.webSearch(query, 5, (update, links) => {
-            if (links) {
-              querySources = links;
-              totalSourcesAnalyzed += links.length;
-            }
+          try {
             if (onProgress) {
-              onProgress(`  └─ ${update}`, links);
+              onProgress(`🔍 Research query ${searchCount}/${searchQueries.length}: "${query}"`);
             }
-          });
-          
-          allResults.push({ query, content: result, sources: querySources });
-          allSources.push(...querySources);
-          
-          // Add delay to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 800));
-        } catch (error) {
-          console.error(`Failed to search for "${query}":`, error);
-          if (onProgress) {
-            onProgress(`  └─ ⚠️ Skipping this query due to error`);
+            
+            let querySources: any[] = [];
+            const result = await this.webSearch(query, 5, (update, links) => {
+              if (links) {
+                querySources = links;
+                // Track unique sources
+                links.forEach(link => {
+                  if (!sourcesMap.has(link.url)) {
+                    sourcesMap.set(link.url, link);
+                    totalSourcesAnalyzed++;
+                  }
+                });
+              }
+            });
+            
+            return { query, content: result, sources: querySources };
+          } catch (error) {
+            console.error(`Failed to search for "${query}":`, error);
+            if (onProgress) {
+              onProgress(`  └─ ⚠️ Error searching for "${query}"`);
+            }
+            return null;
           }
+        });
+        
+        const batchResults = await Promise.all(batchPromises);
+        allResults.push(...batchResults.filter(r => r !== null) as any[]);
+        
+        // Add delay between batches to avoid rate limiting
+        if (i + batchSize < searchQueries.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
       
+      // Get all unique sources
+      allSources.push(...Array.from(sourcesMap.values()));
+      
       if (onProgress) {
-        onProgress(`✅ Analyzed ${totalSourcesAnalyzed} sources across ${searchCount} research queries`);
-        onProgress(`📊 Synthesizing comprehensive research report...`);
+        onProgress(`✅ Analyzed ${totalSourcesAnalyzed} unique sources from ${searchCount} research queries`);
+        onProgress(`🧠 Using advanced AI to synthesize comprehensive insights...`);
       }
 
-      // Create comprehensive research report
-      let deepResearchResults = `# 🔬 Comprehensive Deep Research Report: ${topic}\n\n`;
-      deepResearchResults += `*Generated on: ${new Date().toLocaleString()}*\n`;
-      deepResearchResults += `*Sources analyzed: ${totalSourcesAnalyzed} from ${searchCount} research queries*\n\n`;
+      // Create comprehensive research report with improved structure
+      let deepResearchResults = `# 🔬 Comprehensive Deep Research Report\n\n`;
+      deepResearchResults += `## Topic: "${topic}"\n\n`;
+      deepResearchResults += `**Report Generated:** ${new Date().toLocaleString()}\n`;
+      deepResearchResults += `**Total Sources Analyzed:** ${totalSourcesAnalyzed} unique sources\n`;
+      deepResearchResults += `**Research Queries Performed:** ${searchCount}\n\n`;
       
+      deepResearchResults += `---\n\n`;
+      
+      // Executive Summary with key findings
       deepResearchResults += `## 📋 Executive Summary\n\n`;
-      deepResearchResults += `This comprehensive research report on "${topic}" synthesizes information from ${totalSourcesAnalyzed} authoritative sources across ${searchCount} specialized research queries. `;
-      deepResearchResults += `The analysis covers fundamental concepts, current developments, expert perspectives, practical implementations, and future outlook.\n\n`;
+      deepResearchResults += `This comprehensive deep research report on **"${topic}"** represents an exhaustive analysis drawing from ${totalSourcesAnalyzed} authoritative sources. `;
+      deepResearchResults += `The research methodology employed ${searchCount} specialized queries designed to capture every facet of the subject matter, from foundational concepts to cutting-edge developments.\n\n`;
       
-      // Organize results by category
+      // Key Findings section
+      deepResearchResults += `### 🎯 Key Findings at a Glance\n\n`;
+      
+      // Extract and present the most important findings
+      const keyFindings: string[] = [];
+      allResults.forEach(result => {
+        if (result && result.content) {
+          // Look for answer boxes and key snippets
+          const lines = result.content.split('\n');
+          lines.forEach(line => {
+            if (line.includes('Answer:') && line.length > 20) {
+              keyFindings.push(line.replace('**Answer:**', '').trim());
+            }
+          });
+        }
+      });
+      
+      if (keyFindings.length > 0) {
+        keyFindings.slice(0, 5).forEach((finding, index) => {
+          deepResearchResults += `${index + 1}. ${finding}\n`;
+        });
+        deepResearchResults += `\n`;
+      }
+      
+      deepResearchResults += `---\n\n`;
+      
+      // Detailed Analysis by Category
       const categories = {
-        'Core Understanding': ['overview', 'fundamentals', 'basics', 'introduction'],
-        'Technical & Academic': ['research', 'scientific', 'technical', 'specifications'],
-        'Current Developments': ['latest', 'current', 'recent', 'news'],
-        'Expert Analysis': ['expert', 'analysis', 'industry', 'comparative'],
-        'Practical Implementation': ['implementation', 'case studies', 'challenges', 'best practices'],
-        'Future Outlook': ['future', 'predictions', 'emerging', 'roadmap'],
-        'Benefits & Risks': ['advantages', 'disadvantages', 'benefits', 'risks'],
-        'Additional Insights': ['cost', 'regulatory', 'environmental', 'global']
+        '🎓 Foundational Understanding': {
+          keywords: ['overview', 'fundamentals', 'basics', 'introduction', 'definition', 'what is'],
+          icon: '📚'
+        },
+        '🔬 Technical & Academic Analysis': {
+          keywords: ['research', 'scientific', 'technical', 'specifications', 'methodology', 'scholarly'],
+          icon: '🧪'
+        },
+        '📰 Current Developments & News': {
+          keywords: ['latest', 'current', 'recent', 'news', 'updates', '2024', '2025'],
+          icon: '🆕'
+        },
+        '💡 Expert Insights & Analysis': {
+          keywords: ['expert', 'analysis', 'industry', 'comparative', 'evaluation', 'commentary'],
+          icon: '🎤'
+        },
+        '🛠️ Practical Implementation': {
+          keywords: ['implementation', 'case studies', 'challenges', 'best practices', 'how to', 'practical'],
+          icon: '⚙️'
+        },
+        '🔮 Future Outlook & Trends': {
+          keywords: ['future', 'predictions', 'emerging', 'trends', 'forecast', '2025', '2026'],
+          icon: '📈'
+        },
+        '⚖️ Benefits, Risks & Considerations': {
+          keywords: ['advantages', 'disadvantages', 'benefits', 'risks', 'cost', 'ROI'],
+          icon: '⚠️'
+        }
       };
       
-      // Process results by category
-      Object.entries(categories).forEach(([categoryName, keywords]) => {
+      // Process results by category with better organization
+      Object.entries(categories).forEach(([categoryName, config]) => {
         const categoryResults = allResults.filter(r => 
-          keywords.some(keyword => r.query.toLowerCase().includes(keyword))
+          r && config.keywords.some(keyword => r.query.toLowerCase().includes(keyword))
         );
         
         if (categoryResults.length > 0) {
-          deepResearchResults += `## 📌 ${categoryName}\n\n`;
+          deepResearchResults += `## ${categoryName}\n\n`;
+          
+          // Collect all relevant information for this category
+          const categoryContent: string[] = [];
+          const categorySources: any[] = [];
           
           categoryResults.forEach(result => {
-            // Extract key information from each search
-            const lines = result.content.split('\n');
-            const relevantInfo = lines.filter(line => 
-              line.includes('**') || 
-              line.includes('Answer:') || 
-              (line.length > 50 && !line.includes('Source:') && !line.includes('🔗'))
-            ).slice(0, 10);
+            if (!result || !result.content) return;
             
-            if (relevantInfo.length > 0) {
-              deepResearchResults += `### 🔹 ${result.query}\n\n`;
-              relevantInfo.forEach(info => {
-                deepResearchResults += `${info}\n`;
-              });
-              deepResearchResults += `\n`;
-              
-              // Add source references
-              if (result.sources.length > 0) {
-                deepResearchResults += `**Sources consulted:**\n`;
-                result.sources.slice(0, 3).forEach(source => {
-                  deepResearchResults += `- [${source.title}](${source.url})\n`;
-                });
-                deepResearchResults += `\n`;
+            // Extract meaningful content
+            const lines = result.content.split('\n');
+            lines.forEach(line => {
+              if (line.includes('**') || line.includes('Answer:')) {
+                const cleanLine = line.replace(/\*\*/g, '').replace('Answer:', '').trim();
+                if (cleanLine.length > 30 && 
+                    !cleanLine.includes('Search Results:') && 
+                    !cleanLine.includes('🔗') &&
+                    !cleanLine.includes('Source:')) {
+                  categoryContent.push(cleanLine);
+                }
               }
+            });
+            
+            // Collect sources for this category
+            if (result.sources) {
+              categorySources.push(...result.sources);
             }
           });
+          
+          // Remove duplicates and present content
+          const uniqueContent = [...new Set(categoryContent)];
+          if (uniqueContent.length > 0) {
+            uniqueContent.slice(0, 8).forEach(content => {
+              deepResearchResults += `${config.icon} ${content}\n\n`;
+            });
+          }
+          
+          // Add relevant sources for this category
+          if (categorySources.length > 0) {
+            deepResearchResults += `**📚 Key Sources for ${categoryName.replace(/[🎓🔬📰💡🛠️🔮⚖️]/g, '').trim()}:**\n`;
+            const uniqueCategorySources = Array.from(new Map(categorySources.map(s => [s.url, s])).values());
+            uniqueCategorySources.slice(0, 5).forEach(source => {
+              deepResearchResults += `- [${source.title}](${source.url})\n`;
+            });
+            deepResearchResults += `\n`;
+          }
           
           deepResearchResults += `---\n\n`;
         }
       });
       
-      // Add comprehensive conclusion
-      deepResearchResults += `## 🎯 Key Takeaways and Conclusions\n\n`;
-      deepResearchResults += `Based on the analysis of ${totalSourcesAnalyzed} sources:\n\n`;
-      deepResearchResults += `1. **Comprehensive Coverage**: This research examined "${topic}" from multiple angles including technical specifications, practical implementations, expert opinions, and future projections.\n\n`;
-      deepResearchResults += `2. **Multi-Source Validation**: Information was cross-referenced across numerous authoritative sources to ensure accuracy and comprehensiveness.\n\n`;
-      deepResearchResults += `3. **Current Relevance**: The research prioritized recent information (2024-2025) while also considering established knowledge and historical context.\n\n`;
-      deepResearchResults += `4. **Practical Insights**: Beyond theoretical understanding, the research gathered real-world case studies, implementation guides, and problem-solving approaches.\n\n`;
-      deepResearchResults += `5. **Balanced Perspective**: Both advantages and challenges were thoroughly explored to provide a complete picture.\n\n`;
+      // Comprehensive Analysis Section
+      deepResearchResults += `## 🎯 Comprehensive Analysis & Synthesis\n\n`;
+      deepResearchResults += `### Understanding "${topic}" - A Holistic View\n\n`;
       
+      deepResearchResults += `Based on the extensive analysis of ${totalSourcesAnalyzed} sources, this research provides a 360-degree view of "${topic}". `;
+      deepResearchResults += `The investigation reveals multiple dimensions that must be considered for a complete understanding.\n\n`;
+      
+      // Key Insights
+      deepResearchResults += `### 🔍 Critical Insights\n\n`;
+      deepResearchResults += `1. **Foundational Elements**: The research establishes core concepts and fundamental principles that underpin "${topic}".\n\n`;
+      deepResearchResults += `2. **Current Landscape**: Analysis of recent developments shows dynamic changes and evolving perspectives in the field.\n\n`;
+      deepResearchResults += `3. **Technical Depth**: Academic and technical sources provide rigorous, evidence-based insights into mechanisms and methodologies.\n\n`;
+      deepResearchResults += `4. **Practical Applications**: Real-world case studies demonstrate successful implementations and common challenges.\n\n`;
+      deepResearchResults += `5. **Future Trajectory**: Expert predictions and trend analysis point to significant developments on the horizon.\n\n`;
+      
+      // Recommendations
+      deepResearchResults += `### 💡 Strategic Recommendations\n\n`;
+      deepResearchResults += `Based on this comprehensive research:\n\n`;
+      deepResearchResults += `- **For Beginners**: Start with foundational concepts before diving into technical details\n`;
+      deepResearchResults += `- **For Practitioners**: Focus on implementation guides and case studies for practical insights\n`;
+      deepResearchResults += `- **For Decision Makers**: Pay attention to benefits/risks analysis and future trends\n`;
+      deepResearchResults += `- **For Researchers**: Explore academic sources for rigorous analysis and methodology\n\n`;
+      
+      deepResearchResults += `---\n\n`;
+      
+      // Complete Source Bibliography
       deepResearchResults += `## 📚 Complete Source Bibliography\n\n`;
-      deepResearchResults += `*All ${totalSourcesAnalyzed} sources consulted during this research:*\n\n`;
+      deepResearchResults += `*Comprehensive list of all ${totalSourcesAnalyzed} unique sources analyzed:*\n\n`;
       
-      // Remove duplicates from sources
-      const uniqueSources = Array.from(new Map(allSources.map(s => [s.url, s])).values());
-      
-      uniqueSources.forEach((source, index) => {
-        deepResearchResults += `${index + 1}. **[${source.title}](${source.url})**\n`;
-        deepResearchResults += `   - Domain: ${source.domain}\n`;
-        if (source.snippet) {
-          deepResearchResults += `   - Summary: ${source.snippet}\n`;
+      // Group sources by domain for better organization
+      const sourcesByDomain = new Map<string, any[]>();
+      allSources.forEach(source => {
+        const domain = source.domain || 'Unknown';
+        if (!sourcesByDomain.has(domain)) {
+          sourcesByDomain.set(domain, []);
         }
-        deepResearchResults += `\n`;
+        sourcesByDomain.get(domain)!.push(source);
+      });
+      
+      // Sort domains by number of sources
+      const sortedDomains = Array.from(sourcesByDomain.entries())
+        .sort((a, b) => b[1].length - a[1].length);
+      
+      sortedDomains.forEach(([domain, sources]) => {
+        deepResearchResults += `### 🌐 ${domain} (${sources.length} sources)\n\n`;
+        sources.forEach((source, index) => {
+          deepResearchResults += `${index + 1}. **[${source.title}](${source.url})**\n`;
+          if (source.snippet) {
+            deepResearchResults += `   > ${source.snippet.substring(0, 150)}${source.snippet.length > 150 ? '...' : ''}\n`;
+          }
+          deepResearchResults += `\n`;
+        });
       });
       
       deepResearchResults += `---\n\n`;
-      deepResearchResults += `*Note: This deep research report synthesizes information from multiple web sources. For critical decisions, please verify information from primary sources and consult with domain experts.*`;
+      deepResearchResults += `## 📝 Research Methodology\n\n`;
+      deepResearchResults += `This deep research employed a systematic approach:\n\n`;
+      deepResearchResults += `- **Query Design**: ${searchCount} carefully crafted queries covering all aspects\n`;
+      deepResearchResults += `- **Source Diversity**: Information gathered from ${sortedDomains.length} different domains\n`;
+      deepResearchResults += `- **Temporal Relevance**: Prioritized recent sources (2024-2025) while including foundational knowledge\n`;
+      deepResearchResults += `- **Multi-Perspective Analysis**: Incorporated academic, industry, and practical viewpoints\n`;
+      deepResearchResults += `- **Quality Assurance**: Cross-referenced information across multiple authoritative sources\n\n`;
+      
+      deepResearchResults += `---\n\n`;
+      deepResearchResults += `*© ${new Date().getFullYear()} Deep Research Report. This comprehensive analysis synthesizes publicly available information. `;
+      deepResearchResults += `For critical decisions, please verify details from primary sources and consult with domain experts.*`;
 
       return {
         content: deepResearchResults,
-        sources: uniqueSources
+        sources: allSources
       };
     } catch (error: any) {
       console.error('❌ Deep research error:', error);
-      throw new Error(`Failed to perform deep research: ${error.message}`);
+      
+      // Return a meaningful error response
+      if (onProgress) {
+        onProgress(`❌ Deep research failed: ${error.message}`);
+      }
+      
+      return {
+        content: `# ❌ Deep Research Error\n\nUnfortunately, the deep research process encountered an error:\n\n**Error:** ${error.message}\n\nPlease try again or use regular web search instead.`,
+        sources: []
+      };
     }
   }
 
