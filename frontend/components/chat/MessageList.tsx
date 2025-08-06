@@ -44,22 +44,14 @@ export default function MessageList({
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4">
         {messages.map((message) => (
-          <Message key={message.id} message={message} />
-        ))}
-        
-        {streamingMessage && (
-          <Message
-            message={{
-              id: 'streaming',
-              content: streamingMessage,
-              sender_type: 'assistant',
-              created_at: new Date().toISOString()
-            }}
-            isStreaming={isStreaming}
+          <Message 
+            key={message.id} 
+            message={message} 
+            isStreaming={isStreaming && message.metadata?.streaming === true}
           />
-        )}
+        ))}
         
         <div ref={messagesEndRef} />
       </div>

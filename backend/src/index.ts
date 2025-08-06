@@ -1,23 +1,33 @@
 import { httpServer } from './app';
 import { config } from './config';
-import database from './database';
 import { redisClient } from './utils/redis';
+import { supabaseAdmin } from './services/supabase.service';
 
 const PORT = config.PORT || 3001;
 const HOST = config.HOST || 'localhost';
 
 async function startServer() {
   try {
-    // Test database connection
-    await database.query('SELECT NOW()');
-    console.log('✅ Database connected successfully');
+    // Test Supabase connection
+    const { error } = await supabaseAdmin
+      .from('users')
+      .select('count', { count: 'exact', head: true });
+    if (error) {
+      throw new Error(`Supabase connection failed: ${error.message}`);
+    }
+    console.log('✅ Supabase connected successfully');
 
-    // Test Redis connection
-    await redisClient.set('test', 'connected');
-    const testValue = await redisClient.get('test');
-    if (testValue === 'connected') {
-      await redisClient.del('test');
-      console.log('✅ Redis connected successfully');
+    // Test Redis connection (optional)
+    try {
+      await redisClient.set('test', 'connected');
+      const testValue = await redisClient.get('test');
+      if (testValue === 'connected') {
+        await redisClient.del('test');
+        console.log('✅ Redis connected successfully');
+      }
+    } catch (error) {
+      console.warn('⚠️  Redis not available - running without caching');
+      console.warn('   To enable Redis, install Docker and run: docker compose up -d redis');
     }
 
     // Start the server
@@ -46,10 +56,6 @@ process.on('SIGTERM', async () => {
     console.log('HTTP server closed');
   });
 
-  // Close database connection
-  await database.close();
-  console.log('Database connection closed');
-
   // Close Redis connection
   await redisClient.disconnect();
   console.log('Redis connection closed');
@@ -63,10 +69,6 @@ process.on('SIGINT', async () => {
   httpServer.close(() => {
     console.log('HTTP server closed');
   });
-
-  // Close database connection
-  await database.close();
-  console.log('Database connection closed');
 
   // Close Redis connection
   await redisClient.disconnect();

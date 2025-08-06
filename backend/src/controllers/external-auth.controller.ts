@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { UserModel, User } from '../models/User';
 import { redisClient } from '../utils/redis';
-import { frontendConfig } from '../config';
+import { frontendConfig, oauthConfig } from '../config';
 import { 
   buildAuthUrl, 
   exchangeCodeForToken, 
@@ -15,16 +15,31 @@ export class ExternalAuthController {
    */
   async getAuthUrl(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      console.log('=== getAuthUrl called ===');
       const state = req.query.state as string || undefined;
       
+      // Log OAuth configuration for debugging
+      console.log('OAuth Config:', {
+        clientId: oauthConfig.clientId,
+        authUrl: oauthConfig.authUrl,
+        redirectUri: oauthConfig.redirectUri,
+        scope: oauthConfig.scope
+      });
+      
       const authUrl = buildAuthUrl(state);
-      console.log('Auth URL built successfully:', { state, authUrlLength: authUrl.length });
+      console.log('Auth URL built successfully:', { state, authUrlLength: authUrl.length, authUrl });
       
       res.json({ authUrl });
-    } catch (error) {
-      console.error('Failed to build auth URL:', { state: req.query.state, error });
+    } catch (error: any) {
+      console.error('=== Failed to build auth URL ===');
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('OAuth config at error:', oauthConfig);
+      
       res.status(500).json({
-        error: 'Failed to build auth URL'
+        error: 'Failed to build auth URL',
+        details: error.message,
+        stack: error.stack
       });
     }
   }

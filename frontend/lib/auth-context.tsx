@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import axios from 'axios'
+import axios from './axios-config'
 import { getCookie, setCookie, removeCookie } from './utils'
 
 interface User {
@@ -22,64 +22,53 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Configure axios defaults
-axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-axios.defaults.withCredentials = true
-
-// Add auth token to requests
-axios.interceptors.request.use(
-  (config) => {
-    const token = getCookie('access_token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => Promise.reject(error)
-)
-
-// Handle token refresh on 401
-axios.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
-      try {
-        const response = await axios.post('/api/auth/refresh')
-        setCookie('access_token', response.data.access_token, { 
-          expires: 7, // 7 days
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax'
-        })
-        originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`
-        return axios(originalRequest)
-      } catch (refreshError) {
-        removeCookie('access_token')
-        window.location.href = '/login'
-        return Promise.reject(refreshError)
-      }
-    }
-    return Promise.reject(error)
-  }
-)
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    checkAuth()
+    // Skip auth check if in trial mode
+    const urlParams = new URLSearchParams(window.location.search)
+    const isTrialMode = urlParams.get('trial') === 'true'
+    
+    if (!isTrialMode) {
+      checkAuth()
+    } else {
+      // Set trial user immediately for trial mode
+      setUser({
+        id: 'trial-user',
+        email: 'trial@nova.ai',
+        username: 'Trial User'
+      })
+      setLoading(false)
+    }
   }, [])
 
   const checkAuth = async () => {
     try {
       const token = getCookie('access_token')
-      if (!token) {
+      
+      // Check if we're in trial mode
+      const urlParams = new URLSearchParams(window.location.search)
+      const isTrial = urlParams.get('trial') === 'true'
+      
+      if (!token && !isTrial) {
         setLoading(false)
         return
       }
-      const response = await axios.get('/api/auth/profile')
+
+      if (isTrial) {
+        // Set a trial user for trial mode
+        setUser({
+          id: 'trial-user',
+          email: 'trial@nova.ai',
+          username: 'Trial User'
+        })
+        setLoading(false)
+        return
+      }
+      
+      const response = await axios.get('/api/auth/me')
       setUser(response.data.user)
     } catch (error) {
       removeCookie('access_token')
@@ -90,21 +79,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const response = await axios.post('/api/auth/login', { email, password })
-    setCookie('access_token', response.data.access_token, {
-      expires: 7, // 7 days
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
-    })
+    
+    // Handle both response formats
+    if (response.data.access_token) {
+      setCookie('access_token', response.data.access_token, {
+        expires: 7, // 7 days
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+      })
+      // Set auth header immediately after login
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`
+    } else if (response.data.tokens) {
+      setCookie('access_token', response.data.tokens.accessToken, {
+        expires: 7, // 7 days
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+      })
+      // Set auth header immediately after login
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.accessToken}`
+    }
+    
     setUser(response.data.user)
   }
 
   const register = async (email: string, password: string, username: string) => {
     const response = await axios.post('/api/auth/register', { email, password, username })
-    setCookie('access_token', response.data.access_token, {
-      expires: 7, // 7 days
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
-    })
+    
+    // Handle both response formats
+    if (response.data.access_token) {
+      setCookie('access_token', response.data.access_token, {
+        expires: 7, // 7 days
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+      })
+      // Set auth header immediately after register
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`
+    } else if (response.data.tokens) {
+      setCookie('access_token', response.data.tokens.accessToken, {
+        expires: 7, // 7 days
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+      })
+      // Set auth header immediately after register
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.accessToken}`
+    }
+    
     setUser(response.data.user)
   }
 
@@ -120,11 +139,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshToken = async () => {
     const response = await axios.post('/api/auth/refresh')
-    setCookie('access_token', response.data.access_token, {
-      expires: 7, // 7 days
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
-    })
+    if (response.data.access_token) {
+      setCookie('access_token', response.data.access_token, {
+        expires: 7, // 7 days
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+      })
+    } else if (response.data.accessToken) {
+      setCookie('access_token', response.data.accessToken, {
+        expires: 7, // 7 days
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+      })
+    }
   }
 
   return (

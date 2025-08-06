@@ -1,6 +1,5 @@
 import React from 'react'
 import { format } from 'date-fns'
-import { MessageCircle } from 'lucide-react'
 
 interface ConversationItemProps {
   conversation: {
@@ -20,19 +19,20 @@ export default function ConversationItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
+      className={`w-full text-left px-3 py-2 rounded-xl transition-all ${
         isActive
-          ? 'bg-accent text-accent-foreground'
-          : 'hover:bg-accent/50'
+          ? 'bg-[#00FF7F] hover:bg-[#00D96A]'
+          : 'hover:bg-[var(--nova-bg-hover)] text-[var(--nova-text-secondary)]'
       }`}
     >
-      <div className="flex items-start gap-2">
-        <MessageCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+      <div className="flex items-center justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <div className="font-medium truncate">{conversation.title}</div>
-          <div className="text-xs text-muted-foreground">
-            {format(new Date(conversation.updated_at), 'MMM d, h:mm a')}
+          <div className={`text-[11px] font-medium truncate ${isActive ? 'text-black' : 'text-[var(--nova-text-primary)]'}`}>
+            {conversation.title}
           </div>
+        </div>
+        <div className={`text-[10px] flex-shrink-0 ${isActive ? 'text-black/70' : 'text-[var(--nova-text-tertiary)]'}`}>
+          {format(new Date(conversation.updated_at), 'h:mm a')}
         </div>
       </div>
     </button>

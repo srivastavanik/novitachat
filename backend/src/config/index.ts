@@ -11,26 +11,20 @@ const envSchema = z.object({
   PORT: z.string().default('5000').transform(Number),
   HOST: z.string().default('localhost'),
 
-  // Database
-  DB_HOST: z.string(),
-  DB_PORT: z.string().transform(Number),
-  DB_NAME: z.string(),
-  DB_USER: z.string(),
-  DB_PASSWORD: z.string(),
+  // Supabase
+  SUPABASE_URL: z.string(),
+  SUPABASE_ANON_KEY: z.string(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string(),
+  SUPABASE_DB_PASSWORD: z.string().optional(),
 
   // Redis
   REDIS_HOST: z.string(),
   REDIS_PORT: z.string().transform(Number),
   REDIS_PASSWORD: z.string().optional().default(''),
 
-  // JWT
-  JWT_SECRET: z.string(),
-  JWT_ACCESS_TOKEN_EXPIRY: z.string().default('15m'),
-  JWT_REFRESH_TOKEN_EXPIRY: z.string().default('7d'),
-
   // Novita AI
   NOVITA_API_KEY: z.string(),
-  NOVITA_API_BASE_URL: z.string().default('https://api.novita.ai/v3'),
+  NOVITA_API_BASE_URL: z.string().default('https://api.novita.ai/v3/openai'),
 
   // OAuth
   OAUTH_CLIENT_ID: z.string(),
@@ -58,6 +52,12 @@ const envSchema = z.object({
   // Rate Limiting
   RATE_LIMIT_WINDOW: z.string().transform(Number).default('15'),
   RATE_LIMIT_MAX_REQUESTS: z.string().transform(Number).default('100'),
+
+  // JWT
+  JWT_ACCESS_SECRET: z.string().default('your-super-secret-jwt-access-key'),
+  JWT_REFRESH_SECRET: z.string().default('your-super-secret-jwt-refresh-key'),
+  JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
+  JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 });
 
 // Parse and validate environment variables
@@ -71,25 +71,17 @@ if (!parsedEnv.success) {
 export const config = parsedEnv.data;
 
 // Export grouped configurations for easier access
-export const dbConfig = {
-  host: config.DB_HOST,
-  port: config.DB_PORT,
-  database: config.DB_NAME,
-  user: config.DB_USER,
-  password: config.DB_PASSWORD,
-  ssl: config.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+export const supabaseConfig = {
+  url: config.SUPABASE_URL,
+  anonKey: config.SUPABASE_ANON_KEY,
+  serviceRoleKey: config.SUPABASE_SERVICE_ROLE_KEY,
+  dbPassword: config.SUPABASE_DB_PASSWORD,
 };
 
 export const redisConfig = {
   host: config.REDIS_HOST,
   port: config.REDIS_PORT,
   password: config.REDIS_PASSWORD || undefined,
-};
-
-export const jwtConfig = {
-  secret: config.JWT_SECRET,
-  accessTokenExpiry: config.JWT_ACCESS_TOKEN_EXPIRY,
-  refreshTokenExpiry: config.JWT_REFRESH_TOKEN_EXPIRY,
 };
 
 export const novitaConfig = {
@@ -120,6 +112,13 @@ export const corsConfig = {
 export const socketCorsConfig = {
   origin: config.SOCKET_CORS_ORIGIN.split(','),
   credentials: true,
+};
+
+export const jwtConfig = {
+  accessSecret: config.JWT_ACCESS_SECRET,
+  refreshSecret: config.JWT_REFRESH_SECRET,
+  accessExpiresIn: config.JWT_ACCESS_EXPIRES_IN,
+  refreshExpiresIn: config.JWT_REFRESH_EXPIRES_IN,
 };
 
 export default config;

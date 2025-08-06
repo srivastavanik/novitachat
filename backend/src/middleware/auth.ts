@@ -11,6 +11,21 @@ export const authenticate = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    // Check if this is a trial request
+    const isTrial = req.headers['x-trial-mode'] === 'true';
+    
+    if (isTrial) {
+      // Set trial user
+      req.user = {
+        userId: 'trial-user',
+        email: 'trial@nova.ai',
+        role: 'user',
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 3600 // 1 hour expiry
+      };
+      return next();
+    }
+    
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

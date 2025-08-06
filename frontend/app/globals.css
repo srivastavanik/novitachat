@@ -1,76 +1,780 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800;900&display=swap');
+@import '../styles/design-tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-  }
+:root {
+  --primary-green: #00FF7F;
+  --secondary-green: #00D96A;
+  --text-primary: rgba(255, 255, 255, 0.95);
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-tertiary: rgba(255, 255, 255, 0.5);
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --blur-amount: 20px;
 }
 
 @layer base {
+  /* Base styles using Nova design tokens */
   * {
     @apply border-border;
   }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[var(--nova-bg-primary)] text-[var(--nova-text-primary)];
+    font-family: var(--nova-font-sans);
+    font-size: var(--nova-text-base);
+    line-height: var(--nova-leading-normal);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--nova-bg-secondary);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--nova-border-secondary);
+    border-radius: var(--nova-radius-full);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--nova-border-primary);
+  }
+
+  /* Selection highlighting */
+  ::selection {
+    background: var(--nova-primary);
+    color: var(--nova-text-inverse);
+  }
+}
+
+@layer components {
+  /* Nova Button Styles - Pill-Shaped Design */
+  .nova-button {
+    @apply inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--nova-green-bright)] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    border-radius: var(--nova-radius-full);
+    padding: var(--nova-space-3) var(--nova-space-6);
+    font-size: var(--nova-text-base);
+    font-weight: var(--nova-font-medium);
+    letter-spacing: 0;
+  }
+
+  .nova-button-primary {
+    @apply nova-button;
+    background-color: var(--nova-green-primary);
+    color: var(--nova-text-inverse);
+    font-weight: var(--nova-font-semibold);
+    border-radius: 24px;
+    height: 48px;
+    padding: 0 32px;
+    transition: all 0.2s ease;
+  }
+  
+  .nova-button-primary:hover {
+    background-color: var(--nova-green-alt);
+    transform: translateY(-1px);
+  }
+
+  .nova-button-secondary {
+    @apply nova-button;
+    background-color: transparent;
+    color: var(--nova-text-primary);
+    border: 1.5px solid var(--nova-green-primary);
+    font-weight: var(--nova-font-semibold);
+    border-radius: 24px;
+    height: 48px;
+    padding: 0 32px;
+    transition: all 0.2s ease;
+  }
+  
+  .nova-button-secondary:hover {
+    background-color: var(--nova-green-hover);
+    color: var(--nova-text-primary);
+    transform: translateY(-1px);
+  }
+
+  .nova-button-ghost {
+    @apply nova-button text-[var(--nova-text-secondary)] hover:text-[var(--nova-text-primary)] hover:bg-[var(--nova-bg-elevated)];
+  }
+
+  /* Navigation Button Styles */
+  .nova-nav-button {
+    @apply inline-flex items-center transition-all duration-200;
+    font-size: var(--nova-text-sm);
+    font-weight: var(--nova-font-medium);
+    padding: 12px 16px;
+    color: var(--nova-text-secondary);
+    border-radius: 8px;
+  }
+  
+  .nova-nav-button:hover {
+    color: var(--nova-text-primary);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  /* Nova Input Styles */
+  .nova-input {
+    @apply w-full rounded-[var(--nova-radius-md)] bg-[var(--nova-bg-tertiary)] border border-[var(--nova-border-primary)] px-4 py-2 text-[var(--nova-text-primary)] placeholder:text-[var(--nova-text-tertiary)] focus:border-[var(--nova-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--nova-primary)] transition-all duration-150;
+  }
+
+  /* Nova Card Styles */
+  .nova-card {
+    @apply rounded-[var(--nova-radius-lg)] bg-[var(--nova-bg-tertiary)] border border-[var(--nova-border-primary)] shadow-[var(--nova-shadow-base)];
+  }
+
+  .nova-card-hover {
+    @apply nova-card hover:bg-[var(--nova-bg-elevated)] hover:border-[var(--nova-border-secondary)] hover:shadow-[var(--nova-shadow-md)] transition-all duration-200 cursor-pointer;
+  }
+
+  /* Code Block Styles */
+  .nova-code {
+    @apply font-[var(--nova-font-mono)] text-[var(--nova-text-sm)] bg-[var(--nova-code-bg)] text-[var(--nova-code-text)] rounded-[var(--nova-radius-md)] p-4 overflow-x-auto;
+  }
+
+  .nova-code-inline {
+    @apply font-[var(--nova-font-mono)] text-[var(--nova-text-sm)] bg-[var(--nova-code-bg)] text-[var(--nova-code-text)] px-1.5 py-0.5 rounded-[var(--nova-radius-sm)];
+  }
+
+  /* Nova Badge Styles */
+  .nova-badge {
+    @apply inline-flex items-center rounded-[var(--nova-radius-full)] px-2.5 py-0.5 text-[var(--nova-text-xs)] font-medium;
+  }
+
+  .nova-badge-primary {
+    @apply nova-badge bg-[var(--nova-primary-ultra-light)] text-[var(--nova-primary-dark)];
+  }
+
+  .nova-badge-accent {
+    @apply nova-badge bg-[var(--nova-accent-light)] text-[var(--nova-accent-dark)];
+  }
+
+  /* Nova Divider */
+  .nova-divider {
+    @apply h-px bg-[var(--nova-border-primary)] w-full;
+  }
+
+  /* Nova Heading Styles - Enhanced with dramatic sizing and weight mixing */
+  .nova-hero {
+    font-size: var(--nova-text-8xl);
+    font-weight: 200; /* Ultra-thin for base text */
+    line-height: var(--nova-leading-tight);
+    letter-spacing: -0.04em;
+    text-align: center;
+    margin-bottom: 80px;
+    text-shadow: 0 0 40px rgba(0, 255, 127, 0.3);
+  }
+
+  .nova-hero-accent {
+    font-weight: 900; /* Black for emphasis words */
+    background: linear-gradient(135deg, #00FF7F 0%, #40FFB7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .nova-subhero {
+    font-size: var(--nova-text-xl);
+    font-weight: var(--nova-font-normal);
+    line-height: 1.6;
+    text-align: center;
+    margin-bottom: 60px;
+    color: var(--nova-text-secondary);
+  }
+
+  .nova-h1 {
+    font-size: var(--nova-text-4xl);
+    font-weight: var(--nova-font-bold);
+    line-height: var(--nova-leading-tight);
+    letter-spacing: -0.01em;
+  }
+
+  .nova-h2 {
+    font-size: var(--nova-text-3xl);
+    font-weight: var(--nova-font-semibold);
+    line-height: var(--nova-leading-tight);
+    letter-spacing: -0.01em;
+  }
+
+  .nova-h3 {
+    font-size: var(--nova-text-2xl);
+    font-weight: var(--nova-font-semibold);
+    line-height: var(--nova-leading-snug);
+  }
+
+  .nova-text-muted {
+    @apply text-[var(--nova-text-secondary)];
+  }
+
+  /* Nova Link Styles */
+  .nova-link {
+    @apply text-[var(--nova-primary)] hover:text-[var(--nova-primary-light)] underline-offset-4 hover:underline transition-colors duration-150;
+  }
+
+  /* Nova Loading Animation */
+  .nova-loading {
+    @apply animate-spin text-[var(--nova-primary)];
+  }
+
+  /* Nova Modal Overlay */
+  .nova-overlay {
+    @apply fixed inset-0 bg-black/80 backdrop-blur-sm z-[var(--nova-z-modal)];
+  }
+
+  /* Nova Modal Content */
+  .nova-modal {
+    @apply fixed left-[50%] top-[50%] z-[var(--nova-z-modal)] w-full max-w-lg translate-x-[-50%] translate-y-[-50%] nova-card p-6 shadow-[var(--nova-shadow-xl)];
+  }
+
+  /* Message bubble styles */
+  .nova-message-user {
+    @apply bg-[var(--nova-primary)] text-[var(--nova-text-inverse)] shadow-[var(--nova-shadow-sm)];
+  }
+
+  .nova-message-assistant {
+    @apply bg-[var(--nova-bg-tertiary)] border border-[var(--nova-border-primary)] shadow-[var(--nova-shadow-sm)];
+  }
+
+  /* Sidebar styles */
+  .nova-sidebar {
+    @apply h-full bg-[var(--nova-bg-secondary)] border-r border-[var(--nova-border-primary)];
+  }
+
+  /* Chat input styles */
+  .nova-chat-input {
+    @apply nova-input min-h-[100px] resize-none;
+  }
+}
+
+@layer utilities {
+  .nova-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+  
+  .nova-slide-up {
+    animation: slideUp 0.6s ease-out;
+  }
+  
+  .nova-slide-left {
+    animation: slideLeft 0.6s ease-out;
+  }
+  
+  .nova-slide-right {
+    animation: slideRight 0.6s ease-out;
+  }
+  
+  .animate-spin-slow {
+    animation: spin 20s linear infinite;
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-float-reverse {
+    animation: float-reverse 6s ease-in-out infinite;
+  }
+  
+  .nova-gradient-mesh {
+    background-image: 
+      radial-gradient(at 40% 20%, hsla(160, 69%, 41%, 0.3) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, hsla(38, 88%, 50%, 0.2) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, hsla(217, 91%, 60%, 0.15) 0px, transparent 50%);
+  }
+
+  .nova-text-gradient {
+    color: var(--nova-green-primary);
+    text-shadow: 0 0 20px rgba(0, 232, 126, 0.4);
+  }
+
+  /* Hero Section Utilities - Together.ai Style */
+  .nova-hero-section {
+    padding-top: 120px;
+    padding-bottom: 120px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  .nova-hero-background {
+    background: var(--nova-bg-black);
+    position: relative;
+    overflow: hidden;
+    min-height: 100vh;
+  }
+
+  /* Layer 1: Grain texture overlay */
+  .grain-overlay {
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    z-index: 1;
+    opacity: 0.03;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' /%3E%3C/svg%3E");
+  }
+
+  /* Layer 2: Gradient mesh grid */
+  .gradient-grid {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotateX(60deg);
+    width: 150vw;
+    height: 150vh;
+    background-image: 
+      linear-gradient(rgba(0, 255, 127, 0.1) 2px, transparent 2px),
+      linear-gradient(90deg, rgba(0, 255, 127, 0.1) 2px, transparent 2px);
+    background-size: 100px 100px;
+    filter: blur(1px);
+    opacity: 0.5;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* Layer 3: Radial gradient glow */
+  .radial-glow {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120vw;
+    height: 120vh;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(0, 255, 127, 0.15) 0%,
+      rgba(0, 217, 106, 0.05) 40%,
+      transparent 70%
+    );
+    mix-blend-mode: screen;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* Glass-morphism Cards */
+  .nova-glass-card {
+    background: var(--nova-glass-bg);
+    backdrop-filter: var(--nova-glass-blur);
+    -webkit-backdrop-filter: var(--nova-glass-blur);
+    border: 1px solid var(--nova-glass-border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Pattern Utilities */
+  .nova-pattern-dots {
+    background-image: var(--nova-pattern-dots);
+    background-size: 16px 16px;
+  }
+
+  .nova-pattern-dots-dark {
+    background-image: var(--nova-pattern-dots-dark);
+    background-size: 16px 16px;
+  }
+
+  /* Gradient Utilities */
+  .nova-gradient-green {
+    background: var(--nova-gradient-green);
+  }
+
+  .nova-gradient-green-subtle {
+    background: var(--nova-gradient-green-subtle);
+  }
+
+  /* Geometric Shape Utilities */
+  .nova-wire-cube {
+    width: 200px;
+    height: 200px;
+    border: 2px solid;
+    border-image: var(--nova-gradient-green) 1;
+    transform: rotateX(15deg) rotateY(30deg);
+    opacity: 0.7;
+  }
+
+  .nova-glow-effect {
+    filter: drop-shadow(0 0 20px rgba(14, 199, 115, 0.3));
+  }
+
+  /* Hero Styles */
+  .hero-headline {
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 200;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-headline .accent {
+    font-weight: 800;
+    background: linear-gradient(135deg, #00FF7F 0%, #00D96A 50%, #00FF7F 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradient-shift 3s ease infinite;
+  }
+
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* Navigation Styles */
+  .navbar {
+    position: relative;
+    z-index: 20;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* Hero Content Layering */
+  .nova-hero-background > div {
+    position: relative;
+    z-index: 10;
+  }
+
+  /* Ensure all interactive elements are clickable */
+  .btn-primary, .btn-secondary, a, button, input, textarea {
+    position: relative;
+    z-index: 50;
+    pointer-events: auto !important;
+  }
+  
+  /* Specifically ensure navigation and hero buttons are above overlays */
+  .navbar a, .navbar button {
+    z-index: 60;
+    pointer-events: auto !important;
+  }
+  
+  /* Hero section buttons need highest priority */
+  .nova-hero-background a, .nova-hero-background button {
+    z-index: 100 !important;
+    pointer-events: auto !important;
+    position: relative;
+  }
+
+  /* Additional selector for homepage buttons */
+  .hero-headline + p + div a, 
+  .hero-headline + p + div button,
+  [href="/register"],
+  [href="/demo"],
+  [href="/login"] {
+    z-index: 100 !important;
+    pointer-events: auto !important;
+    position: relative;
+  }
+
+  .nav-link {
+    position: relative;
+    transition: color 0.2s ease;
+  }
+
+  .nav-link:hover {
+    color: #00FF7F;
+  }
+
+  /* Button Styles */
+  .btn-primary {
+    background: linear-gradient(135deg, #00FF7F 0%, #00D96A 100%);
+    color: #000;
+    padding: 0.75rem 2rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: inline-block;
+    text-decoration: none;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 255, 127, 0.3);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: #fff;
+    padding: 0.75rem 2rem;
+    border: 1.5px solid #00FF7F;
+    border-radius: 9999px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: inline-block;
+    text-decoration: none;
+  }
+
+  .btn-secondary:hover {
+    background: rgba(0, 255, 127, 0.1);
+    transform: translateY(-2px);
+  }
+
+  /* Feature Card Styles */
+  .feature-card {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+  }
+
+  .feature-card:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(0, 255, 127, 0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Chat Input Container */
+  .chat-input-container {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+  }
+
+  .chat-input-container:focus-within {
+    border-color: rgba(0, 255, 127, 0.5);
+    box-shadow: 0 0 0 3px rgba(0, 255, 127, 0.1);
+  }
+
+  /* Dynamic Grid Animation */
+  .nova-dynamic-grid {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(0, 255, 127, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 127, 0.03) 1px, transparent 1px);
+    background-size: 100px 100px;
+    animation: grid-shift 20s linear infinite;
+  }
+
+  /* Floating Particles */
+  .nova-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .nova-particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #00FF7F;
+    border-radius: 50%;
+    filter: blur(1px);
+    opacity: 0.6;
+    animation: float-particle 25s linear infinite;
+  }
+
+  /* Animation utilities */
+  .nova-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .nova-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* Search Progress Animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1.5);
+      opacity: 1;
+    }
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) translateX(0px);
+    }
+    25% {
+      transform: translateY(-20px) translateX(10px);
+    }
+    50% {
+      transform: translateY(10px) translateX(-10px);
+    }
+    75% {
+      transform: translateY(-10px) translateX(5px);
+    }
+  }
+
+  @keyframes float-reverse {
+    0%, 100% {
+      transform: translateY(0px) translateX(0px);
+    }
+    25% {
+      transform: translateY(20px) translateX(-10px);
+    }
+    50% {
+      transform: translateY(-10px) translateX(10px);
+    }
+    75% {
+      transform: translateY(10px) translateX(-5px);
+    }
+  }
+
+  @keyframes slideLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Enhanced Lumina-Inspired Animations */
+  @keyframes pulse-glow {
+    0%, 100% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes rotate-pattern {
+    0% {
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+      transform: translate(-50%, -50%) rotate(360deg);
+    }
+  }
+
+  @keyframes grid-shift {
+    0%, 100% {
+      background-position: 0 0;
+    }
+    50% {
+      background-position: 30px 30px;
+    }
+  }
+
+  @keyframes float-particle {
+    0% {
+      transform: translateY(100vh) translateX(0) scale(0);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+      transform: translateY(90vh) translateX(10px) scale(1);
+    }
+    90% {
+      opacity: 1;
+      transform: translateY(10vh) translateX(-10px) scale(1);
+    }
+    100% {
+      transform: translateY(-10vh) translateX(0) scale(0);
+      opacity: 0;
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+
+  /* Text selection utility */
+  .select-text {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+    cursor: text;
+  }
+
+  /* Performance optimizations - Reduce backdrop-filter on mobile for performance */
+  @media (max-width: 768px) {
+    .glass-element,
+    .chat-input-container,
+    .feature-card,
+    .navbar {
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
   }
 }

@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: nova-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: CORS_ORIGIN
+        sync: false
+      - key: SOCKET_CORS_ORIGIN
+        sync: false
+      - key: WEB_ORIGIN
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        sync: false
+      - key: REDIS_PASSWORD
+        sync: false
+      - key: NOVITA_API_KEY
+        sync: false
+      - key: OAUTH_CLIENT_ID
+        value: 2a743b89a0a645dc88635c85
+      - key: OAUTH_APP_SECRET
+        sync: false
+      - key: OAUTH_AUTH_URL
+        value: https://novita.ai/oauth/authorize
+      - key: OAUTH_TOKEN_EXCHANGE_URL
+        value: https://api-server.novita.ai/oauth/token
+      - key: OAUTH_REDIRECT_URI
+        sync: false
+      - key: OAUTH_SCOPE
+        value: openid+profile
+      - key: OAUTH_USERINFO_URL
+        value: https://api-server.novita.ai/oauth/userinfo
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false

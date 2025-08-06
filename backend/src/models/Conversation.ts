@@ -1,4 +1,4 @@
-import database from '../database';
+import { supabaseAdmin } from '../services/supabase.service';
 
 export interface Conversation {
   id: string;
@@ -37,168 +37,221 @@ export class ConversationModel {
     const {
       user_id,
       title = 'New Conversation',
-      model = 'gpt-3.5-turbo',
+      model = 'meta-llama/llama-3.3-70b-instruct',
       temperature = 0.7,
-      max_tokens = null,
+      max_tokens = 2048,  // Default to 2048 tokens
       system_prompt = null
     } = input;
 
-    const query = `
-      INSERT INTO conversations (user_id, title, model, temperature, max_tokens, system_prompt)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING *
-    `;
+    const { data, error } = await supabaseAdmin
+      .from('conversations')
+      .insert({
+        user_id,
+        title,
+        model,
+        temperature,
+        max_tokens,
+        system_prompt
+      })
+      .select()
+      .single();
 
-    const values = [user_id, title, model, temperature, max_tokens, system_prompt];
-    const result = await database.query(query, values);
-
-    return result.rows[0];
+    if (error) throw error;
+    return data;
   }
 
   static async findById(id: string): Promise<Conversation | null> {
-    const query = 'SELECT * FROM conversations WHERE id = $1';
-    const result = await database.query(query, [id]);
+    const { data, error } = await supabaseAdmin
+      .from('conversations')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-    return result.rows[0] || null;
+    if (error) return null;
+    return data;
   }
 
   static async findByUserId(userId: string, limit = 50, offset = 0): Promise<Conversation[]> {
-    const query = `
-      SELECT * FROM conversations 
-      WHERE user_id = $1 
-      ORDER BY last_message_at DESC NULLS LAST, created_at DESC
-      LIMIT $2 OFFSET $3
-    `;
-    const result = await database.query(query, [userId, limit, offset]);
+    const { data, error } = await supabaseAdmin
+      .from('conversations')
+      .select('*')
+      .eq('user_id', userId)
+      .order('last_message_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
-    return result.rows;
+    if (error) return [];
+    return data || [];
   }
 
   static async findActiveByUserId(userId: string, limit = 50): Promise<Conversation[]> {
-    const query = `
-      SELECT * FROM conversations 
-      WHERE user_id = $1 AND is_archived = false
-      ORDER BY last_message_at DESC NULLS LAST, created_at DESC
-      LIMIT $2
-    `;
-    const result = await database.query(query, [userId, limit]);
+    const { data, error } = await supabaseAdmin
+      .from('conversations')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_archived', false)
+      .order('last_message_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
-    return result.rows;
+    if (error) return [];
+    return data || [];
   }
 
   static async update(id: string, updates: UpdateConversationInput): Promise<Conversation | null> {
     const allowedFields = ['title', 'model', 'temperature', 'max_tokens', 'system_prompt', 'is_archived'];
-    const updateFields: string[] = [];
-    const values: any[] = [];
-    let paramCount = 1;
+    const filteredUpdates: any = {};
 
     for (const [key, value] of Object.entries(updates)) {
       if (allowedFields.includes(key)) {
-        updateFields.push(`${key} = $${paramCount}`);
-        values.push(value);
-        paramCount++;
+        filteredUpdates[key] = value;
       }
     }
 
-    if (updateFields.length === 0) {
+    if (Object.keys(filteredUpdates).length === 0) {
       return await this.findById(id);
     }
 
-    values.push(id);
-    const query = `
-      UPDATE conversations 
-      SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $${paramCount}
-      RETURNING *
-    `;
+    const { data, error } = await supabaseAdmin
+      .from('conversations')
+      .update(filteredUpdates)
+      .eq('id', id)
+      .select()
+      .single();
 
-    const result = await database.query(query, values);
-    return result.rows[0] || null;
+    if (error) return null;
+    return data;
   }
 
   static async updateLastMessageAt(id: string): Promise<void> {
-    const query = `
-      UPDATE conversations 
-      SET last_message_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1
-    `;
-    await database.query(query, [id]);
+    await supabaseAdmin
+      .from('conversations')
+      .update({ 
+        last_message_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
   }
 
   static async delete(id: string): Promise<boolean> {
-    const query = 'DELETE FROM conversations WHERE id = $1';
-    const result = await database.query(query, [id]);
+    const { error } = await supabaseAdmin
+      .from('conversations')
+      .delete()
+      .eq('id', id);
 
-    return (result.rowCount ?? 0) > 0;
+    return !error;
   }
 
   static async deleteByUserId(userId: string): Promise<number> {
-    const query = 'DELETE FROM conversations WHERE user_id = $1';
-    const result = await database.query(query, [userId]);
+    // First count the conversations
+    const { count } = await supabaseAdmin
+      .from('conversations')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
 
-    return result.rowCount ?? 0;
+    if (!count) return 0;
+
+    // Then delete them
+    const { error } = await supabaseAdmin
+      .from('conversations')
+      .delete()
+      .eq('user_id', userId);
+
+    return error ? 0 : count;
   }
 
   static async archive(id: string): Promise<Conversation | null> {
-    const query = `
-      UPDATE conversations 
-      SET is_archived = true, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1
-      RETURNING *
-    `;
-    const result = await database.query(query, [id]);
+    const { data, error } = await supabaseAdmin
+      .from('conversations')
+      .update({ 
+        is_archived: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
 
-    return result.rows[0] || null;
+    if (error) return null;
+    return data;
   }
 
   static async unarchive(id: string): Promise<Conversation | null> {
-    const query = `
-      UPDATE conversations 
-      SET is_archived = false, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1
-      RETURNING *
-    `;
-    const result = await database.query(query, [id]);
+    const { data, error } = await supabaseAdmin
+      .from('conversations')
+      .update({ 
+        is_archived: false,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
 
-    return result.rows[0] || null;
+    if (error) return null;
+    return data;
   }
 
   static async verifyOwnership(conversationId: string, userId: string): Promise<boolean> {
-    const query = 'SELECT user_id FROM conversations WHERE id = $1';
-    const result = await database.query(query, [conversationId]);
+    const { data, error } = await supabaseAdmin
+      .from('conversations')
+      .select('user_id')
+      .eq('id', conversationId)
+      .single();
 
-    if (result.rows.length === 0) {
-      return false;
-    }
-
-    return result.rows[0].user_id === userId;
+    if (error || !data) return false;
+    return data.user_id === userId;
   }
 
   static async getMessageCount(conversationId: string): Promise<number> {
-    const query = 'SELECT COUNT(*) as count FROM messages WHERE conversation_id = $1';
-    const result = await database.query(query, [conversationId]);
+    const { count } = await supabaseAdmin
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('conversation_id', conversationId);
 
-    return parseInt(result.rows[0].count, 10);
+    return count || 0;
   }
 
   static async search(userId: string, searchTerm: string, limit = 20): Promise<Conversation[]> {
-    const query = `
-      SELECT c.* FROM conversations c
-      WHERE c.user_id = $1 
-      AND (
-        c.title ILIKE $2 
-        OR EXISTS (
-          SELECT 1 FROM messages m 
-          WHERE m.conversation_id = c.id 
-          AND m.content ILIKE $2
-        )
-      )
-      ORDER BY c.last_message_at DESC NULLS LAST, c.created_at DESC
-      LIMIT $3
-    `;
-    const searchPattern = `%${searchTerm}%`;
-    const result = await database.query(query, [userId, searchPattern, limit]);
+    // First, search conversations by title
+    const { data: titleMatches } = await supabaseAdmin
+      .from('conversations')
+      .select('*')
+      .eq('user_id', userId)
+      .ilike('title', `%${searchTerm}%`)
+      .order('last_message_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
-    return result.rows;
+    // Also search by message content (this is more complex in Supabase)
+    const { data: messageMatches } = await supabaseAdmin
+      .from('messages')
+      .select('conversation_id')
+      .ilike('content', `%${searchTerm}%`);
+
+    const conversationIds = new Set<string>();
+    
+    // Add title matches
+    if (titleMatches) {
+      titleMatches.forEach(conv => conversationIds.add(conv.id));
+    }
+    
+    // Add conversation IDs from message matches
+    if (messageMatches) {
+      messageMatches.forEach(msg => conversationIds.add(msg.conversation_id));
+    }
+
+    // If no matches, return empty array
+    if (conversationIds.size === 0) return [];
+
+    // Fetch all matching conversations
+    const { data: conversations } = await supabaseAdmin
+      .from('conversations')
+      .select('*')
+      .eq('user_id', userId)
+      .in('id', Array.from(conversationIds))
+      .order('last_message_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    return conversations || [];
   }
 }
