@@ -878,7 +878,10 @@ export class ChatController {
             content: fullContent,
             metadata: { 
               streaming: false,
-              ...(linkPreviews.length > 0 && { linkPreviews })
+              ...(linkPreviews.length > 0 && { 
+                linkPreviews,
+                searchSources: linkPreviews  // Also include as searchSources for compatibility
+              })
             }
           });
           

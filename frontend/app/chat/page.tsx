@@ -280,8 +280,8 @@ export default function ChatPage() {
     try {
       const response = await axios.post('/api/chat/conversations', {
         title: 'New Chat',
-        model: currentModel || 'meta-llama/llama-3.3-70b-instruct',
-        max_tokens: 2048  // Default to 2048 tokens
+        model: currentModel || 'openai/gpt-oss-120b',  // Default to ChatGPT OSS 120B
+        max_tokens: 4096  // Default to 4096 tokens for better conversations
       })
       const newConversation = response.data.conversation
       setConversations(prev => [newConversation, ...(prev || [])])
@@ -294,7 +294,7 @@ export default function ChatPage() {
 
   const selectConversation = async (conversation: any) => {
     setCurrentConversation(conversation)
-    setCurrentModel(conversation.model || 'meta-llama/llama-3.3-70b-instruct')
+    setCurrentModel(conversation.model || 'openai/gpt-oss-120b')
     setMessagesLoading(true)
     try {
       const response = await axios.get(`/api/chat/conversations/${conversation.id}/messages`)
@@ -509,7 +509,7 @@ export default function ChatPage() {
     }
   }
 
-  const handleSendMessage = async (message: string, options?: { webSearch?: boolean; attachments?: File[]; style?: any }) => {
+  const handleSendMessage = async (message: string, options?: { webSearch?: boolean; attachments?: File[]; style?: any; deepResearch?: boolean }) => {
     // Handle trial mode
     if (isTrialMode) {
       // Convert File[] to the format expected by handleTrialSendMessage
@@ -534,6 +534,9 @@ export default function ChatPage() {
     // Add options if provided
     if (options?.webSearch) {
       messageData.webSearch = true
+    }
+    if (options?.deepResearch) {
+      messageData.deepResearch = true
     }
     if (options?.style) {
       messageData.style = options.style
@@ -711,7 +714,7 @@ export default function ChatPage() {
             }}
             isStreaming={isStreaming || trialMessageCount >= TRIAL_MESSAGE_LIMIT}
             disabled={isStreaming || trialMessageCount >= TRIAL_MESSAGE_LIMIT}
-            currentModel="meta-llama/llama-3.3-70b-instruct"
+            currentModel="openai/gpt-oss-120b"
             onModelChange={() => {}}
             modelCapabilities={['chat']}
             placeholder={
@@ -840,6 +843,7 @@ export default function ChatPage() {
                 if (inputMessage.trim()) {
                   handleSendMessage(inputMessage.trim(), { 
                     webSearch: options?.webSearch,
+                    deepResearch: options?.deepResearch,
                     attachments: attachments?.map(a => a.file),
                     style: options?.style
                   })

@@ -119,7 +119,6 @@ export class ModelsController {
     // Models that explicitly support thinking/reasoning process
     const thinkingModels = [
       'deepseek/deepseek-r1', 'deepseek-r1',
-      'deepseek/deepseek-v3', 'deepseek-v3',
       'glm-4.1v-9b-thinking',
       'qwen3-235b-a22b-thinking',
       'qwen-2.5-72b-instruct-thinking',
@@ -127,13 +126,16 @@ export class ModelsController {
       'reflection',
       'reasoning'
     ];
+    // DeepSeek V3 is NOT a thinking model
     return thinkingModels.some(model => modelId.toLowerCase().includes(model.toLowerCase()));
   }
 
-  // Sort models by recommendation - Kimi K2 first, then DeepSeek, then Qwen, then Llama
+  // Sort models by recommendation - GPT OSS 120B first as default
   private sortModelsByRecommendation(models: any[]): any[] {
     const priority = [
-      'kimi/k2',  // Kimi K2 FIRST as requested
+      'openai/gpt-oss-120b',  // Default model as requested
+      'openai/gpt-oss-20b',
+      'kimi/k2',
       'kimi-k2',
       'deepseek/deepseek-v3',
       'deepseek-v3',
@@ -179,6 +181,8 @@ export class ModelsController {
   private simplifyModelName(modelId: string): string {
     // Remove organization prefix and clean up model names
     const simplifications: Record<string, string> = {
+      'openai/gpt-oss-120b': 'ChatGPT OSS 120B',
+      'openai/gpt-oss-20b': 'ChatGPT OSS 20B',
       'kimi/k2': 'Kimi K2',
       'deepseek/deepseek-v3': 'DeepSeek V3',
       'deepseek/deepseek-r1': 'DeepSeek R1',
@@ -251,7 +255,7 @@ export class ModelsController {
 
     // Premium/large models
     if (modelName.includes('large') || modelName.includes('70b') || modelName.includes('72b') || 
-        modelName.includes('90b')) {
+        modelName.includes('90b') || modelName.includes('120b') || modelName.includes('deepseek-v3')) {
       return 'premium';
     }
 
@@ -338,6 +342,28 @@ export class ModelsController {
   private getFallbackModels() {
     return [
       {
+        id: 'openai/gpt-oss-120b',
+        name: 'ChatGPT OSS 120B',
+        description: 'OpenAI GPT OSS model with 120B parameters',
+        contextSize: 131072,
+        capabilities: ['text', 'code', 'reasoning', 'multi-step'],
+        category: 'premium',
+        supportsThinking: false,
+        inputPrice: 0.1,
+        outputPrice: 0.5
+      },
+      {
+        id: 'openai/gpt-oss-20b',
+        name: 'ChatGPT OSS 20B',
+        description: 'OpenAI GPT OSS model with 20B parameters',
+        contextSize: 131072,
+        capabilities: ['text', 'code', 'reasoning'],
+        category: 'general',
+        supportsThinking: false,
+        inputPrice: 0.05,
+        outputPrice: 0.2
+      },
+      {
         id: 'kimi/k2',
         name: 'Kimi K2',
         description: 'Advanced reasoning model with thinking capabilities',
@@ -349,11 +375,13 @@ export class ModelsController {
       {
         id: 'deepseek/deepseek-v3',
         name: 'DeepSeek V3',
-        description: 'Latest DeepSeek model with advanced reasoning',
-        contextSize: 131072,
+        description: 'Latest DeepSeek model with advanced capabilities',
+        contextSize: 163840,
         capabilities: ['text', 'code', 'reasoning', 'multi-step'],
-        category: 'reasoning',
-        supportsThinking: true
+        category: 'premium',  // Not reasoning since it doesn't support thinking
+        supportsThinking: false,
+        inputPrice: 0.28,
+        outputPrice: 1.14
       },
       {
         id: 'deepseek/deepseek-r1',
