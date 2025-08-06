@@ -52,12 +52,12 @@ export default function ApiKeySelector({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-3 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
       >
         <div className="flex items-center gap-2">
           <Key className="h-4 w-4 text-[#00FF7F]" />
           <div className="text-left">
-            <div className="text-sm font-medium text-white flex items-center gap-2">
+            <div className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
               {activeKey === 'novita' ? 'Nova Platform Key' : 'Your API Key'}
               {activeKey === 'novita' && novitaStatus === 'exhausted' && (
                 <span className="text-xs px-1.5 py-0.5 bg-red-500/20 text-red-400 rounded-full">
@@ -75,7 +75,7 @@ export default function ApiKeySelector({
                 </span>
               )}
             </div>
-            <div className="text-xs text-white/60">
+            <div className="text-xs text-gray-600 dark:text-white/60">
               {activeKey === 'novita' 
                 ? remaining !== null ? `${remaining} queries left today` : 'Loading...'
                 : userApiKey ? `Key ending in ${userApiKey}` : 'No key configured'
@@ -83,7 +83,7 @@ export default function ApiKeySelector({
             </div>
           </div>
         </div>
-        <ChevronDown className={`h-4 w-4 text-white/60 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-4 w-4 text-gray-400 dark:text-white/60 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
@@ -92,28 +92,28 @@ export default function ApiKeySelector({
             className="fixed inset-0 z-40" 
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute top-full left-0 right-0 mt-2 bg-black border border-white/20 rounded-lg shadow-xl z-50 overflow-hidden">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-black border border-gray-200 dark:border-white/20 rounded-lg shadow-xl z-50 overflow-hidden">
             {/* Novita Key Option */}
             <button
               onClick={() => {
                 onKeyChange('novita')
                 setIsOpen(false)
               }}
-              className={`w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors ${
-                activeKey === 'novita' ? 'bg-white/5' : ''
+              className={`w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-white/5 transition-colors ${
+                activeKey === 'novita' ? 'bg-gray-100 dark:bg-white/5' : ''
               }`}
             >
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  activeKey === 'novita' ? 'bg-[#00FF7F]/20' : 'bg-white/10'
+                  activeKey === 'novita' ? 'bg-[#00FF7F]/20' : 'bg-gray-200 dark:bg-white/10'
                 }`}>
                   <Key className={`h-5 w-5 ${
-                    activeKey === 'novita' ? 'text-[#00FF7F]' : 'text-white/60'
+                    activeKey === 'novita' ? 'text-[#00FF7F]' : 'text-gray-600 dark:text-white/60'
                   }`} />
                 </div>
                 <div className="text-left">
-                  <div className="text-sm font-medium text-white">Nova Platform Key</div>
-                  <div className="text-xs text-white/60">
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">Nova Platform Key</div>
+                  <div className="text-xs text-gray-600 dark:text-white/60">
                     {remaining !== null 
                       ? `${remaining}/${dailyUsage?.maxTotal || 100} queries remaining`
                       : 'Rate limited access'

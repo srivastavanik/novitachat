@@ -1039,11 +1039,11 @@ export default function ChatPage() {
                 <div className="flex items-center justify-between mb-2 px-2">
                   <div className="flex items-center gap-2 text-xs">
                     <div className={`w-2 h-2 rounded-full ${activeKey === 'user' ? 'bg-green-400' : 'bg-blue-400'}`} />
-                    <span className="text-white/60">
+                    <span className="text-gray-600 dark:text-white/60">
                       Using: {activeKey === 'user' ? 'Your API Key' : 'Nova Platform Key'}
                     </span>
                     {activeKey === 'novita' && dailyUsage && (
-                      <span className="text-white/40">
+                      <span className="text-gray-500 dark:text-white/40">
                         ({dailyUsage.maxTotal - dailyUsage.totalQueries} queries left)
                       </span>
                     )}

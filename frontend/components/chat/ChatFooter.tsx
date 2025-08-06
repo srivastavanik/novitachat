@@ -5,8 +5,8 @@ import Image from 'next/image'
 
 export default function ChatFooter() {
   return (
-    <div className="mt-4 pt-3 border-t border-white/10">
-      <div className="flex items-center justify-center gap-4 text-xs text-white/40">
+    <div className="mt-2 mb-2 pt-3 border-t border-white/10 dark:border-white/10">
+      <div className="flex items-center justify-center gap-4 text-xs text-gray-500 dark:text-white/40">
         {/* Creator credit */}
         <span>By Nick Srivastava</span>
         
@@ -35,7 +35,7 @@ export default function ChatFooter() {
             href="https://www.linkedin.com/company/novita-ai-labs"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white/40 hover:text-white/60 transition-colors"
+            className="text-gray-500 hover:text-gray-700 dark:text-white/40 dark:hover:text-white/60 transition-colors"
             title="Novita AI on LinkedIn"
           >
             <svg
@@ -51,10 +51,10 @@ export default function ChatFooter() {
           
           {/* X/Twitter */}
           <Link
-            href="https://x.com/novita_ai"
+            href="https://x.com/novita_labs"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white/40 hover:text-white/60 transition-colors"
+            className="text-gray-500 hover:text-gray-700 dark:text-white/40 dark:hover:text-white/60 transition-colors"
             title="Novita AI on X"
           >
             <svg

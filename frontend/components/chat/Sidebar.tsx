@@ -155,7 +155,11 @@ export default function Sidebar({
         {/* Header */}
         <div className="p-4 flex items-center justify-between">
           <div className="flex items-center">
-            <img src="/nova-logo-wordmark.png" alt="Nova" className="h-5 object-contain" />
+            <img 
+              src={theme === 'light' ? "/Logo + wordmark (1).png" : "/nova-logo-wordmark.png"} 
+              alt="Nova" 
+              className="h-5 object-contain" 
+            />
           </div>
           <button
             onClick={onNewConversation}
