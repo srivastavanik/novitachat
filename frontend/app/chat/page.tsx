@@ -19,32 +19,12 @@ import ApiKeyModal from '@/components/chat/ApiKeyModal'
 import ApiKeySelector from '@/components/chat/ApiKeySelector'
 import { getCookie, setCookie } from '@/lib/utils'
 
-interface TrialMessage {
-  id: string
-  content: string
-  role: 'user' | 'assistant' | 'system'
-  timestamp: Date
-  attachments?: Array<{
-    id: string
-    name: string
-    type: 'image' | 'document'
-    size: number
-    data?: string
-  }>
-  metadata?: {
-    webSearch?: boolean
-    isSearchProgress?: boolean
-  }
-}
-
-const TRIAL_MESSAGE_LIMIT = 10
+// Removed trial mode interfaces and constants
 
 export default function ChatPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, loading: authLoading, logout, checkAuth } = useAuth()
-  const isTrialMode = searchParams.get('trial') === 'true'
-  const initialQuery = searchParams.get('q')
   const authSuccess = searchParams.get('auth') === 'success'
   const authCode = searchParams.get('code')
   const authToken = searchParams.get('token')
@@ -61,10 +41,7 @@ export default function ChatPage() {
   const [modelCapabilities, setModelCapabilities] = useState<string[]>([])
   const [showSettings, setShowSettings] = useState(false)
   
-  // Trial mode states
-  const [trialMessages, setTrialMessages] = useState<TrialMessage[]>([])
-  const [trialMessageCount, setTrialMessageCount] = useState(0)
-  const [showTrialLimitModal, setShowTrialLimitModal] = useState(false)
+  // Remove trial mode states
   const [showDeepResearchModal, setShowDeepResearchModal] = useState(false)
   const hasInitialized = useRef(false)
   
@@ -100,68 +77,45 @@ export default function ChatPage() {
     }
   }, [authSuccess, authCode, authToken])
 
-  // Redirect if not authenticated and not in trial mode
+  // Redirect if not authenticated
   useEffect(() => {
-    if (!isTrialMode && !authLoading && !user && !authSuccess) {
+    if (!authLoading && !user && !authSuccess) {
       router.push('/login')
     }
-  }, [authLoading, user, router, isTrialMode, authSuccess])
+  }, [authLoading, user, router, authSuccess])
 
-  // Initialize trial mode
+  // Auto-submit pending query from homepage after login
   useEffect(() => {
-    if (isTrialMode && !hasInitialized.current) {
+    if (user && !hasInitialized.current) {
       hasInitialized.current = true
       
-      // Load existing trial messages
-      const savedMessages = localStorage.getItem('trialMessages')
-      const savedCount = localStorage.getItem('trialMessageCount')
-      
-      if (savedMessages) {
-        try {
-          const parsed = JSON.parse(savedMessages)
-          setTrialMessages(parsed.map((msg: any) => ({
-            ...msg,
-            timestamp: new Date(msg.timestamp)
-          })))
-        } catch (e) {
-          console.error('Failed to parse trial messages:', e)
-        }
-      }
-
-      if (savedCount) {
-        const count = parseInt(savedCount, 10)
-        setTrialMessageCount(count)
+      // Check for pending query from homepage
+      const pendingQuery = localStorage.getItem('pendingQuery')
+      if (pendingQuery) {
+        // Clear the stored query
+        localStorage.removeItem('pendingQuery')
         
-        // Check if trial is exhausted
-        if (count >= TRIAL_MESSAGE_LIMIT) {
-          setShowTrialLimitModal(true)
-          return
-        }
-      }
-
-      // Handle initial query from home page
-      if (initialQuery && (!savedMessages || JSON.parse(savedMessages).length === 0)) {
-        // Set the initial message in the input
-        setInputMessage(initialQuery)
-        // Send it after a brief delay to ensure everything is initialized
+        // Set the input and auto-submit after everything is loaded
+        setInputMessage(pendingQuery)
         setTimeout(() => {
-          handleTrialSendMessage(initialQuery)
-        }, 100)
+          // Create a new conversation and send the message
+          createNewConversation().then(() => {
+            setTimeout(() => {
+              // Trigger message send
+              const event = new KeyboardEvent('keypress', { key: 'Enter' })
+              document.dispatchEvent(event)
+            }, 500)
+          })
+        }, 1000)
       }
     }
-  }, [isTrialMode, initialQuery, router])
+  }, [user])
 
-  // Save trial data to localStorage whenever it changes
-  useEffect(() => {
-    if (isTrialMode && trialMessages.length > 0) {
-      localStorage.setItem('trialMessages', JSON.stringify(trialMessages))
-      localStorage.setItem('trialMessageCount', trialMessageCount.toString())
-    }
-  }, [isTrialMode, trialMessages, trialMessageCount])
+  // Removed trial mode localStorage saving
 
   // Initialize WebSocket connection (only for authenticated users)
   useEffect(() => {
-    if (user && !isTrialMode) {
+    if (user) {
       const socketInstance = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001', {
         auth: {
           token: getCookie('access_token')
@@ -297,15 +251,15 @@ export default function ChatPage() {
         socketInstance.disconnect()
       }
     }
-  }, [user, isTrialMode])
+  }, [user])
 
   // Load conversations and daily usage (only for authenticated users)
   useEffect(() => {
-    if (user && !isTrialMode) {
+    if (user) {
       loadConversations()
       loadDailyUsage()
     }
-  }, [user, isTrialMode])
+  }, [user])
 
   // Handle OAuth callback with Novita token from URL
   const handleOAuthCallback = async (code: string, token: string) => {

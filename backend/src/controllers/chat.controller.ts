@@ -21,7 +21,7 @@ export class ChatController {
       // Build messages array
       const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string | Array<any> }> = [];
       
-      let systemPrompt = 'You are Nova, a helpful AI assistant. Keep your responses concise and helpful.';
+      let systemPrompt = 'You are Chat by Novita AI, a helpful AI assistant. Keep your responses concise and helpful.';
       
       // Handle web search if requested
       let searchResults = '';
@@ -408,6 +408,12 @@ export class ChatController {
       
       // Prepare system prompt with conversation summary if available
       let systemPrompt = conversation.system_prompt || '';
+      
+      // Add Chat by Novita AI branding with model info
+      const modelName = conversation.model || 'GPT-4';
+      const novitaBranding = `You are Chat by Novita AI, powered by the ${modelName} model. You are a helpful, knowledgeable AI assistant. Always provide accurate, helpful, and engaging responses while maintaining a professional and friendly tone.`;
+      systemPrompt = novitaBranding + '\n\n' + systemPrompt;
+      
       if (contextData.summary) {
         systemPrompt += '\n\nConversation Context: ' + contextData.summary;
       }
@@ -726,9 +732,15 @@ export class ChatController {
       // Add system prompt with search instructions if needed
       let systemPrompt = conversation.system_prompt || '';
       
+      // Add Chat by Novita AI branding with model info
+      const modelName = conversation.model || 'GPT-4';
+      const novitaBranding = `You are Chat by Novita AI, powered by the ${modelName} model. You are a helpful, knowledgeable AI assistant. Always provide accurate, helpful, and engaging responses while maintaining a professional and friendly tone.`;
+      
       // Add style system prompt if provided
       if (styleSystemPrompt) {
-        systemPrompt = styleSystemPrompt + '\n\n' + systemPrompt;
+        systemPrompt = novitaBranding + '\n\n' + styleSystemPrompt + '\n\n' + systemPrompt;
+      } else {
+        systemPrompt = novitaBranding + '\n\n' + systemPrompt;
       }
       
       if (searchResults) {

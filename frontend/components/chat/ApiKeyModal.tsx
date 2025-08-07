@@ -41,8 +41,8 @@ export default function ApiKeyModal({
       return false
     }
 
-    if (!apiKey.startsWith('sk-') && !apiKey.startsWith('nvapi-')) {
-      setError('Invalid API key format. Novita API keys should start with "nvapi-"')
+    if (!apiKey.startsWith('sk_')) {
+      setError('Invalid API key format. Novita API keys should start with "sk_"')
       return false
     }
 
@@ -157,7 +157,7 @@ export default function ApiKeyModal({
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="nvapi-..."
+              placeholder="sk_..."
               className="w-full px-3 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 focus:outline-none focus:border-[#00FF7F]/50 focus:ring-1 focus:ring-[#00FF7F]/50 font-mono text-sm"
               disabled={isValidating || isSaving}
             />
@@ -198,7 +198,7 @@ export default function ApiKeyModal({
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 py-3 border border-white/20 text-white font-medium rounded-full hover:bg-white/5 transition-colors"
+              className="flex-1 py-3 border border-gray-300 dark:border-white/20 text-gray-700 dark:text-white font-medium rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
               disabled={isValidating || isSaving}
             >
               Cancel

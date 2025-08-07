@@ -21,6 +21,7 @@ interface ChatInputProps {
   placeholder?: string
   isTrialMode?: boolean
   onRateLimitCheck?: (type: 'webSearch' | 'deepResearch' | 'normal') => boolean
+  resetToggles?: boolean  // When true, resets all toggles to false
 }
 
 export default function ChatInput({
@@ -34,14 +35,25 @@ export default function ChatInput({
   modelCapabilities = [],
   placeholder,
   isTrialMode = false,
-  onRateLimitCheck
+  onRateLimitCheck,
+  resetToggles = false
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const [attachments, setAttachments] = useState<Attachment[]>([])
-  const [deepResearchEnabled, setDeepResearchEnabled] = useState(false)
-  const [thinkingEnabled, setThinkingEnabled] = useState(false)
+  const [deepResearchEnabled, setDeepResearchEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('deepResearchEnabled') === 'true'
+    }
+    return false
+  })
+  const [thinkingEnabled, setThinkingEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('thinkingEnabled') === 'true'
+    }
+    return false
+  })
   const [currentStyle, setCurrentStyle] = useState<any>(null)
   
   // Check if current model supports thinking (based on Novita AI models)
@@ -97,8 +109,48 @@ export default function ChatInput({
     return hasSearchKeyword || isCurrentInfoQuestion
   }
 
-  const [webSearchEnabled, setWebSearchEnabled] = useState(false)
+  const [webSearchEnabled, setWebSearchEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('webSearchEnabled') === 'true'
+    }
+    return false
+  })
   const [manualWebSearchOverride, setManualWebSearchOverride] = useState(false)
+  
+  // Save preferences to localStorage when they change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('webSearchEnabled', webSearchEnabled.toString())
+    }
+  }, [webSearchEnabled])
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('deepResearchEnabled', deepResearchEnabled.toString())
+    }
+  }, [deepResearchEnabled])
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('thinkingEnabled', thinkingEnabled.toString())
+    }
+  }, [thinkingEnabled])
+  
+  // Reset toggles when requested (e.g., new conversation)
+  useEffect(() => {
+    if (resetToggles) {
+      setWebSearchEnabled(false)
+      setDeepResearchEnabled(false)
+      setThinkingEnabled(false)
+      setManualWebSearchOverride(false)
+      // Clear from localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('webSearchEnabled', 'false')
+        localStorage.setItem('deepResearchEnabled', 'false')
+        localStorage.setItem('thinkingEnabled', 'false')
+      }
+    }
+  }, [resetToggles])
   
   // Update web search state when query changes
   useEffect(() => {

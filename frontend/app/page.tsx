@@ -21,8 +21,10 @@ export default function LandingPage() {
   const handleTrialSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (trialQuery.trim()) {
-      // Navigate to chat page with trial mode
-      router.push(`/chat?trial=true&q=${encodeURIComponent(trialQuery)}`)
+      // Store the query for after login/signup
+      localStorage.setItem('pendingQuery', trialQuery)
+      // Redirect to register page
+      router.push('/register')
     }
   }
 
@@ -189,7 +191,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <p className="text-xs text-center text-white/50 mt-3">
-                  Try Chat free – 10 messages, no signup required
+                  Sign up to start chatting with AI
                 </p>
               </form>
             </div>
