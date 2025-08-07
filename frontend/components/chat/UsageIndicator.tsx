@@ -68,23 +68,23 @@ export default function UsageIndicator({ isTrialMode, trialMessageCount = 0, dai
     const barColor = getProgressBarColor(trialMessageCount, 10)
 
     return (
-      <div className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg p-3 mb-4">
+      <div className="bg-[var(--nova-bg-secondary)] border border-[var(--nova-border-primary)] rounded-lg p-3 mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4 text-[#00FF7F]" />
-            <span className="text-sm font-medium text-gray-900 dark:text-white">Trial Messages</span>
+            <span className="text-sm font-medium text-[var(--nova-text-primary)]">Trial Messages</span>
           </div>
-          <span className="text-sm text-gray-600 dark:text-white/60">
+          <span className="text-sm text-[var(--nova-text-secondary)]">
             {remaining} left
           </span>
         </div>
         
         <div className="mt-2">
-          <div className="flex justify-between text-xs text-gray-600 dark:text-white/60 mb-1">
+          <div className="flex justify-between text-xs text-[var(--nova-text-secondary)] mb-1">
             <span>{trialMessageCount} used</span>
             <span>10 total</span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-white/10 rounded-full h-2">
+          <div className="w-full bg-[var(--nova-bg-tertiary)] rounded-full h-2">
             <div 
               className={`${barColor} h-2 rounded-full transition-all duration-300`}
               style={{ width: `${percentage}%` }}
@@ -133,31 +133,31 @@ export default function UsageIndicator({ isTrialMode, trialMessageCount = 0, dai
   const deepResearchBarColor = getProgressBarColor(deepResearchQueries, maxDeepResearch)
 
   return (
-    <div className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-3 mb-4">
+    <div className="bg-[var(--nova-bg-secondary)] border border-[var(--nova-border-primary)] rounded-xl p-3 mb-4">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between hover:bg-gray-200 dark:hover:bg-white/5 rounded-xl p-2 transition-colors"
+        className="w-full flex items-center justify-between hover:bg-[var(--nova-bg-hover)] rounded-xl p-2 transition-colors"
       >
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm font-medium text-gray-900 dark:text-white truncate">Daily Usage</span>
+          <span className="text-sm font-medium text-[var(--nova-text-primary)] truncate">Daily Usage</span>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-sm text-gray-600 dark:text-white/60 whitespace-nowrap">{totalRemaining} left</span>
+          <span className="text-sm text-[var(--nova-text-secondary)] whitespace-nowrap">{totalRemaining} left</span>
           {isExpanded ? (
-            <ChevronUp className="h-4 w-4 text-gray-400 dark:text-white/40" />
+            <ChevronUp className="h-4 w-4 text-[var(--nova-text-tertiary)]" />
           ) : (
-            <ChevronDown className="h-4 w-4 text-gray-400 dark:text-white/40" />
+            <ChevronDown className="h-4 w-4 text-[var(--nova-text-tertiary)]" />
           )}
         </div>
       </button>
 
       {/* Summary bar */}
       <div className="mt-2">
-        <div className="flex justify-between text-xs text-gray-600 dark:text-white/60 mb-1">
+        <div className="flex justify-between text-xs text-[var(--nova-text-secondary)] mb-1">
           <span>{totalQueries} used</span>
           <span>{maxTotal} total</span>
         </div>
-        <div className="w-full bg-gray-200 dark:bg-white/10 rounded-full h-2">
+        <div className="w-full bg-[var(--nova-bg-tertiary)] rounded-full h-2">
           <div 
             className={`${totalBarColor} h-2 rounded-full transition-all duration-300`}
             style={{ width: `${Math.min(100, totalPercentage)}%` }}
@@ -172,17 +172,17 @@ export default function UsageIndicator({ isTrialMode, trialMessageCount = 0, dai
           <div>
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-700 dark:text-white/80">Web Search</span>
+                <span className="text-xs text-[var(--nova-text-primary)]">Web Search</span>
               </div>
-              <span className="text-xs text-gray-600 dark:text-white/60">
+              <span className="text-xs text-[var(--nova-text-secondary)]">
                 {webSearchRemaining} left
               </span>
             </div>
-            <div className="flex justify-between text-xs text-gray-500 dark:text-white/50 mb-1">
+            <div className="flex justify-between text-xs text-[var(--nova-text-tertiary)] mb-1">
               <span>{webSearchQueries} used</span>
               <span>{maxWebSearch} daily</span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-white/10 rounded-full h-1.5">
+            <div className="w-full bg-[var(--nova-bg-tertiary)] rounded-full h-1.5">
               <div 
                 className={`${webSearchBarColor} h-1.5 rounded-full transition-all duration-300`}
                 style={{ width: `${Math.min(100, webSearchPercentage)}%` }}
@@ -194,17 +194,17 @@ export default function UsageIndicator({ isTrialMode, trialMessageCount = 0, dai
           <div>
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-700 dark:text-white/80">Deep Research</span>
+                <span className="text-xs text-[var(--nova-text-primary)]">Deep Research</span>
               </div>
-              <span className="text-xs text-gray-600 dark:text-white/60">
+              <span className="text-xs text-[var(--nova-text-secondary)]">
                 {deepResearchRemaining} left
               </span>
             </div>
-            <div className="flex justify-between text-xs text-gray-500 dark:text-white/50 mb-1">
+            <div className="flex justify-between text-xs text-[var(--nova-text-tertiary)] mb-1">
               <span>{deepResearchQueries} used</span>
               <span>{maxDeepResearch} daily</span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-white/10 rounded-full h-1.5">
+            <div className="w-full bg-[var(--nova-bg-tertiary)] rounded-full h-1.5">
               <div 
                 className={`${deepResearchBarColor} h-1.5 rounded-full transition-all duration-300`}
                 style={{ width: `${Math.min(100, deepResearchPercentage)}%` }}
@@ -237,8 +237,8 @@ export default function UsageIndicator({ isTrialMode, trialMessageCount = 0, dai
       )}
 
       {/* Reset time */}
-      <div className="mt-3 pt-2 border-t border-gray-200 dark:border-white/10">
-        <div className="flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-white/40">
+      <div className="mt-3 pt-2 border-t border-[var(--nova-border-primary)]">
+        <div className="flex items-center justify-center gap-2 text-xs text-[var(--nova-text-tertiary)]">
           <span>Resets in {timeUntilReset || 'calculating...'}</span>
         </div>
       </div>
