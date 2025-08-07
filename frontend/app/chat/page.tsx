@@ -531,6 +531,8 @@ export default function ChatPage() {
   }
 
   const handleTrialSendMessage = async (content: string, attachments?: any[], options?: { webSearch?: boolean; deepResearch?: boolean }) => {
+    // Trial mode disabled - this function is no longer used
+    return;
     if (!content.trim() || isStreaming) return
 
     const webSearchEnabled = options?.webSearch || shouldEnableWebSearch(content)
@@ -826,7 +828,7 @@ export default function ChatPage() {
 
   // Trial mode UI
   if (isTrialMode) {
-    const remainingMessages = TRIAL_MESSAGE_LIMIT - trialMessageCount
+    const remainingMessages = 0 // Trial mode disabled
 
     return (
       <div className="flex h-screen bg-[var(--nova-bg-primary)]">
@@ -887,8 +889,8 @@ export default function ChatPage() {
             <div className="max-w-4xl mx-auto p-4">
               {/* Usage Indicator for Trial */}
               <UsageIndicator
-                isTrialMode={true}
-                trialMessageCount={trialMessageCount}
+                isTrialMode={false}
+                trialMessageCount={0}
               />
               
               {trialMessages.length === 0 && (
@@ -931,17 +933,12 @@ export default function ChatPage() {
                   setInputMessage('')
                 }
               }}
-              isStreaming={isStreaming || trialMessageCount >= TRIAL_MESSAGE_LIMIT}
-              disabled={isStreaming || trialMessageCount >= TRIAL_MESSAGE_LIMIT}
+              isStreaming={isStreaming}
+              disabled={isStreaming}
               currentModel="openai/gpt-oss-120b"
               onModelChange={() => {}}
               modelCapabilities={['chat']}
-              placeholder={
-                trialMessageCount >= TRIAL_MESSAGE_LIMIT
-                  ? "Trial limit reached. Sign up to continue..."
-                  : "Type your message..."
-              }
-              isTrialMode={true}
+              placeholder="Type your message..."
             />
             <ChatFooter />
           </div>
@@ -1007,7 +1004,7 @@ export default function ChatPage() {
         <TrialLimitModal
           isOpen={showTrialLimitModal}
           onClose={() => setShowTrialLimitModal(false)}
-          messageCount={trialMessageCount}
+          messageCount={0}
         />
 
         {/* API Key Modal */}
