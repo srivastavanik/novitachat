@@ -1,12 +1,15 @@
 import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
 import { format } from 'date-fns'
 import Image from 'next/image'
 import SearchProgress from './SearchProgress'
 import ThinkingDisplay from './ThinkingDisplay'
 import LinkPreview from './LinkPreview'
 import SearchSources from './SearchSources'
+import 'katex/dist/katex.min.css'
 
 interface MessageProps {
   message: {
@@ -148,7 +151,8 @@ export default function Message({ message, isStreaming = false }: MessageProps) 
                     <p className="m-0 text-gray-400 italic">Chat is thinking...</p>
                   ) : (
                     <ReactMarkdown 
-                      remarkPlugins={[remarkGfm]}
+                      remarkPlugins={[remarkGfm, remarkMath]}
+                      rehypePlugins={[rehypeKatex]}
                       components={{
                         p: ({children}) => <p className={`m-0 ${isUser ? 'mb-2' : 'mb-4'} last:mb-0 text-[var(--nova-text-primary)]`}>{children}</p>,
                         ul: ({children}) => <ul className="m-0 mb-2 last:mb-0">{children}</ul>,

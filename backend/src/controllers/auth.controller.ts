@@ -99,30 +99,16 @@ export class AuthController {
 
       const { email, password } = req.body;
 
-      // Find user
-      const user = await UserModel.findByEmail(email);
-      if (!user) {
+      // Authenticate user (supports both email and username)
+      const authResult = await UserModel.authenticate(email, password);
+      if (!authResult) {
         res.status(401).json({ 
           error: 'Invalid credentials' 
         });
         return;
       }
 
-      // Verify password
-      const isValidPassword = await UserModel.verifyPassword(user, password);
-      if (!isValidPassword) {
-        res.status(401).json({ 
-          error: 'Invalid credentials' 
-        });
-        return;
-      }
-
-      // Update last login
-      await UserModel.updateLastLogin(user.id);
-
-      // Generate tokens
-      const accessToken = generateAccessToken(user.id, user.email, user.role);
-      const refreshToken = generateRefreshToken(user.id, user.email, user.role);
+      const { user, accessToken, refreshToken } = authResult;
 
       // Store refresh token in Redis (if available)
       try {

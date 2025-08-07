@@ -145,16 +145,13 @@ export default function ModelShowcase() {
                 <button
                   key={model.id}
                   onClick={() => setSelectedModel(index)}
-                  className={`p-3 rounded-lg border transition-all ${
+                  className={`p-3 rounded-xl border transition-all ${
                     selectedModel === index
                       ? 'bg-[#00FF7F]/10 border-[#00FF7F]/30'
                       : 'bg-white/5 border-white/10 hover:bg-white/10'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${
-                      selectedModel === index ? 'bg-[#00FF7F]' : 'bg-white/40'
-                    }`} />
                     <span className={`text-xs font-medium ${
                       selectedModel === index ? 'text-[#00FF7F]' : 'text-white/60'
                     }`}>

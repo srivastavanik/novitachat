@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react'
 import { ChevronRight, Loader2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 
 interface ThinkingDisplayProps {
   content: string
@@ -65,7 +68,8 @@ export default function ThinkingDisplay({ content, isActive }: ThinkingDisplayPr
         >
           <div className="text-xs text-white/50 leading-relaxed">
             <ReactMarkdown 
-              remarkPlugins={[remarkGfm]}
+              remarkPlugins={[remarkGfm, remarkMath]}
+              rehypePlugins={[rehypeKatex]}
               components={{
                 p: ({children}) => <p className="mb-1.5 last:mb-0">{children}</p>,
                 code: ({children}) => (
