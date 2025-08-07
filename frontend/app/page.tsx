@@ -202,9 +202,9 @@ export default function LandingPage() {
       {/* Divider */}
       <div className="relative z-10 h-px bg-gradient-to-r from-transparent via-[var(--nova-border-primary)] to-transparent"></div>
 
-      <section className="relative z-10 py-12 px-4 sm:px-6 lg:px-8 -mt-16">
+      <section className="relative z-10 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-10">
             <h2 className="text-4xl font-semibold tracking-tight mb-4 select-text">Powerful AI Models</h2>
             <p className="text-white/60 text-lg font-normal max-w-2xl mx-auto select-text">
               Access state-of-the-art language models through a single, unified interface.
