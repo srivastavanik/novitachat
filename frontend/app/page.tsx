@@ -117,11 +117,11 @@ export default function LandingPage() {
           ))}
         </div>
         
-        <div className="px-6 max-w-6xl mx-auto mt-8 md:mt-12 relative">
+        <div className="px-6 max-w-6xl mx-auto mt-2 md:mt-4 relative">
           <div className="md:max-w-2xl mx-auto text-center relative">
             {/* Clean glowing ring with pulse */}
-            <div className="absolute inset-0 -inset-x-80 -inset-y-80 flex items-center justify-center pointer-events-none">
-              <div className="relative w-[1400px] h-[1400px]">
+            <div className="absolute inset-0 -inset-x-80 -inset-y-96 flex items-center justify-center pointer-events-none">
+              <div className="relative w-[1600px] h-[1600px]">
                 {/* Clean hollow ring with glow and pulse animation */}
                 <div className="absolute inset-0 rounded-full border-[48px] border-[#00FF7F] animate-pulse-slow"
                      style={{
@@ -134,7 +134,7 @@ export default function LandingPage() {
               </div>
             </div>
             
-            <h1 className="text-7xl md:text-8xl font-semibold tracking-tight text-white select-text relative z-10">
+            <h1 className="text-7xl md:text-8xl font-semibold tracking-tight text-white select-text relative z-10 mt-16">
               Open Source <span className="text-[#00FF7F]">AI Chat</span>
             </h1>
             <p className="text-white/60 mt-8 text-xl md:text-2xl font-normal leading-relaxed select-text relative z-10 max-w-3xl mx-auto">
@@ -152,7 +152,7 @@ export default function LandingPage() {
             </div>
             
             {/* Trial Chat Input - Liquid Glass Design */}
-            <div className="mt-20 max-w-4xl mx-auto">
+            <div className="mt-16 max-w-4xl mx-auto">
               <form onSubmit={handleTrialSubmit}>
                 <div className="chat-input-container">
                   <div className="flex items-end gap-4 p-6">
@@ -336,16 +336,7 @@ export default function LandingPage() {
               </div>
             </div>
             
-            {/* Open Source */}
-            <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300">
-              <h3 className="text-lg font-medium mb-3">100% Open Source</h3>
-              <p className="text-white/60 text-sm mb-4">
-                Full transparency with open source code. Self-host, modify, and contribute to the project.
-              </p>
-              <div className="bg-black/50 rounded-lg p-3 border border-white/10">
-                <p className="text-xs text-[#00FF7F] font-mono">license: MIT | github: available</p>
-              </div>
-            </div>
+
           </div>
         </div>
       </section>
