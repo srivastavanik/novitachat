@@ -21,7 +21,7 @@ export class ChatController {
       // Build messages array
       const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string | Array<any> }> = [];
       
-      let systemPrompt = 'You are Chat by Novita AI, a helpful AI assistant. Keep your responses concise and helpful.';
+      let systemPrompt = 'I am Chat, an AI assistant offered by Novita AI. I am a helpful AI assistant designed to keep my responses concise and helpful.';
       
       // Handle web search if requested
       let searchResults = '';
@@ -411,7 +411,7 @@ export class ChatController {
       
       // Add Chat by Novita AI branding with model info
       const modelName = conversation.model || 'GPT-4';
-      const novitaBranding = `You are Chat by Novita AI, powered by the ${modelName} model. You are a helpful, knowledgeable AI assistant. Always provide accurate, helpful, and engaging responses while maintaining a professional and friendly tone.`;
+      const novitaBranding = `I am Chat, an AI assistant offered by Novita AI. I am powered by the ${modelName} model. I am a helpful, knowledgeable AI assistant designed to provide accurate, helpful, and engaging responses while maintaining a professional and friendly tone.`;
       systemPrompt = novitaBranding + '\n\n' + systemPrompt;
       
       if (contextData.summary) {
@@ -734,7 +734,7 @@ export class ChatController {
       
       // Add Chat by Novita AI branding with model info
       const modelName = conversation.model || 'GPT-4';
-      const novitaBranding = `You are Chat by Novita AI, powered by the ${modelName} model. You are a helpful, knowledgeable AI assistant. Always provide accurate, helpful, and engaging responses while maintaining a professional and friendly tone.`;
+      const novitaBranding = `I am Chat, an AI assistant offered by Novita AI. I am powered by the ${modelName} model. I am a helpful, knowledgeable AI assistant designed to provide accurate, helpful, and engaging responses while maintaining a professional and friendly tone.`;
       
       // Add style system prompt if provided
       if (styleSystemPrompt) {
