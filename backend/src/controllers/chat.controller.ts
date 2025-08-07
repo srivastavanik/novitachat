@@ -849,9 +849,23 @@ export class ChatController {
                 documentText += `[Could not read text content]\n[END DOCUMENT]\n\n`;
               }
             } else if (attachment.mimeType === 'application/pdf' || attachment.name?.endsWith('.pdf')) {
-              // PDF file - inform about the document
-              documentText += `[PDF Document - ${Math.round(attachment.size / 1024)}KB]\n`;
-              documentText += `Please note: This is a PDF document that I can analyze if you describe what you'd like me to focus on.\n[END DOCUMENT]\n\n`;
+              // PDF file - extract text server-side for text-only models
+              try {
+                const pdfBuffer = Buffer.from(attachment.data, 'base64');
+                const pdfParse = (await import('pdf-parse')).default as any;
+                const parsed = await pdfParse(pdfBuffer);
+                const extracted = (parsed?.text || '').trim();
+                if (extracted) {
+                  const limited = extracted.length > 20000 ? `${extracted.slice(0, 20000)}...[truncated]` : extracted;
+                  documentText += `PDF Extracted Text (truncated if large):\n${limited}\n[END DOCUMENT]\n\n`;
+                } else {
+                  documentText += `[PDF detected but no extractable text]\n[END DOCUMENT]\n\n`;
+                }
+              } catch (err) {
+                console.error('PDF parse failed:', err);
+                documentText += `[PDF Document - ${Math.round(attachment.size / 1024)}KB]\n`;
+                documentText += `Unable to extract text. Please summarize key sections to analyze.\n[END DOCUMENT]\n\n`;
+              }
             } else if (attachment.mimeType === 'text/csv' || attachment.name?.endsWith('.csv')) {
               // CSV file - decode and include content
               try {
