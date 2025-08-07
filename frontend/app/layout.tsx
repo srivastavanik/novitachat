@@ -17,8 +17,22 @@ const michroma = Michroma({ subsets: ['latin'], weight: '400', variable: '--font
 const oxanium = Oxanium({ subsets: ['latin'], variable: '--font-oxanium' })
 
 export const metadata: Metadata = {
-      title: 'Chat - AI-Powered Assistant',
+  title: 'Nova Chat - AI-Powered Assistant',
   description: 'Chat with AI powered by Novita',
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' }
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+    ]
+  },
+  manifest: '/site.webmanifest',
+  themeColor: '#00FF7F',
+  viewport: 'width=device-width, initial-scale=1'
 }
 
 export default function RootLayout({
