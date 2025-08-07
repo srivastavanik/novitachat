@@ -17,11 +17,11 @@ router.post('/validate-api-key', authenticate, async (req: Request, res: Respons
       return res.status(400).json({ error: 'API key is required' })
     }
 
-    // Check if it's a valid format
-    if (!apiKey.startsWith('nvapi-') && !apiKey.startsWith('sk-')) {
+    // Check if it's a valid format (Novita API keys start with sk_)
+    if (!apiKey.startsWith('sk_')) {
       return res.status(400).json({ 
         valid: false, 
-        message: 'Invalid API key format' 
+        message: 'Invalid API key format. Novita API keys should start with "sk_"' 
       })
     }
 
