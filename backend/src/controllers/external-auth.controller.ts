@@ -72,21 +72,13 @@ export class ExternalAuthController {
       try {
         console.log('Exchanging code for token...');
         const tokenResponse = await exchangeCodeForToken(code as string);
-        console.log('Token exchange successful, setting cookie...');
+        console.log('Token exchange successful, redirecting with token...');
 
-        // Set the Novita token as a cookie for frontend to access
-        res.cookie('token', tokenResponse.access_token, {
-          httpOnly: false, // Allow frontend to access this cookie
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 24 * 60 * 60 * 1000, // 24 hours
-          domain: process.env.NODE_ENV === 'production' ? '.novita.ai' : undefined
-        });
-
-        // Successful OAuth - redirect to frontend 
+        // Instead of setting a cookie (which won't work cross-domain), 
+        // pass the token in the redirect URL for frontend to use
         const baseUrl = frontendConfig.webOrigin;
-        const redirectUrl = `${baseUrl}/chat?auth=success&code=${encodeURIComponent(code as string)}`;
-        console.log('OAuth callback successful, redirecting to:', redirectUrl);
+        const redirectUrl = `${baseUrl}/chat?auth=success&code=${encodeURIComponent(code as string)}&token=${encodeURIComponent(tokenResponse.access_token)}`;
+        console.log('OAuth callback successful, redirecting to:', redirectUrl.replace(tokenResponse.access_token, '***TOKEN***'));
 
         res.redirect(redirectUrl);
       } catch (tokenError) {

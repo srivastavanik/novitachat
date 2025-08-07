@@ -47,6 +47,7 @@ export default function ChatPage() {
   const initialQuery = searchParams.get('q')
   const authSuccess = searchParams.get('auth') === 'success'
   const authCode = searchParams.get('code')
+  const authToken = searchParams.get('token')
   const [socket, setSocket] = useState<Socket | null>(null)
   const [conversations, setConversations] = useState<any[]>([])
   const [currentConversation, setCurrentConversation] = useState<any>(null)
@@ -94,10 +95,10 @@ export default function ChatPage() {
 
   // Handle OAuth callback
   useEffect(() => {
-    if (authSuccess && authCode) {
-      handleOAuthCallback(authCode)
+    if (authSuccess && authCode && authToken) {
+      handleOAuthCallback(authCode, authToken)
     }
-  }, [authSuccess, authCode])
+  }, [authSuccess, authCode, authToken])
 
   // Redirect if not authenticated and not in trial mode
   useEffect(() => {
@@ -306,25 +307,28 @@ export default function ChatPage() {
     }
   }, [user, isTrialMode])
 
-  // Handle OAuth callback with Novita token cookie access
-  const handleOAuthCallback = async (code: string) => {
+  // Handle OAuth callback with Novita token from URL
+  const handleOAuthCallback = async (code: string, token: string) => {
     try {
       console.log('Processing OAuth callback with code:', code)
+      console.log('Novita token from URL:', token ? `${token.substring(0, 20)}...` : 'null')
       
-      // Access Novita token cookie directly (as suggested by your coworker)
-      const novitaToken = getCookie('token') // This will be the Novita token cookie
-      
-      if (novitaToken) {
-        console.log('Found Novita token cookie, fetching user info...')
+      if (token) {
+        console.log('Found Novita token from URL, fetching user info...')
+        console.log('Making request to:', 'https://api-server.novita.ai/oauth/userinfo')
+        console.log('Authorization header:', `Bearer ${token.substring(0, 20)}...`)
         
         // Call Novita's user info API directly
-        const userInfoResponse = await fetch('https://api-server.novita.ai/v1/user/info', {
+        const userInfoResponse = await fetch('https://api-server.novita.ai/oauth/userinfo', {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${novitaToken}`,
+            'Authorization': `Bearer ${token}`,
             'Accept': 'application/json',
           }
         })
+        
+        console.log('User info response status:', userInfoResponse.status)
+        console.log('User info response headers:', Object.fromEntries(userInfoResponse.headers.entries()))
         
         if (userInfoResponse.ok) {
           const userInfo = await userInfoResponse.json()
@@ -333,7 +337,7 @@ export default function ChatPage() {
           // Create or login user in your backend
           const loginResponse = await axios.post('/api/auth/external-login', {
             userInfo: userInfo,
-            novitaToken: novitaToken
+            novitaToken: token
           })
           
           if (loginResponse.data.access_token) {
@@ -356,7 +360,7 @@ export default function ChatPage() {
           router.push('/login?error=oauth_failed')
         }
       } else {
-        console.error('No Novita token cookie found')
+        console.error('No Novita token found in URL')
         router.push('/login?error=no_token')
       }
     } catch (error) {
