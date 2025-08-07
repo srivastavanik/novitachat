@@ -40,10 +40,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
       
+      // Set auth header for subsequent requests
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      
       const response = await axios.get('/api/auth/me')
       setUser(response.data.user)
     } catch (error) {
+      // If auth check fails, remove invalid token
       removeCookie('access_token')
+      delete axios.defaults.headers.common['Authorization']
     } finally {
       setLoading(false)
     }

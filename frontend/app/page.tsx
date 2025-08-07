@@ -10,6 +10,7 @@ import StyleShowcase from '@/components/showcases/StyleShowcase'
 import SearchShowcase from '@/components/showcases/SearchShowcase'
 import DeepResearchShowcase from '@/components/showcases/DeepResearchShowcase'
 import ModelShowcase from '@/components/showcases/ModelShowcase'
+import { useAuth } from '@/lib/auth-context'
 
 export default function LandingPage() {
   const gradientRef = useRef<HTMLDivElement>(null)
@@ -17,6 +18,14 @@ export default function LandingPage() {
   const [trialQuery, setTrialQuery] = useState('')
   const { theme, toggleTheme } = useTheme()
   const router = useRouter()
+  const { user, loading } = useAuth()
+  
+  // Redirect logged-in users to chat
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/chat')
+    }
+  }, [user, loading, router])
   
   const handleTrialSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -88,12 +97,20 @@ export default function LandingPage() {
               <img src="/novita-logo.png" alt="Novita" className="h-7 object-contain brightness-0 invert" />
             </div>
             <div className="flex items-center space-x-4">
-              <Link href="/login" className="text-white text-sm font-medium border border-white/20 rounded-full px-6 py-2.5 hover:bg-white/10 transition-all">
-                Sign In
-              </Link>
-              <Link href="/register" className="bg-[#00FF7F] text-black text-sm font-medium rounded-full px-6 py-2.5 hover:bg-[#00E572] transition-all">
-                Get Started
-              </Link>
+              {user ? (
+                <Link href="/chat" className="bg-[#00FF7F] text-black text-sm font-medium rounded-full px-6 py-2.5 hover:bg-[#00E572] transition-all">
+                  Go to Chat
+                </Link>
+              ) : (
+                <>
+                  <Link href="/login" className="text-white text-sm font-medium border border-white/20 rounded-full px-6 py-2.5 hover:bg-white/10 transition-all">
+                    Sign In
+                  </Link>
+                  <Link href="/register" className="bg-[#00FF7F] text-black text-sm font-medium rounded-full px-6 py-2.5 hover:bg-[#00E572] transition-all">
+                    Get Started
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

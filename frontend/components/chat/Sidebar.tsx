@@ -5,7 +5,7 @@ import UsageIndicator from './UsageIndicator'
 import ApiKeySelector from './ApiKeySelector'
 import axios from '@/lib/axios-config'
 import { useTheme } from '../ThemeProvider'
-import { Sun, Moon } from 'lucide-react'
+import { Sun, Moon, LogOut } from 'lucide-react'
 
 interface SidebarProps {
   conversations: any[]
@@ -48,6 +48,7 @@ export default function Sidebar({
   onRemoveApiKey
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState('')
+  const [showUserDropdown, setShowUserDropdown] = useState(false)
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [searchTimer, setSearchTimer] = useState<NodeJS.Timeout | null>(null)
@@ -157,13 +158,18 @@ export default function Sidebar({
         
         {/* Header */}
         <div className="p-4 flex items-center justify-between">
-          <div className="flex items-center">
+          <a 
+            href="/" 
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+            title="Go to homepage"
+          >
             <img 
               src={theme === 'light' ? "/Logo%20%2B%20wordmark%20(1).png" : "/nova-logo-wordmark.png"} 
               alt="Nova" 
               className="h-5 object-contain" 
             />
-          </div>
+            <span className="text-[var(--nova-text-primary)] font-semibold text-lg">Chat</span>
+          </a>
           <button
             onClick={onNewConversation}
             className="p-2 rounded-lg hover:bg-[var(--nova-bg-hover)] transition-colors text-[var(--nova-text-secondary)] hover:text-[var(--nova-text-primary)]"
@@ -272,20 +278,44 @@ export default function Sidebar({
           </button>
           
           {/* User Profile */}
-          <button
-            onClick={onLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[var(--nova-bg-hover)] transition-colors"
-          >
-            <div className="flex-shrink-0 w-8 h-8 bg-[var(--nova-primary)] rounded-full flex items-center justify-center">
-              <span className="text-sm font-medium text-[var(--nova-text-inverse)]">
-                {user?.username?.charAt(0).toUpperCase() || 'U'}
-              </span>
-            </div>
-            <div className="flex-1 text-left">
-              <div className="text-sm font-medium text-[var(--nova-text-primary)]">{user?.username || 'User'}</div>
-              <div className="text-xs text-[var(--nova-text-tertiary)]">Free plan</div>
-            </div>
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowUserDropdown(!showUserDropdown)}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[var(--nova-bg-hover)] transition-colors"
+            >
+              <div className="flex-shrink-0 w-8 h-8 bg-[var(--nova-primary)] rounded-full flex items-center justify-center">
+                <span className="text-sm font-medium text-[var(--nova-text-inverse)]">
+                  {user?.username?.charAt(0).toUpperCase() || 'U'}
+                </span>
+              </div>
+              <div className="flex-1 text-left">
+                <div className="text-sm font-medium text-[var(--nova-text-primary)]">{user?.username || 'User'}</div>
+                <div className="text-xs text-[var(--nova-text-tertiary)]">Free plan</div>
+              </div>
+            </button>
+
+            {/* User Dropdown */}
+            {showUserDropdown && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setShowUserDropdown(false)}
+                />
+                <div className="absolute bottom-full left-0 right-0 mb-2 bg-[var(--nova-bg-primary)] border border-[var(--nova-border-primary)] rounded-xl shadow-xl z-50 overflow-hidden">
+                  <button
+                    onClick={() => {
+                      setShowUserDropdown(false)
+                      onLogout()
+                    }}
+                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[var(--nova-bg-secondary)] transition-colors text-[var(--nova-text-primary)]"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span className="text-sm font-medium">Log out</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
