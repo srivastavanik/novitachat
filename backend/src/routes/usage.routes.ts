@@ -2,50 +2,81 @@ import { Router } from 'express'
 import { Request, Response } from 'express'
 import { authenticate } from '../middleware/auth'
 import { getUserApiKey } from './apikey.routes'
+import { supabaseAdmin } from '../services/supabase.service'
 
 const router = Router()
 
-// In-memory usage tracking (in production, use Redis or database)
-const dailyUsage = new Map<string, {
-  totalQueries: number
-  webSearchQueries: number
-  deepResearchQueries: number
-  lastReset: string // ISO date string for tracking daily reset
-}>()
-
-const getDailyUsageKey = (userId: string): string => {
+const getOrCreateUsage = async (userId: string) => {
   const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
-  return `${userId}:${today}`
-}
+  
+  try {
+    // First try to get existing usage for today
+    const { data: existingUsage, error: fetchError } = await supabaseAdmin
+      .from('daily_usage')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('usage_date', today)
+      .single()
 
-const getOrCreateUsage = (userId: string) => {
-  const key = getDailyUsageKey(userId)
-  const today = new Date().toISOString().split('T')[0]
-  
-  if (!dailyUsage.has(key)) {
-    dailyUsage.set(key, {
-      totalQueries: 0,
-      webSearchQueries: 0,
-      deepResearchQueries: 0,
-      lastReset: today
-    })
+    if (existingUsage && !fetchError) {
+      return existingUsage
+    }
+
+    // If no usage exists for today, create a new record
+    const { data: newUsage, error: insertError } = await supabaseAdmin
+      .from('daily_usage')
+      .insert({
+        user_id: userId,
+        usage_date: today,
+        total_queries: 0,
+        web_search_queries: 0,
+        deep_research_queries: 0
+      })
+      .select()
+      .single()
+
+    if (insertError) {
+      console.error('Error creating usage record:', insertError)
+      // Return a default usage object if database fails
+      return {
+        user_id: userId,
+        usage_date: today,
+        total_queries: 0,
+        web_search_queries: 0,
+        deep_research_queries: 0
+      }
+    }
+
+    return newUsage
+  } catch (error) {
+    console.error('Error in getOrCreateUsage:', error)
+    // Return a default usage object if database fails
+    return {
+      user_id: userId,
+      usage_date: today,
+      total_queries: 0,
+      web_search_queries: 0,
+      deep_research_queries: 0
+    }
   }
-  
-  return dailyUsage.get(key)!
 }
 
 // Get current usage
-router.get('/usage', authenticate, (req: Request, res: Response) => {
+router.get('/usage', authenticate, async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user.id
-    const usage = getOrCreateUsage(userId)
-    const userApiKey = getUserApiKey(userId)
+    const userId = (req as any).user?.userId
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' })
+    }
+
+    const usage = await getOrCreateUsage(userId)
+    const userApiKey = await getUserApiKey(userId)
     
     res.json({
       usage: {
-        totalQueries: usage.totalQueries,
-        webSearchQueries: usage.webSearchQueries,
-        deepResearchQueries: usage.deepResearchQueries,
+        totalQueries: usage.total_queries || 0,
+        webSearchQueries: usage.web_search_queries || 0,
+        deepResearchQueries: usage.deep_research_queries || 0,
         maxTotal: 100,
         maxWebSearch: 20,
         maxDeepResearch: 3
@@ -59,34 +90,62 @@ router.get('/usage', authenticate, (req: Request, res: Response) => {
 })
 
 // Update usage (called by chat endpoints)
-export const updateUsage = (userId: string, type: 'total' | 'webSearch' | 'deepResearch' = 'total') => {
-  const usage = getOrCreateUsage(userId)
-  
-  usage.totalQueries += 1
-  
-  if (type === 'webSearch') {
-    usage.webSearchQueries += 1
-  } else if (type === 'deepResearch') {
-    usage.deepResearchQueries += 1
+export const updateUsage = async (userId: string, type: 'total' | 'webSearch' | 'deepResearch' = 'total') => {
+  try {
+    const usage = await getOrCreateUsage(userId)
+    const today = new Date().toISOString().split('T')[0]
+    
+    // Increment counters
+    const updates: any = {
+      total_queries: (usage.total_queries || 0) + 1,
+      updated_at: new Date().toISOString()
+    }
+    
+    if (type === 'webSearch') {
+      updates.web_search_queries = (usage.web_search_queries || 0) + 1
+    } else if (type === 'deepResearch') {
+      updates.deep_research_queries = (usage.deep_research_queries || 0) + 1
+    }
+    
+    // Update the database
+    const { error } = await supabaseAdmin
+      .from('daily_usage')
+      .update(updates)
+      .eq('user_id', userId)
+      .eq('usage_date', today)
+    
+    if (error) {
+      console.error('Error updating usage:', error)
+    }
+  } catch (error) {
+    console.error('Error in updateUsage:', error)
   }
-  
-  const key = getDailyUsageKey(userId)
-  dailyUsage.set(key, usage)
 }
 
 // Check if user has remaining quota
-export const hasRemainingQuota = (userId: string, type: 'total' | 'webSearch' | 'deepResearch' = 'total'): boolean => {
-  const usage = getOrCreateUsage(userId)
-  
-  switch (type) {
-    case 'total':
-      return usage.totalQueries < 100
-    case 'webSearch':
-      return usage.webSearchQueries < 20
-    case 'deepResearch':
-      return usage.deepResearchQueries < 3
-    default:
-      return false
+export const hasRemainingQuota = async (userId: string, type: 'total' | 'webSearch' | 'deepResearch' = 'total'): Promise<boolean> => {
+  try {
+    const usage = await getOrCreateUsage(userId)
+    
+    const limits = {
+      total: 100,
+      webSearch: 20,
+      deepResearch: 3
+    }
+    
+    switch (type) {
+      case 'total':
+        return (usage.total_queries || 0) < limits.total
+      case 'webSearch':
+        return (usage.web_search_queries || 0) < limits.webSearch
+      case 'deepResearch':
+        return (usage.deep_research_queries || 0) < limits.deepResearch
+      default:
+        return false
+    }
+  } catch (error) {
+    console.error('Error checking quota:', error)
+    return false
   }
 }
 

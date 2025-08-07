@@ -23,11 +23,22 @@ export default function UsageIndicator({ isTrialMode, trialMessageCount = 0, dai
   useEffect(() => {
     const calculateTimeUntilReset = () => {
       const now = new Date()
-      const tomorrow = new Date(now)
-      tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
-      tomorrow.setUTCHours(0, 0, 0, 0)
       
-      const diff = tomorrow.getTime() - now.getTime()
+      // Calculate next midnight PST (UTC-8)
+      // Convert current time to PST
+      const pstOffset = -8 * 60 // PST is UTC-8
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60000)
+      const pstTime = new Date(utc + (pstOffset * 60000))
+      
+      // Get tomorrow midnight PST
+      const tomorrowPST = new Date(pstTime)
+      tomorrowPST.setDate(tomorrowPST.getDate() + 1)
+      tomorrowPST.setHours(0, 0, 0, 0)
+      
+      // Convert back to UTC for calculation
+      const tomorrowUTC = new Date(tomorrowPST.getTime() - (pstOffset * 60000))
+      
+      const diff = tomorrowUTC.getTime() - now.getTime()
       const hours = Math.floor(diff / (1000 * 60 * 60))
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
       
