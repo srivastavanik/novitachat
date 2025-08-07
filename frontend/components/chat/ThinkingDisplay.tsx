@@ -30,7 +30,7 @@ export default function ThinkingDisplay({ content, isActive }: ThinkingDisplayPr
   }, [isActive])
 
   return (
-    <div className="px-4 py-2">
+    <div className="px-4 py-2 will-change-transform"> {/* Add will-change for better performance */}
       <div 
         className={`inline-flex items-center gap-2 cursor-pointer select-none transition-all duration-300 ${
           isActive ? 'opacity-40 hover:opacity-60' : 'opacity-30 hover:opacity-50'
@@ -55,10 +55,11 @@ export default function ThinkingDisplay({ content, isActive }: ThinkingDisplayPr
       </div>
 
       <div 
-        className={`overflow-hidden transition-all duration-300 ease-in-out`}
+        className={`overflow-hidden transition-all duration-300 ease-in-out will-change-auto`}
         style={{ 
           maxHeight: isExpanded ? `${contentHeight + 24}px` : '0px',
-          opacity: isExpanded ? 1 : 0
+          opacity: isExpanded ? 1 : 0,
+          transform: 'translateZ(0)' // Force hardware acceleration
         }}
       >
         <div 

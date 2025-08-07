@@ -96,12 +96,13 @@ export default function SearchProgress({ content, isActive = true, isExpanded = 
   }
 
   return (
-    <div className="flex justify-center p-4">
+    <div className="flex justify-center p-4 will-change-transform">
       <div className="max-w-3xl w-full">
         <div 
           className="bg-[#343541]/50 backdrop-blur-xl border border-[#4E4F60] rounded-2xl transition-all duration-300 ease-out shadow-xl"
           style={{
             animation: 'fadeInUp 0.3s ease-out',
+            transform: 'translateZ(0)', // Force hardware acceleration
           }}
         >
           <div 

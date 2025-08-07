@@ -1092,9 +1092,9 @@ export default function ChatPage() {
         {/* Messages */}
         {currentConversation ? (
           <>
-            {/* Thinking Display - Separate from messages */}
+            {/* Thinking Display - Fixed position to avoid layout shifts */}
             {thinkingMessage && (
-              <div className="border-b border-[var(--nova-border-primary)] bg-[var(--nova-bg-secondary)]/50 backdrop-blur-xl">
+              <div className="flex-shrink-0 border-b border-[var(--nova-border-primary)] bg-[var(--nova-bg-secondary)]/50 backdrop-blur-xl">
                 <ThinkingDisplay 
                   content={thinkingMessage.content}
                   isActive={thinkingMessage.isThinking}
@@ -1102,12 +1102,15 @@ export default function ChatPage() {
               </div>
             )}
             
-            <MessageList
-              messages={messages.filter(msg => !msg.metadata?.isThinking)}
-              streamingMessage={streamingMessage}
-              isStreaming={isStreaming}
-              loading={messagesLoading}
-            />
+            {/* Messages Container - Always maintains scroll position */}
+            <div className="flex-1 flex flex-col min-h-0">
+              <MessageList
+                messages={messages.filter(msg => !msg.metadata?.isThinking)}
+                streamingMessage={streamingMessage}
+                isStreaming={isStreaming}
+                loading={messagesLoading}
+              />
+            </div>
             <div className="px-4">
               {/* Active Key Indicator */}
               {user && (

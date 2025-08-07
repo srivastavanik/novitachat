@@ -16,9 +16,35 @@ export default function MessageList({
   loading = false
 }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const userHasScrolled = useRef(false)
+  const lastScrollTop = useRef(0)
 
+  // Track if user has manually scrolled up
+  const handleScroll = () => {
+    if (!scrollContainerRef.current) return
+    
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current
+    const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 5
+    
+    // If user scrolled up from bottom, mark as user scrolled
+    if (scrollTop < lastScrollTop.current && !isAtBottom) {
+      userHasScrolled.current = true
+    }
+    
+    // If user scrolled back to bottom, allow auto-scroll again
+    if (isAtBottom) {
+      userHasScrolled.current = false
+    }
+    
+    lastScrollTop.current = scrollTop
+  }
+
+  // Only auto-scroll if user hasn't manually scrolled up
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (!userHasScrolled.current && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [messages, streamingMessage])
 
   if (loading) {
@@ -43,8 +69,13 @@ export default function MessageList({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      <div className="max-w-7xl mx-auto px-4">
+    <div 
+      ref={scrollContainerRef}
+      className="flex-1 overflow-y-auto overflow-x-hidden"
+      onScroll={handleScroll}
+      style={{ scrollBehavior: 'auto' }} // Prevent conflicts with smooth scrolling
+    >
+      <div className="max-w-7xl mx-auto px-4 py-4">
         {messages.map((message) => (
           <Message 
             key={message.id} 
@@ -53,6 +84,8 @@ export default function MessageList({
           />
         ))}
         
+        {/* Add some padding at the bottom */}
+        <div className="h-4" />
         <div ref={messagesEndRef} />
       </div>
     </div>
