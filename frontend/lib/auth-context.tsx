@@ -28,43 +28,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Skip auth check if in trial mode
-    const urlParams = new URLSearchParams(window.location.search)
-    const isTrialMode = urlParams.get('trial') === 'true'
-    
-    if (!isTrialMode) {
-      checkAuth()
-    } else {
-      // Set trial user immediately for trial mode
-      setUser({
-        id: 'trial-user',
-        email: 'trial@nova.ai',
-        username: 'Trial User'
-      })
-      setLoading(false)
-    }
+    checkAuth()
   }, [])
 
   const checkAuth = async () => {
     try {
       const token = getCookie('access_token')
       
-      // Check if we're in trial mode
-      const urlParams = new URLSearchParams(window.location.search)
-      const isTrial = urlParams.get('trial') === 'true'
-      
-      if (!token && !isTrial) {
-        setLoading(false)
-        return
-      }
-
-      if (isTrial) {
-        // Set a trial user for trial mode
-        setUser({
-          id: 'trial-user',
-          email: 'trial@nova.ai',
-          username: 'Trial User'
-        })
+      if (!token) {
         setLoading(false)
         return
       }

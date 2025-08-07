@@ -19,7 +19,7 @@ interface ChatInputProps {
   onModelChange: (modelId: string, model: any) => void
   modelCapabilities?: string[]
   placeholder?: string
-  isTrialMode?: boolean
+  // Removed isTrialMode prop
   onRateLimitCheck?: (type: 'webSearch' | 'deepResearch' | 'normal') => boolean
   resetToggles?: boolean  // When true, resets all toggles to false
 }
@@ -34,7 +34,6 @@ export default function ChatInput({
   onModelChange,
   modelCapabilities = [],
   placeholder,
-  isTrialMode = false,
   onRateLimitCheck,
   resetToggles = false
 }: ChatInputProps) {
@@ -239,21 +238,17 @@ export default function ChatInput({
     <form onSubmit={handleSubmit} className="border-t border-[var(--nova-border-primary)] bg-[var(--nova-bg-secondary)] p-4">
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-3 flex items-center justify-between">
-          {!isTrialMode ? (
-            <div className="flex items-center gap-3">
-              <ModelSelector
-                currentModel={currentModel}
-                onModelChange={onModelChange}
-                hasAttachments={attachments.length > 0}
-                attachmentTypes={attachments.map(att => att.type)}
-              />
-              <StyleSelector 
-                onStyleChange={setCurrentStyle}
+          <div className="flex items-center gap-3">
+            <ModelSelector
+              currentModel={currentModel}
+              onModelChange={onModelChange}
+              hasAttachments={attachments.length > 0}
+              attachmentTypes={attachments.map(att => att.type)}
+            />
+            <StyleSelector 
+              onStyleChange={setCurrentStyle}
               />
             </div>
-          ) : (
-            <div />
-          )}
           <div className="flex items-center gap-3">
             {/* Thinking Toggle (only for supported models) */}
             {supportsThinking && (

@@ -19,7 +19,25 @@ import ApiKeyModal from '@/components/chat/ApiKeyModal'
 import ApiKeySelector from '@/components/chat/ApiKeySelector'
 import { getCookie, setCookie } from '@/lib/utils'
 
-// Removed trial mode interfaces and constants
+interface TrialMessage {
+  id: string
+  content: string
+  role: 'user' | 'assistant' | 'system'
+  timestamp: Date
+  attachments?: Array<{
+    id: string
+    name: string
+    type: 'image' | 'document'
+    size: number
+    data?: string
+  }>
+  metadata?: {
+    webSearch?: boolean
+    isSearchProgress?: boolean
+  }
+}
+
+const TRIAL_MESSAGE_LIMIT = 10
 
 export default function ChatPage() {
   const router = useRouter()
@@ -28,6 +46,7 @@ export default function ChatPage() {
   const authSuccess = searchParams.get('auth') === 'success'
   const authCode = searchParams.get('code')
   const authToken = searchParams.get('token')
+  const isTrialMode = false // Trial mode disabled
   const [socket, setSocket] = useState<Socket | null>(null)
   const [conversations, setConversations] = useState<any[]>([])
   const [currentConversation, setCurrentConversation] = useState<any>(null)
@@ -41,7 +60,10 @@ export default function ChatPage() {
   const [modelCapabilities, setModelCapabilities] = useState<string[]>([])
   const [showSettings, setShowSettings] = useState(false)
   
-  // Remove trial mode states
+  // Trial mode states (to be removed)
+  const [trialMessages, setTrialMessages] = useState<TrialMessage[]>([])
+  const [trialMessageCount, setTrialMessageCount] = useState(0)
+  const [showTrialLimitModal, setShowTrialLimitModal] = useState(false)
   const [showDeepResearchModal, setShowDeepResearchModal] = useState(false)
   const hasInitialized = useRef(false)
   
@@ -95,18 +117,28 @@ export default function ChatPage() {
         // Clear the stored query
         localStorage.removeItem('pendingQuery')
         
-        // Set the input and auto-submit after everything is loaded
+        // Set the input message
         setInputMessage(pendingQuery)
-        setTimeout(() => {
-          // Create a new conversation and send the message
-          createNewConversation().then(() => {
-            setTimeout(() => {
-              // Trigger message send
-              const event = new KeyboardEvent('keypress', { key: 'Enter' })
-              document.dispatchEvent(event)
+        
+        // Wait for conversations to load, then create new conversation and send message
+        setTimeout(async () => {
+          try {
+            // Ensure we have a current conversation or create one
+            if (!currentConversation) {
+              await createNewConversation()
+            }
+            
+            // Wait a bit more for conversation to be set, then send the message
+            setTimeout(async () => {
+              if (pendingQuery.trim()) {
+                await handleSendMessage([], {}) // Send without attachments
+                setInputMessage('') // Clear input after sending
+              }
             }, 500)
-          })
-        }, 1000)
+          } catch (error) {
+            console.error('Error auto-submitting pending query:', error)
+          }
+        }, 1500)
       }
     }
   }, [user])
@@ -676,13 +708,7 @@ export default function ChatPage() {
   }
 
   const handleSendMessage = async (attachments?: any[], options?: { webSearch?: boolean; deepResearch?: boolean; thinking?: boolean; style?: any }) => {
-    // Handle trial mode
-    if (isTrialMode) {
-      return handleTrialSendMessage(inputMessage, attachments, { 
-        webSearch: options?.webSearch,
-        deepResearch: options?.deepResearch 
-      })
-    }
+    // Trial mode removed - now always use authenticated flow
 
     // Normal authenticated flow
     if (!inputMessage.trim() || !currentConversation || isStreaming) return
