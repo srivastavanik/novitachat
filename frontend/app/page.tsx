@@ -204,9 +204,9 @@ export default function LandingPage() {
       {/* Divider */}
       <div className="relative z-10 h-px bg-gradient-to-r from-transparent via-[var(--nova-border-primary)] to-transparent"></div>
 
-      <section className="relative z-10 py-8 px-4 sm:px-6 lg:px-8">
+      <section className="relative z-10 py-4 -mt-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
+          <div className="text-center mb-6">
             <h2 className="text-4xl font-semibold tracking-tight mb-4 select-text">Powerful AI Models</h2>
             <p className="text-white/60 text-lg font-normal max-w-2xl mx-auto select-text">
               Access state-of-the-art language models through a single, unified interface.
@@ -283,62 +283,68 @@ export default function LandingPage() {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Style System */}
-            <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300">
-              <h3 className="text-lg font-medium mb-3">Custom Style Prompts</h3>
-              <p className="text-white/60 text-sm mb-4">
-                Personalize AI responses with custom system prompts. Choose from professional, creative, or technical styles.
-              </p>
-              <div className="bg-black/50 rounded-lg p-3 border border-white/10">
-                <p className="text-xs text-[#00FF7F] font-mono">styles: ["Professional", "Creative", "Technical", "Custom"]</p>
+            <div className="lg:col-span-3 lg:grid lg:grid-cols-3 lg:gap-8 lg:justify-items-center lg:space-y-0 space-y-8 md:space-y-0">
+              {/* First row - 3 items */}
+              <div className="lg:contents">
+                {/* Style System */}
+                <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300">
+                  <h3 className="text-lg font-medium mb-3">Custom Style Prompts</h3>
+                  <p className="text-white/60 text-sm mb-4">
+                    Personalize AI responses with custom system prompts. Choose from professional, creative, or technical styles.
+                  </p>
+                  <div className="bg-black/50 rounded-lg p-3 border border-white/10">
+                    <p className="text-xs text-[#00FF7F] font-mono">styles: ["Professional", "Creative", "Technical", "Custom"]</p>
+                  </div>
+                </div>
+                
+                {/* Web Search */}
+                <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300">
+                  <h3 className="text-lg font-medium mb-3">Real-time Web Search</h3>
+                  <p className="text-white/60 text-sm mb-4">
+                    Get current information with integrated web search. Perfect for news, research, and fact-checking.
+                  </p>
+                  <div className="bg-black/50 rounded-lg p-3 border border-white/10">
+                    <p className="text-xs text-[#00FF7F] font-mono">search: enabled | sources: verified</p>
+                  </div>
+                </div>
+                
+                {/* Deep Research */}
+                <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300">
+                  <h3 className="text-lg font-medium mb-3">Deep Research Mode</h3>
+                  <p className="text-white/60 text-sm mb-4">
+                    Comprehensive analysis with multiple searches and cross-referenced sources for thorough answers.
+                  </p>
+                  <div className="bg-black/50 rounded-lg p-3 border border-white/10">
+                    <p className="text-xs text-[#00FF7F] font-mono">depth: maximum | accuracy: enhanced</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Second row - 2 items centered */}
+              <div className="lg:col-span-3 lg:flex lg:justify-center lg:gap-8 lg:space-y-0 space-y-8 md:space-y-0 md:grid md:grid-cols-2 md:gap-8">
+                {/* File Attachments */}
+                <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300 lg:max-w-sm">
+                  <h3 className="text-lg font-medium mb-3">File Analysis</h3>
+                  <p className="text-white/60 text-sm mb-4">
+                    Upload documents, images, and code files for AI analysis and discussion.
+                  </p>
+                  <div className="bg-black/50 rounded-lg p-3 border border-white/10">
+                    <p className="text-xs text-[#00FF7F] font-mono">formats: [pdf, txt, jpg, png, code]</p>
+                  </div>
+                </div>
+                
+                {/* API Keys */}
+                <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300 lg:max-w-sm">
+                  <h3 className="text-lg font-medium mb-3">Bring Your Own Key</h3>
+                  <p className="text-white/60 text-sm mb-4">
+                    Use your own Novita API key for unlimited access and custom rate limits.
+                  </p>
+                  <div className="bg-black/50 rounded-lg p-3 border border-white/10">
+                    <p className="text-xs text-[#00FF7F] font-mono">api: flexible | limits: customizable</p>
+                  </div>
+                </div>
               </div>
             </div>
-            
-            {/* Web Search */}
-            <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300">
-              <h3 className="text-lg font-medium mb-3">Real-time Web Search</h3>
-              <p className="text-white/60 text-sm mb-4">
-                Get current information with integrated web search. Perfect for news, research, and fact-checking.
-              </p>
-              <div className="bg-black/50 rounded-lg p-3 border border-white/10">
-                <p className="text-xs text-[#00FF7F] font-mono">search: enabled | sources: verified</p>
-              </div>
-            </div>
-            
-            {/* Deep Research */}
-            <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300">
-              <h3 className="text-lg font-medium mb-3">Deep Research Mode</h3>
-              <p className="text-white/60 text-sm mb-4">
-                Comprehensive analysis with multiple searches and cross-referenced sources for thorough answers.
-              </p>
-              <div className="bg-black/50 rounded-lg p-3 border border-white/10">
-                <p className="text-xs text-[#00FF7F] font-mono">depth: maximum | accuracy: enhanced</p>
-              </div>
-            </div>
-            
-            {/* File Attachments */}
-            <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300">
-              <h3 className="text-lg font-medium mb-3">File Analysis</h3>
-              <p className="text-white/60 text-sm mb-4">
-                Upload documents, images, and code files for AI analysis and discussion.
-              </p>
-              <div className="bg-black/50 rounded-lg p-3 border border-white/10">
-                <p className="text-xs text-[#00FF7F] font-mono">formats: [pdf, txt, jpg, png, code]</p>
-              </div>
-            </div>
-            
-            {/* API Keys */}
-            <div className="feature-card group hover:border-[#00FF7F]/30 transition-all duration-300">
-              <h3 className="text-lg font-medium mb-3">Bring Your Own Key</h3>
-              <p className="text-white/60 text-sm mb-4">
-                Use your own Novita API key for unlimited access and custom rate limits.
-              </p>
-              <div className="bg-black/50 rounded-lg p-3 border border-white/10">
-                <p className="text-xs text-[#00FF7F] font-mono">api: flexible | limits: customizable</p>
-              </div>
-            </div>
-            
-
           </div>
         </div>
       </section>

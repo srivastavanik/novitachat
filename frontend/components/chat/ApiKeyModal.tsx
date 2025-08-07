@@ -229,8 +229,8 @@ export default function ApiKeyModal({
         </div>
 
         {reason === 'limit_exceeded' && (
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <p className="text-xs text-white/40 text-center">
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-white/10">
+            <p className="text-xs text-gray-500 dark:text-white/40 text-center">
               Your personal API key will be used automatically when daily limits are reached
             </p>
           </div>
