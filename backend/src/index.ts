@@ -8,12 +8,29 @@ const HOST = config.HOST || 'localhost';
 
 async function startServer() {
   try {
+    // Log environment status
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('Supabase URL:', config.SUPABASE_URL ? 'Set' : 'Not set');
+    console.log('Supabase Keys:', {
+      anon: config.SUPABASE_ANON_KEY ? 'Set' : 'Not set',
+      service: config.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Not set'
+    });
+    
     // Test Supabase connection
-    const { error } = await supabaseAdmin
-      .from('users')
-      .select('count', { count: 'exact', head: true });
-    if (error) {
-      throw new Error(`Supabase connection failed: ${error.message}`);
+    try {
+      const { error } = await supabaseAdmin
+        .from('users')
+        .select('count', { count: 'exact', head: true });
+      if (error) {
+        throw new Error(`Supabase connection failed: ${error.message}`);
+      }
+    } catch (err: any) {
+      console.error('Supabase connection error details:', {
+        message: err.message,
+        cause: err.cause,
+        stack: err.stack
+      });
+      throw new Error(`Supabase connection failed: ${err}`);
     }
     console.log('Supabase connected successfully');
 
