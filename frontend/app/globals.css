@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800;900&display=swap');
 @import '../styles/design-tokens.css';
+@import 'katex/dist/katex.min.css';
 
 @tailwind base;
 @tailwind components;
@@ -104,6 +105,32 @@
 
   ::-webkit-scrollbar-track {
     background: var(--nova-bg-secondary);
+  }
+
+  /* KaTeX Math Rendering Styles */
+  .katex {
+    color: var(--nova-text-primary) !important;
+    font-size: 1.1em !important;
+  }
+  
+  .katex-display {
+    margin: 1em 0 !important;
+    text-align: center !important;
+  }
+  
+  .katex .base {
+    color: var(--nova-text-primary) !important;
+  }
+  
+  /* Ensure KaTeX math elements are visible in dark mode */
+  .katex .mord,
+  .katex .mop,
+  .katex .mbin,
+  .katex .mrel,
+  .katex .mopen,
+  .katex .mclose,
+  .katex .mpunct {
+    color: var(--nova-text-primary) !important;
   }
 
   ::-webkit-scrollbar-thumb {

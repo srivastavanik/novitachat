@@ -9,7 +9,6 @@ import SearchProgress from './SearchProgress'
 import ThinkingDisplay from './ThinkingDisplay'
 import LinkPreview from './LinkPreview'
 import SearchSources from './SearchSources'
-import 'katex/dist/katex.min.css'
 
 interface MessageProps {
   message: {
@@ -92,7 +91,7 @@ export default function Message({ message, isStreaming = false }: MessageProps) 
   return (
     <div className={`flex ${isUser ? 'justify-end pl-8' : 'justify-start pr-8'} px-4 ${isUser ? 'py-3' : 'py-6'}`}>
       {!isUser && (
-        <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-[var(--nova-bg-tertiary)] mr-3">
+        <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-gray-900 dark:bg-[var(--nova-bg-tertiary)] mr-3">
           <Image 
             src="/novita-logo-only.png" 
                           alt="Chat" 
