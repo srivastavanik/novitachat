@@ -117,31 +117,44 @@ export default function ChatPage() {
         // Clear the stored query
         localStorage.removeItem('pendingQuery')
         
-        // Set the input message
+        console.log('Auto-submitting pending query:', pendingQuery)
+        
+        // Set the input message temporarily for the send function
         setInputMessage(pendingQuery)
         
-        // Wait for conversations to load, then create new conversation and send message
+        // Wait for everything to load, then send the message
         setTimeout(async () => {
           try {
             // Ensure we have a current conversation or create one
             if (!currentConversation) {
+              console.log('Creating new conversation for auto-submit')
               await createNewConversation()
-            }
-            
-            // Wait a bit more for conversation to be set, then send the message
-            setTimeout(async () => {
-              if (pendingQuery.trim()) {
-                await handleSendMessage([], {}) // Send without attachments
+              
+              // Wait for the conversation to be properly set
+              setTimeout(async () => {
+                // Set input again and send
+                setInputMessage(pendingQuery)
+                setTimeout(async () => {
+                  console.log('Sending auto-submit message:', pendingQuery)
+                  await handleSendMessage([], {})
+                  setInputMessage('') // Clear input after sending
+                }, 300)
+              }, 800)
+            } else {
+              // Conversation already exists, just send
+              setTimeout(async () => {
+                console.log('Sending auto-submit message to existing conversation:', pendingQuery)
+                await handleSendMessage([], {})
                 setInputMessage('') // Clear input after sending
-              }
-            }, 500)
+              }, 500)
+            }
           } catch (error) {
             console.error('Error auto-submitting pending query:', error)
           }
-        }, 1500)
+        }, 2000)
       }
     }
-  }, [user])
+  }, [user, currentConversation])
 
   // Removed trial mode localStorage saving
 

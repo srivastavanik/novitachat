@@ -325,15 +325,32 @@ export class AuthController {
         return;
       }
 
+      // Log userInfo to see what we're getting from Novita
+      console.log('Novita userInfo received:', JSON.stringify(userInfo, null, 2));
+      
       // Check if user already exists
       let user = await UserModel.findByEmail(userInfo.email || userInfo.sub);
       
       if (!user) {
+        // Extract a clean username from userInfo
+        let username = userInfo.preferred_username || userInfo.name || userInfo.username;
+        
+        // If we still don't have a good username, extract from email
+        if (!username || username === userInfo.sub) {
+          if (userInfo.email) {
+            username = userInfo.email.split('@')[0]; // Use part before @ as username
+          } else {
+            username = `user_${userInfo.sub.substring(0, 8)}`; // Last resort: truncated sub
+          }
+        }
+        
+        console.log('Creating new user with username:', username);
+        
         // Create new user
         user = await UserModel.create({
           email: userInfo.email || userInfo.sub,
           password: userInfo.sub, // Use sub as password placeholder
-          username: userInfo.preferred_username || userInfo.name || userInfo.sub
+          username: username
         });
       }
 
