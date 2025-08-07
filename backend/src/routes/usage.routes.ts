@@ -150,14 +150,23 @@ export const hasRemainingQuota = async (userId: string, type: 'total' | 'webSear
 }
 
 // Reset usage (called by a daily cron job or middleware)
-export const resetDailyUsage = () => {
-  const today = new Date().toISOString().split('T')[0]
-  
-  // Clear old entries (keep only today's data)
-  for (const [key, usage] of dailyUsage.entries()) {
-    if (usage.lastReset !== today) {
-      dailyUsage.delete(key)
+export const resetDailyUsage = async () => {
+  try {
+    // Delete all usage records older than today
+    const today = new Date().toISOString().split('T')[0]
+    
+    const { error } = await supabaseAdmin
+      .from('daily_usage')
+      .delete()
+      .lt('usage_date', today)
+    
+    if (error) {
+      console.error('Error resetting daily usage:', error)
+    } else {
+      console.log('Daily usage reset completed')
     }
+  } catch (error) {
+    console.error('Error in resetDailyUsage:', error)
   }
 }
 
