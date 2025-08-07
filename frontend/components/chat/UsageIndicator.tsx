@@ -24,21 +24,27 @@ export default function UsageIndicator({ isTrialMode, trialMessageCount = 0, dai
     const calculateTimeUntilReset = () => {
       const now = new Date()
       
-      // Calculate next midnight PST (UTC-8)
-      // Convert current time to PST
-      const pstOffset = -8 * 60 // PST is UTC-8
-      const utc = now.getTime() + (now.getTimezoneOffset() * 60000)
-      const pstTime = new Date(utc + (pstOffset * 60000))
+      // Create a date object for current time in PST (UTC-8)
+      // Use toLocaleString to get PST time properly
+      const pstTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Los_Angeles"}))
       
-      // Get tomorrow midnight PST
-      const tomorrowPST = new Date(pstTime)
-      tomorrowPST.setDate(tomorrowPST.getDate() + 1)
-      tomorrowPST.setHours(0, 0, 0, 0)
+      // Get next midnight PST
+      const nextMidnightPST = new Date(pstTime)
+      nextMidnightPST.setDate(pstTime.getDate() + 1)
+      nextMidnightPST.setHours(0, 0, 0, 0)
       
-      // Convert back to UTC for calculation
-      const tomorrowUTC = new Date(tomorrowPST.getTime() - (pstOffset * 60000))
+      // Convert next midnight PST to UTC for accurate calculation
+      const pstToUtcOffset = 8 * 60 * 60 * 1000 // 8 hours in milliseconds
+      const nextMidnightUTC = nextMidnightPST.getTime() + pstToUtcOffset
       
-      const diff = tomorrowUTC.getTime() - now.getTime()
+      // Calculate difference from current UTC time
+      const diff = nextMidnightUTC - now.getTime()
+      
+      if (diff <= 0) {
+        setTimeUntilReset('Resetting...')
+        return
+      }
+      
       const hours = Math.floor(diff / (1000 * 60 * 60))
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
       

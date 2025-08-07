@@ -952,6 +952,20 @@ export class ChatController {
               messageId: streamingMessage.id,
               message: completeMessage 
             });
+
+            // Update usage tracking - only for Novita platform key usage
+            if (!data.useUserKey) {
+              try {
+                let usageType: 'total' | 'webSearch' | 'deepResearch' = 'total';
+                if (deepResearch) usageType = 'deepResearch';
+                else if (webSearch) usageType = 'webSearch';
+                
+                await updateUsage(userId, usageType);
+                console.log(`Usage updated for user ${userId}, type: ${usageType}`);
+              } catch (usageError) {
+                console.error('Error updating usage:', usageError);
+              }
+            }
           } else {
             // If finalization failed, still send the message with metadata
             const messageWithAllMetadata = await MessageModel.findById(streamingMessage.id);
@@ -961,6 +975,20 @@ export class ChatController {
                 messageId: streamingMessage.id,
                 message: messageWithAllMetadata 
               });
+
+              // Update usage tracking - only for Novita platform key usage
+              if (!data.useUserKey) {
+                try {
+                  let usageType: 'total' | 'webSearch' | 'deepResearch' = 'total';
+                  if (deepResearch) usageType = 'deepResearch';
+                  else if (webSearch) usageType = 'webSearch';
+                  
+                  await updateUsage(userId, usageType);
+                  console.log(`Usage updated for user ${userId}, type: ${usageType}`);
+                } catch (usageError) {
+                  console.error('Error updating usage:', usageError);
+                }
+              }
             }
           }
         }
