@@ -45,8 +45,8 @@ export class ExternalAuthController {
   }
 
   /**
-   * Handle OAuth callback - Simplified flow
-   * Just redirect to frontend, which will handle the Novita token cookie directly
+   * Handle OAuth callback - Exchange code for token and set cookie
+   * Set Novita token as cookie for frontend to use
    */
   async handleCallback(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -66,13 +66,34 @@ export class ExternalAuthController {
         return res.redirect(`${baseUrl}/?error=missing_code`);
       }
 
-      // Successful OAuth - redirect to frontend 
-      // Frontend will access Novita token cookie directly and call user info API
-      const baseUrl = frontendConfig.webOrigin;
-      const redirectUrl = `${baseUrl}/chat?auth=success&code=${encodeURIComponent(code as string)}`;
-      console.log('OAuth callback successful, redirecting to:', redirectUrl);
+      console.log('OAuth callback endpoint hit with query:', req.query);
 
-      res.redirect(redirectUrl);
+      // Exchange code for token
+      try {
+        console.log('Exchanging code for token...');
+        const tokenResponse = await exchangeCodeForToken(code as string);
+        console.log('Token exchange successful, setting cookie...');
+
+        // Set the Novita token as a cookie for frontend to access
+        res.cookie('token', tokenResponse.access_token, {
+          httpOnly: false, // Allow frontend to access this cookie
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 24 * 60 * 60 * 1000, // 24 hours
+          domain: process.env.NODE_ENV === 'production' ? '.novita.ai' : undefined
+        });
+
+        // Successful OAuth - redirect to frontend 
+        const baseUrl = frontendConfig.webOrigin;
+        const redirectUrl = `${baseUrl}/chat?auth=success&code=${encodeURIComponent(code as string)}`;
+        console.log('OAuth callback successful, redirecting to:', redirectUrl);
+
+        res.redirect(redirectUrl);
+      } catch (tokenError) {
+        console.error('Token exchange failed:', tokenError);
+        const baseUrl = frontendConfig.webOrigin;
+        res.redirect(`${baseUrl}/?error=token_exchange_failed`);
+      }
     } catch (error) {
       console.error('Auth callback error:', error);
       const baseUrl = frontendConfig.webOrigin;
