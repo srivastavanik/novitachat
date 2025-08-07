@@ -91,15 +91,15 @@ export default function ApiKeySelector({
             className="fixed inset-0 z-40" 
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-black border border-gray-200 dark:border-white/20 rounded-lg shadow-xl z-50 overflow-hidden max-h-96 overflow-y-auto">
+          <div className="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden max-h-96 overflow-y-auto">
             {/* Novita Key Option */}
             <button
               onClick={() => {
                 onKeyChange('novita')
                 setIsOpen(false)
               }}
-              className={`w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-white/5 transition-colors ${
-                activeKey === 'novita' ? 'bg-gray-100 dark:bg-white/5' : ''
+              className={`w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+                activeKey === 'novita' ? 'bg-gray-100 dark:bg-gray-800' : ''
               }`}
             >
               <div className="flex items-center gap-3">
@@ -132,15 +132,15 @@ export default function ApiKeySelector({
                   onKeyChange('user')
                   setIsOpen(false)
                 }}
-                className={`w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors border-t border-white/10 ${
-                  activeKey === 'user' ? 'bg-white/5' : ''
+                className={`w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-t border-gray-200 dark:border-gray-700 ${
+                  activeKey === 'user' ? 'bg-gray-100 dark:bg-gray-800' : ''
                 }`}
               >
                 <div className="flex items-center gap-3">
 
                   <div className="text-left">
-                    <div className="text-sm font-medium text-white">Your API Key</div>
-                    <div className="text-xs text-white/60">
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">Your API Key</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
                       Ending in {userApiKey} • Unlimited queries
                     </div>
                     <div className="text-xs text-green-400 flex items-center gap-1 mt-1">
@@ -172,14 +172,14 @@ export default function ApiKeySelector({
                   onAddKey()
                   setIsOpen(false)
                 }}
-                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors border-t border-white/10"
+                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-t border-gray-200 dark:border-gray-700"
               >
                 <div className="w-10 h-10 rounded-lg bg-[#00FF7F]/10 flex items-center justify-center">
                   <Plus className="h-5 w-5 text-[#00FF7F]" />
                 </div>
                 <div className="text-left">
-                  <div className="text-sm font-medium text-white">Add Your API Key</div>
-                  <div className="text-xs text-white/60">
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">Add Your API Key</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
                     Use your own Novita key for unlimited access
                   </div>
                 </div>
@@ -187,8 +187,8 @@ export default function ApiKeySelector({
             )}
 
             {/* Info Section */}
-            <div className="px-4 py-3 bg-white/5 border-t border-white/10">
-              <div className="text-xs text-white/60">
+            <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-xs text-gray-600 dark:text-gray-400">
                 {activeKey === 'novita' ? (
                   <>
                     <strong>Chat Platform Key:</strong> Free tier with daily limits. 

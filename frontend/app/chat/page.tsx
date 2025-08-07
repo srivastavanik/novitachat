@@ -1067,8 +1067,8 @@ export default function ChatPage() {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col bg-[var(--nova-bg-primary)]">
         {/* Header */}
-        <div className="h-14 border-b border-[var(--nova-border-primary)] bg-[var(--nova-bg-secondary)] flex items-center justify-between px-6">
-          <h2 className="font-semibold text-[var(--nova-text-primary)]">
+        <div className="h-12 border-b border-[var(--nova-border-primary)] bg-[var(--nova-bg-secondary)] flex items-center justify-between px-4">
+          <h2 className="font-medium text-sm text-[var(--nova-text-primary)] truncate">
             {currentConversation ? currentConversation.title : 'Select a conversation'}
           </h2>
           {currentConversation && (
@@ -1106,7 +1106,7 @@ export default function ChatPage() {
               {user && (
                 <div className="flex items-center justify-between mb-2 px-2">
                   <div className="flex items-center gap-2 text-xs">
-                    <div className={`w-2 h-2 rounded-full ${activeKey === 'user' ? 'bg-green-400' : 'bg-blue-400'}`} />
+                    <div className={`w-2 h-2 rounded-full ${activeKey === 'user' ? 'bg-green-400' : 'bg-green-400'}`} />
                     <span className="text-gray-600 dark:text-white/60">
                       Using: {activeKey === 'user' ? 'Your API Key' : 'Chat Platform Key'}
                     </span>
