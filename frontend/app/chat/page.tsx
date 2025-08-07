@@ -849,7 +849,7 @@ export default function ChatPage() {
                     Free Trial
                   </span>
                   <span className="text-sm nova-text-muted">
-                    {remainingMessages} {remainingMessages === 1 ? 'message' : 'messages'} remaining
+                    {remainingMessages} messages remaining
                   </span>
                 </div>
               </div>
