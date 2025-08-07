@@ -148,9 +148,12 @@ export default function LandingPage() {
               <Link href="/register" className="bg-[#00FF7F] text-black text-base font-medium rounded-full px-8 py-3 hover:bg-[#00E572] transition-all">
                 Get Started
               </Link>
-              <Link href="#features" className="border border-white/20 text-white text-base font-medium rounded-full px-8 py-3 hover:bg-white/10 transition-all">
+              <button 
+                onClick={() => document.getElementById('core-features')?.scrollIntoView({ behavior: 'smooth' })}
+                className="border border-white/20 text-white text-base font-medium rounded-full px-8 py-3 hover:bg-white/10 transition-all"
+              >
                 Learn More
-              </Link>
+              </button>
             </div>
             
             {/* Trial Chat Input - Liquid Glass Design */}
@@ -204,7 +207,7 @@ export default function LandingPage() {
       {/* Divider */}
       <div className="relative z-10 h-px bg-gradient-to-r from-transparent via-[var(--nova-border-primary)] to-transparent"></div>
 
-      <section className="relative z-10 py-4 -mt-12 px-4 sm:px-6 lg:px-8">
+      <section className="relative z-10 py-4 -mt-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-6">
             <h2 className="text-4xl font-semibold tracking-tight mb-4 select-text">Powerful AI Models</h2>
@@ -273,7 +276,7 @@ export default function LandingPage() {
       <div className="relative z-10 h-px bg-gradient-to-r from-transparent via-[var(--nova-border-primary)] to-transparent"></div>
 
       {/* Key Features Section */}
-      <section className="relative z-10 py-24 px-4 sm:px-6 lg:px-8">
+      <section id="core-features" className="relative z-10 py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-semibold tracking-tight mb-4">Core Features</h2>
