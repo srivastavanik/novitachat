@@ -761,7 +761,7 @@ export class ChatController {
         if (msg.role === 'user' && msg.attachments && msg.attachments.length > 0) {
           const contentParts: any[] = [{ type: 'text', text: msg.content }];
           
-          // Add image attachments to content
+          // Add attachments to content
           for (const attachment of msg.attachments) {
             if (attachment.type === 'image' && attachment.data) {
               contentParts.push({
@@ -770,6 +770,31 @@ export class ChatController {
                   url: `data:${attachment.mime_type};base64,${attachment.data}`
                 }
               });
+            } else if (attachment.type === 'document' && attachment.data) {
+              // For documents in history, add them as text content with file info
+              let documentText = `\n\n[DOCUMENT: ${attachment.filename}]\n`;
+              
+              // Try to extract text content from common formats
+              if (attachment.mime_type === 'text/plain' || attachment.filename?.endsWith('.txt')) {
+                // Plain text file - decode base64
+                try {
+                  const textContent = Buffer.from(attachment.data, 'base64').toString('utf-8');
+                  documentText += `Content:\n${textContent}\n[END DOCUMENT]\n\n`;
+                } catch (error) {
+                  documentText += `[Could not read text content]\n[END DOCUMENT]\n\n`;
+                }
+              } else if (attachment.mime_type === 'application/pdf' || attachment.filename?.endsWith('.pdf')) {
+                // PDF file - inform about the document
+                documentText += `[PDF Document - ${Math.round(attachment.size / 1024)}KB]\n`;
+                documentText += `Please note: This is a PDF document that was previously uploaded.\n[END DOCUMENT]\n\n`;
+              } else {
+                // Other document types
+                documentText += `[${attachment.mime_type || 'Unknown'} - ${Math.round(attachment.size / 1024)}KB]\n`;
+                documentText += `Document type: ${attachment.mime_type || 'Unknown'}\n[END DOCUMENT]\n\n`;
+              }
+              
+              // Add document info to the text content
+              contentParts[0].text += documentText;
             }
           }
           
@@ -789,15 +814,41 @@ export class ChatController {
       if (attachments && attachments.length > 0) {
         const contentParts: any[] = [{ type: 'text', text: content }];
         
-        // Add image attachments to content
+        // Add attachments to content
         for (const attachment of attachments) {
           if (attachment.type === 'image' && attachment.data) {
+            // Add image attachments as image_url
             contentParts.push({
               type: 'image_url',
               image_url: {
                 url: `data:${attachment.mimeType};base64,${attachment.data}`
               }
             });
+          } else if (attachment.type === 'document' && attachment.data) {
+            // For documents, add them as text content with file info
+            let documentText = `\n\n[DOCUMENT: ${attachment.filename}]\n`;
+            
+            // Try to extract text content from common formats
+            if (attachment.mimeType === 'text/plain' || attachment.filename?.endsWith('.txt')) {
+              // Plain text file - decode base64
+              try {
+                const textContent = Buffer.from(attachment.data, 'base64').toString('utf-8');
+                documentText += `Content:\n${textContent}\n[END DOCUMENT]\n\n`;
+              } catch (error) {
+                documentText += `[Could not read text content]\n[END DOCUMENT]\n\n`;
+              }
+            } else if (attachment.mimeType === 'application/pdf' || attachment.filename?.endsWith('.pdf')) {
+              // PDF file - inform about the document
+              documentText += `[PDF Document - ${Math.round(attachment.size / 1024)}KB]\n`;
+              documentText += `Please note: This is a PDF document that I can analyze if you describe what you'd like me to focus on.\n[END DOCUMENT]\n\n`;
+            } else {
+              // Other document types
+              documentText += `[${attachment.mimeType || 'Unknown'} - ${Math.round(attachment.size / 1024)}KB]\n`;
+              documentText += `Document type: ${attachment.mimeType || 'Unknown'}\n[END DOCUMENT]\n\n`;
+            }
+            
+            // Add document info to the text content
+            contentParts[0].text += documentText;
           }
         }
         
