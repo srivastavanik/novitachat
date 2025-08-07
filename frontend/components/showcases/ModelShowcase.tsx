@@ -37,6 +37,24 @@ const models = [
     features: ['Multilingual', 'Vision capable', 'Function calling'],
     speed: 92,
     accuracy: 95
+  },
+  {
+    id: 'qwen-vl',
+    name: 'Qwen2.5-VL 72B',
+    description: 'Advanced vision-language model for images and documents',
+    color: 'from-[#00FF7F]/30 to-[#00D96A]/30',
+    features: ['Vision & Documents', 'PDF analysis', 'Image understanding'],
+    speed: 88,
+    accuracy: 97
+  },
+  {
+    id: 'gemma-3',
+    name: 'Gemma 3 27B',
+    description: 'Google\'s multimodal model with 140+ language support',
+    color: 'from-[#00FF7F]/30 to-[#00D96A]/30',
+    features: ['Multimodal', '140+ languages', 'Function calling'],
+    speed: 90,
+    accuracy: 96
   }
 ]
 

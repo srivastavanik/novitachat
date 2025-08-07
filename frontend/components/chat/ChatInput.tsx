@@ -70,10 +70,17 @@ export default function ChatInput({
 
   // Check if current model supports image input
   const supportsImages = modelCapabilities.includes('image') ||
+                        modelCapabilities.includes('vision') ||
                         currentModel?.includes('vision') ||
                         currentModel?.includes('-vl-') ||
                         currentModel?.includes('llava') ||
                         false
+
+  // Check if current model supports document input  
+  const supportsDocuments = modelCapabilities.includes('documents') ||
+                           modelCapabilities.includes('image') || // Vision models also support docs
+                           modelCapabilities.includes('vision') ||
+                           false
 
   // Intelligent web search auto-detection for queries that need real-time information
   const shouldEnableWebSearch = (query: string): boolean => {
@@ -440,20 +447,31 @@ export default function ChatInput({
           
           {/* Attachment buttons - only show if model supports them */}
           <div className="flex items-center gap-1 mb-[1px]">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                fileInputRef.current?.click()
-              }}
-              className="p-2 rounded-lg hover:bg-[var(--nova-bg-hover)] transition-colors text-[var(--nova-text-tertiary)] hover:text-[var(--nova-text-secondary)]"
-              title="Attach files"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-              </svg>
-            </button>
+            {supportsDocuments ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  fileInputRef.current?.click()
+                }}
+                className="p-2 rounded-lg hover:bg-[var(--nova-bg-hover)] transition-colors text-[var(--nova-text-tertiary)] hover:text-[var(--nova-text-secondary)] relative group"
+                title="Attach files (PDFs, CSVs, text files)"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+                <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 text-xs bg-[var(--nova-bg-primary)] border border-[var(--nova-border-primary)] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  Document analysis
+                </span>
+              </button>
+            ) : (
+              <div className="p-2 opacity-30 cursor-not-allowed" title="Select a multimodal model to attach files">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+              </div>
+            )}
             {supportsImages && (
               <button
                 type="button"

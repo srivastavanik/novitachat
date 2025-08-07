@@ -89,25 +89,61 @@ export class ModelsController {
     const modelName = model.id.toLowerCase();
     const description = (model.description || '').toLowerCase();
 
-    // Check for specific capabilities
-    if (modelName.includes('vision') || description.includes('image') || modelName.includes('llava')) {
+    // Vision/Multimodal capabilities - based on Novita research
+    const visionModels = [
+      'qwen2.5-vl', 'qwen/qwen2.5-vl', 'qwen2-vl',
+      'gemma-3-27b', 'google/gemma-3-27b',
+      'llama-4-maverick', 'meta-llama/llama-4-maverick',
+      'llama-4-scout', 'meta-llama/llama-4-scout',
+      'glm-4.1v', 'thudm/glm-4.1v'
+    ];
+    
+    // Check for vision capabilities
+    if (visionModels.some(vm => modelName.includes(vm)) || 
+        modelName.includes('vision') || description.includes('image') || 
+        modelName.includes('llava') || modelName.includes('-vl') ||
+        description.includes('multimodal') || description.includes('vision')) {
       capabilities.push('image');
+      capabilities.push('vision');
+      // Vision models also support document analysis
+      capabilities.push('documents');
     }
-    if (modelName.includes('code') || description.includes('code') || modelName.includes('codestral')) {
+
+    // Document processing capabilities (for models that can handle text files but not images)
+    if (capabilities.includes('image') || 
+        modelName.includes('claude') || modelName.includes('gpt-4') ||
+        modelName.includes('gemini') || description.includes('document')) {
+      capabilities.push('documents');
+    }
+
+    // Code capabilities
+    if (modelName.includes('code') || description.includes('code') || 
+        modelName.includes('codestral') || modelName.includes('coder')) {
       capabilities.push('code');
     }
-    if (description.includes('function') || description.includes('tool')) {
+
+    // Function calling
+    if (description.includes('function') || description.includes('tool') ||
+        modelName.includes('instruct') || modelName.includes('chat')) {
       capabilities.push('functions');
     }
+
+    // Embeddings
     if (modelName.includes('embed')) {
       capabilities.push('embeddings');
     }
-    // Check for reasoning capabilities (for deep research)
-    if (modelName.includes('405b') || modelName.includes('large') || modelName.includes('70b') || modelName.includes('72b')) {
+
+    // Reasoning capabilities (for deep research)
+    if (modelName.includes('405b') || modelName.includes('large') || 
+        modelName.includes('70b') || modelName.includes('72b') ||
+        modelName.includes('120b') || modelName.includes('235b')) {
       capabilities.push('reasoning');
     }
+
     // Multi-step reasoning for deep research
-    if (modelName.includes('405b') || (modelName.includes('70b') && modelName.includes('3.3'))) {
+    if (modelName.includes('405b') || (modelName.includes('70b') && modelName.includes('3.3')) ||
+        modelName.includes('120b') || modelName.includes('235b') ||
+        modelName.includes('r1') || modelName.includes('thinking')) {
       capabilities.push('multi-step');
     }
 

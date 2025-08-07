@@ -812,11 +812,21 @@ export class ChatController {
 
       // Add the current user message with attachments to the messages array
       if (attachments && attachments.length > 0) {
+        console.log('Processing attachments for model:', conversation.model);
+        console.log('Attachments received:', attachments.map(att => ({
+          name: att.name,
+          type: att.type,
+          mimeType: att.mimeType,
+          size: att.size,
+          hasData: !!att.data
+        })));
+
         const contentParts: any[] = [{ type: 'text', text: content }];
         
         // Add attachments to content
         for (const attachment of attachments) {
           if (attachment.type === 'image' && attachment.data) {
+            console.log('Adding image attachment:', attachment.name);
             // Add image attachments as image_url
             contentParts.push({
               type: 'image_url',
@@ -825,11 +835,12 @@ export class ChatController {
               }
             });
           } else if (attachment.type === 'document' && attachment.data) {
+            console.log('Adding document attachment:', attachment.name);
             // For documents, add them as text content with file info
-            let documentText = `\n\n[DOCUMENT: ${attachment.filename}]\n`;
+            let documentText = `\n\n[DOCUMENT: ${attachment.name}]\n`;
             
             // Try to extract text content from common formats
-            if (attachment.mimeType === 'text/plain' || attachment.filename?.endsWith('.txt')) {
+            if (attachment.mimeType === 'text/plain' || attachment.name?.endsWith('.txt')) {
               // Plain text file - decode base64
               try {
                 const textContent = Buffer.from(attachment.data, 'base64').toString('utf-8');
@@ -837,10 +848,18 @@ export class ChatController {
               } catch (error) {
                 documentText += `[Could not read text content]\n[END DOCUMENT]\n\n`;
               }
-            } else if (attachment.mimeType === 'application/pdf' || attachment.filename?.endsWith('.pdf')) {
+            } else if (attachment.mimeType === 'application/pdf' || attachment.name?.endsWith('.pdf')) {
               // PDF file - inform about the document
               documentText += `[PDF Document - ${Math.round(attachment.size / 1024)}KB]\n`;
               documentText += `Please note: This is a PDF document that I can analyze if you describe what you'd like me to focus on.\n[END DOCUMENT]\n\n`;
+            } else if (attachment.mimeType === 'text/csv' || attachment.name?.endsWith('.csv')) {
+              // CSV file - decode and include content
+              try {
+                const csvContent = Buffer.from(attachment.data, 'base64').toString('utf-8');
+                documentText += `CSV Content (first 2000 chars):\n${csvContent.substring(0, 2000)}${csvContent.length > 2000 ? '...[truncated]' : ''}\n[END DOCUMENT]\n\n`;
+              } catch (error) {
+                documentText += `[Could not read CSV content]\n[END DOCUMENT]\n\n`;
+              }
             } else {
               // Other document types
               documentText += `[${attachment.mimeType || 'Unknown'} - ${Math.round(attachment.size / 1024)}KB]\n`;
@@ -852,6 +871,11 @@ export class ChatController {
           }
         }
         
+        console.log('Final message content structure:', {
+          hasMultipleParts: contentParts.length > 1,
+          parts: contentParts.map(part => ({ type: part.type, hasImageUrl: !!part.image_url }))
+        });
+
         messages.push({
           role: 'user',
           content: contentParts

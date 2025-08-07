@@ -516,6 +516,13 @@ export default function ChatPage() {
       const convs = response.data.conversations || []
       setConversations(convs)
       
+      // Auto-create a new conversation for new users if none exist
+      if (convs.length === 0) {
+        console.log('No conversations found, creating new conversation for new user')
+        await createNewConversation()
+        return
+      }
+      
       // Select the first conversation if available
       if (convs.length > 0 && !currentConversation) {
         selectConversation(convs[0])
