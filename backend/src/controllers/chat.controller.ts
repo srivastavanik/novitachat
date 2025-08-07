@@ -785,6 +785,33 @@ export class ChatController {
         }
       }
 
+      // Add the current user message with attachments to the messages array
+      if (attachments && attachments.length > 0) {
+        const contentParts: any[] = [{ type: 'text', text: content }];
+        
+        // Add image attachments to content
+        for (const attachment of attachments) {
+          if (attachment.type === 'image' && attachment.data) {
+            contentParts.push({
+              type: 'image_url',
+              image_url: {
+                url: `data:${attachment.mimeType};base64,${attachment.data}`
+              }
+            });
+          }
+        }
+        
+        messages.push({
+          role: 'user',
+          content: contentParts
+        });
+      } else {
+        messages.push({
+          role: 'user',
+          content: content
+        });
+      }
+
       // Create streaming message placeholder
       const streamingMessage = await MessageModel.createStreamingMessage(
         conversationId,
