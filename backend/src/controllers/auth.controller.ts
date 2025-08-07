@@ -335,12 +335,15 @@ export class AuthController {
         // Extract a clean username from userInfo
         let username = userInfo.preferred_username || userInfo.name || userInfo.username;
         
-        // If we still don't have a good username, extract from email
+        // If we still don't have a good username, create a friendly one
         if (!username || username === userInfo.sub) {
           if (userInfo.email) {
             username = userInfo.email.split('@')[0]; // Use part before @ as username
           } else {
-            username = `user_${userInfo.sub.substring(0, 8)}`; // Last resort: truncated sub
+            // Create a user-friendly username from the sub ID
+            // Instead of showing the full hash, create something like "novita_user_abc123"
+            const shortId = userInfo.sub.substring(0, 6);
+            username = `novita_${shortId}`;
           }
         }
         

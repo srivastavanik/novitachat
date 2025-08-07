@@ -113,48 +113,77 @@ export default function ChatPage() {
       
       // Check for pending query from homepage
       const pendingQuery = localStorage.getItem('pendingQuery')
+      console.log('Checking for pending query:', pendingQuery)
+      
       if (pendingQuery) {
         // Clear the stored query
         localStorage.removeItem('pendingQuery')
         
-        console.log('Auto-submitting pending query:', pendingQuery)
+        console.log('🚀 Starting auto-submit process for:', pendingQuery)
+        console.log('Current conversation at start:', currentConversation?.id)
+        console.log('User available:', !!user)
         
-        // Set the input message temporarily for the send function
+        // Set the input message for the send function
         setInputMessage(pendingQuery)
         
-        // Wait for everything to load, then send the message
-        setTimeout(async () => {
+        // Create a more robust auto-submit function
+        const performAutoSubmit = async () => {
           try {
-            // Ensure we have a current conversation or create one
-            if (!currentConversation) {
-              console.log('Creating new conversation for auto-submit')
+            console.log('🔄 Performing auto-submit...')
+            console.log('Current conversation state:', currentConversation?.id)
+            console.log('Input message state:', inputMessage)
+            
+            // Ensure we have a conversation
+            let conversationToUse = currentConversation
+            if (!conversationToUse) {
+              console.log('📝 No conversation found, creating new one...')
               await createNewConversation()
               
-              // Wait for the conversation to be properly set
-              setTimeout(async () => {
-                // Set input again and send
-                setInputMessage(pendingQuery)
-                setTimeout(async () => {
-                  console.log('Sending auto-submit message:', pendingQuery)
-                  await handleSendMessage([], {})
-                  setInputMessage('') // Clear input after sending
-                }, 300)
-              }, 800)
-            } else {
-              // Conversation already exists, just send
-              setTimeout(async () => {
-                console.log('Sending auto-submit message to existing conversation:', pendingQuery)
-                await handleSendMessage([], {})
-                setInputMessage('') // Clear input after sending
-              }, 500)
+              // Wait for conversation to be created and state to update
+              let attempts = 0
+              while (!currentConversation && attempts < 10) {
+                console.log(`⏳ Waiting for conversation... attempt ${attempts + 1}`)
+                await new Promise(resolve => setTimeout(resolve, 500))
+                attempts++
+              }
+              
+              if (!currentConversation) {
+                console.error('❌ Failed to create conversation for auto-submit')
+                return
+              }
+              
+              conversationToUse = currentConversation
+              console.log('✅ New conversation created:', conversationToUse.id)
             }
+            
+            // Ensure input message is set
+            if (inputMessage !== pendingQuery) {
+              console.log('🔧 Resetting input message to pending query')
+              setInputMessage(pendingQuery)
+              await new Promise(resolve => setTimeout(resolve, 200))
+            }
+            
+            console.log('📤 Attempting to send message:', pendingQuery)
+            console.log('Using conversation:', conversationToUse.id)
+            
+            // Call handleSendMessage
+            await handleSendMessage([], {})
+            
+            console.log('✅ Auto-submit completed successfully!')
+            setInputMessage('') // Clear input after sending
+            
           } catch (error) {
-            console.error('Error auto-submitting pending query:', error)
+            console.error('❌ Error during auto-submit:', error)
           }
-        }, 2000)
+        }
+        
+        // Execute auto-submit with a delay to ensure everything is ready
+        setTimeout(performAutoSubmit, 3000)
+      } else {
+        console.log('No pending query found')
       }
     }
-  }, [user, currentConversation])
+  }, [user])
 
   // Removed trial mode localStorage saving
 
