@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
@@ -8,12 +8,40 @@ import { Loader2, ArrowRight, CheckCircle } from 'lucide-react'
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { register } = useAuth()
+  const { register, user } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [isLoadingOAuth, setIsLoadingOAuth] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      router.push('/chat')
+    }
+  }, [user, router])
+
+  const handleOAuthLogin = async () => {
+    setIsLoadingOAuth(true);
+    setError('');
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${apiUrl}/api/external-auth/url`);
+
+      if (!response.ok) {
+        throw new Error("Failed to get auth URL");
+      }
+
+      const { authUrl } = await response.json();
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error("OAuth login error:", error);
+      setError('Failed to connect to Novita authentication service. Please try again.');
+      setIsLoadingOAuth(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,6 +83,50 @@ export default function RegisterPage() {
                 {error}
               </div>
             )}
+
+            <p className="text-center text-sm text-white/60 mb-6">
+              Create your Chat account
+            </p>
+
+            <div className="text-center text-xs text-white/40 mb-6 p-3 bg-white/5 rounded-lg border border-white/10">
+              <p><strong>Quick signup:</strong> Use "Continue with Novita" for instant access</p>
+              <p><strong>Manual signup:</strong> Fill out the form below</p>
+            </div>
+
+            {/* Novita OAuth Signup */}
+            <button
+              type="button"
+              onClick={handleOAuthLogin}
+              disabled={isLoadingOAuth || loading}
+              className="w-full py-3 bg-gradient-to-r from-[#00FF7F] to-[#00D96A] text-black font-medium rounded-full hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center mb-6"
+            >
+              {isLoadingOAuth ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Connecting...</span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-2">
+                  <svg width="24" height="15" viewBox="0 0 24 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5">
+                    <path d="M24 14.8323V14.8326H14.3246L9.16716 9.67507V14.8326H0V14.8314L9.16716 5.66422V0H9.16774L24 14.8323Z" fill="black"/>
+                  </svg>
+                  <span>Continue with Novita</span>
+                  <ArrowRight className="h-4 w-4" />
+                </div>
+              )}
+            </button>
+
+            {/* Divider */}
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-white/10" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-black px-2 text-white/40">
+                  or
+                </span>
+              </div>
+            </div>
 
             <div className="space-y-6">
               <div>

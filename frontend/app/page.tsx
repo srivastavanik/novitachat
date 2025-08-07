@@ -185,7 +185,7 @@ export default function LandingPage() {
                       </button>
                       <button
                         type="submit"
-                        className="p-2 rounded-full bg-gradient-to-r from-[#00FF7F] to-[#00D96A] text-black hover:opacity-90 transition-opacity disabled:opacity-50"
+                        className="p-2 rounded-lg bg-gradient-to-r from-[#00FF7F] to-[#00D96A] text-black hover:opacity-90 transition-opacity disabled:opacity-50"
                         disabled={!trialQuery.trim()}
                       >
                         <Send className="h-5 w-5" />
@@ -207,7 +207,7 @@ export default function LandingPage() {
       {/* Divider */}
       <div className="relative z-10 h-px bg-gradient-to-r from-transparent via-[var(--nova-border-primary)] to-transparent"></div>
 
-      <section className="relative z-10 py-4 -mt-32 px-4 sm:px-6 lg:px-8">
+      <section className="relative z-10 py-4 -mt-48 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-6">
             <h2 className="text-4xl font-semibold tracking-tight mb-4 select-text">Powerful AI Models</h2>
