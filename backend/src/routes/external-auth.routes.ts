@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { oauthConfig } from '../config';
 import { buildAuthUrl } from '../services/external-auth.service';
+import { ExternalAuthController } from '../controllers/external-auth.controller';
 
 const router = Router();
 
@@ -39,9 +40,10 @@ router.get('/url', async (req, res) => {
 });
 
 // OAuth callback endpoint
-router.get('/callback', async (req, res) => {
-  console.log('Callback endpoint hit');
-  res.json({ message: 'Callback endpoint reached' });
+const authController = new ExternalAuthController();
+router.get('/callback', (req, res, next) => {
+  console.log('OAuth callback endpoint hit with query:', req.query);
+  authController.handleCallback(req, res, next);
 });
 
 export default router;

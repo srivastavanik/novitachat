@@ -45,7 +45,8 @@ export class ExternalAuthController {
   }
 
   /**
-   * Handle OAuth callback
+   * Handle OAuth callback - Simplified flow
+   * Just redirect to frontend, which will handle the Novita token cookie directly
    */
   async handleCallback(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -54,71 +55,28 @@ export class ExternalAuthController {
       // Handle OAuth error
       if (error) {
         console.error('OAuth error:', { error, state });
-        return res.redirect(`/?error=${encodeURIComponent(error as string)}`);
+        const baseUrl = frontendConfig.webOrigin;
+        return res.redirect(`${baseUrl}/?error=${encodeURIComponent(error as string)}`);
       }
 
       // Validate authorization code
       if (!code) {
         console.error('Missing authorization code');
-        return res.redirect('/?error=missing_code');
-      }
-
-      try {
-        // Exchange authorization code for access token
-        const tokenResponse = await exchangeCodeForToken(code as string);
-        console.log('Token exchange successful:', { 
-          hasAccessToken: !!tokenResponse.access_token,
-          hasRefreshToken: !!tokenResponse.refresh_token,
-          expiresIn: tokenResponse.expires_in 
-        });
-
-        // Get user information using access token
-        const externalUser = await getUserInfo(tokenResponse.access_token);
-        console.log('User info retrieved:', { 
-          userId: externalUser.sub, 
-          username: externalUser.preferred_username,
-          hasBalance: externalUser.balance !== undefined,
-          hasApiAccess: externalUser.access_api 
-        });
-
-        // Check if user already exists (use userId as the unique identifier, which is set to the email)
-        let user = await UserModel.findByEmail(externalUser.sub);
-        if (!user) {
-          // Create new user
-          user = await UserModel.create({
-            email: externalUser.sub,
-            password: externalUser.sub,
-            username: externalUser.preferred_username || externalUser.sub
-          });
-        }
-
-        // Generate tokens
-        const accessToken = generateAccessToken(user.id);
-        const refreshToken = generateRefreshToken(user.id);
-
-        // Store refresh token in Redis
-        await redisClient.set(
-          `refresh_token:${user.id}`,
-          refreshToken,
-          30 * 24 * 60 * 60 // 30 days
-        );
-
-        // Set auth cookies
-        this.setAuthCookies(res, accessToken);
-
-        // Redirect to chat page
         const baseUrl = frontendConfig.webOrigin;
-        const redirectUrl = `${baseUrl}/chat`;
-        console.log('Auth redirect URL:', { redirectUrl });
-
-        res.redirect(redirectUrl);
-      } catch (tokenError) {
-        console.error('Token exchange failed:', tokenError);
-        res.redirect('/?error=token_exchange_failed');
+        return res.redirect(`${baseUrl}/?error=missing_code`);
       }
+
+      // Successful OAuth - redirect to frontend 
+      // Frontend will access Novita token cookie directly and call user info API
+      const baseUrl = frontendConfig.webOrigin;
+      const redirectUrl = `${baseUrl}/chat?auth=success&code=${encodeURIComponent(code as string)}`;
+      console.log('OAuth callback successful, redirecting to:', redirectUrl);
+
+      res.redirect(redirectUrl);
     } catch (error) {
       console.error('Auth callback error:', error);
-      res.redirect('/?error=auth_failed');
+      const baseUrl = frontendConfig.webOrigin;
+      res.redirect(`${baseUrl}/?error=auth_failed`);
     }
   }
 

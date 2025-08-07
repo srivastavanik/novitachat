@@ -117,11 +117,11 @@ export default function LandingPage() {
           ))}
         </div>
         
-        <div className="px-6 max-w-6xl mx-auto mt-20 md:mt-32 relative">
+        <div className="px-6 max-w-6xl mx-auto mt-8 md:mt-12 relative">
           <div className="md:max-w-2xl mx-auto text-center relative">
             {/* Clean glowing ring with pulse */}
-            <div className="absolute inset-0 -inset-x-80 -inset-y-60 flex items-center justify-center pointer-events-none">
-              <div className="relative w-[1200px] h-[1200px]">
+            <div className="absolute inset-0 -inset-x-80 -inset-y-80 flex items-center justify-center pointer-events-none">
+              <div className="relative w-[1400px] h-[1400px]">
                 {/* Clean hollow ring with glow and pulse animation */}
                 <div className="absolute inset-0 rounded-full border-[48px] border-[#00FF7F] animate-pulse-slow"
                      style={{
@@ -202,9 +202,9 @@ export default function LandingPage() {
       {/* Divider */}
       <div className="relative z-10 h-px bg-gradient-to-r from-transparent via-[var(--nova-border-primary)] to-transparent"></div>
 
-      <section className="relative z-10 py-24 px-4 sm:px-6 lg:px-8">
+      <section className="relative z-10 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <h2 className="text-4xl font-semibold tracking-tight mb-4 select-text">Powerful AI Models</h2>
             <p className="text-white/60 text-lg font-normal max-w-2xl mx-auto select-text">
               Access state-of-the-art language models through a single, unified interface.
@@ -220,9 +220,9 @@ export default function LandingPage() {
             </div>
 
             <div className="feature-card">
-              <h3 className="text-xl font-medium mb-3 select-text">General Purpose</h3>
+              <h3 className="text-xl font-medium mb-3 select-text">Production Ready</h3>
               <p className="text-white/60 text-sm leading-relaxed select-text">
-                Claude 3.5, GPT-4o, Gemini Pro, GLM-4.5, and Llama 3.3 for fast, efficient responses across various tasks and languages.
+                GLM-4.5, DeepSeek V3, and Qwen models optimized for production workloads with fast inference and reliable performance.
               </p>
             </div>
 
