@@ -24,21 +24,23 @@ export default function UsageIndicator({ isTrialMode, trialMessageCount = 0, dai
     const calculateTimeUntilReset = () => {
       const now = new Date()
       
-      // Create a date object for current time in PST (UTC-8)
-      // Use toLocaleString to get PST time properly
-      const pstTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Los_Angeles"}))
+      // Get current time in PST
+      const pstNow = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }))
       
-      // Get next midnight PST
-      const nextMidnightPST = new Date(pstTime)
-      nextMidnightPST.setDate(pstTime.getDate() + 1)
+      // Create next midnight PST
+      const nextMidnightPST = new Date(pstNow)
+      nextMidnightPST.setDate(pstNow.getDate() + 1)
       nextMidnightPST.setHours(0, 0, 0, 0)
       
-      // Convert next midnight PST to UTC for accurate calculation
-      const pstToUtcOffset = 8 * 60 * 60 * 1000 // 8 hours in milliseconds
-      const nextMidnightUTC = nextMidnightPST.getTime() + pstToUtcOffset
+      // Convert both times to UTC for accurate comparison
+      const nowUTC = now.getTime()
       
-      // Calculate difference from current UTC time
-      const diff = nextMidnightUTC - now.getTime()
+      // Get the timezone offset for PST (-8 hours = -480 minutes during standard time, -420 during daylight)
+      const pstOffset = new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles", timeZoneName: "short" }).includes("PDT") ? -7 : -8
+      const nextMidnightUTC = nextMidnightPST.getTime() - (pstOffset * 60 * 60 * 1000)
+      
+      // Calculate difference
+      const diff = nextMidnightUTC - nowUTC
       
       if (diff <= 0) {
         setTimeUntilReset('Resetting...')

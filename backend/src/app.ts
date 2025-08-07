@@ -13,6 +13,9 @@ import chatRoutes from './routes/chat.routes';
 import externalAuthRoutes from './routes/external-auth.routes';
 import modelsRoutes from './routes/models.routes';
 
+// Import middleware
+import { usageResetMiddleware } from './middleware/usage-reset';
+
 // Initialize express app
 const app: Application = express();
 
@@ -35,6 +38,9 @@ app.use(express.urlencoded({ extended: true }));
 if (config.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
 }
+
+// Usage reset middleware - check daily reset on each request
+app.use(usageResetMiddleware);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {

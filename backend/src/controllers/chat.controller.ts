@@ -493,6 +493,32 @@ export class ChatController {
     try {
       const { conversationId, content, userId, attachments, webSearch, deepResearch, thinking } = data;
 
+      // Check rate limits only if using Novita platform key (not user's own key)
+      if (!data.useUserKey) {
+        let usageType: 'total' | 'webSearch' | 'deepResearch' = 'total';
+        if (deepResearch) usageType = 'deepResearch';
+        else if (webSearch) usageType = 'webSearch';
+        
+        const hasQuota = await hasRemainingQuota(userId, usageType);
+        if (!hasQuota) {
+          let errorMessage = 'Daily usage limit exceeded.';
+          if (usageType === 'deepResearch') {
+            errorMessage = 'Daily deep research limit exceeded. You can use up to 3 deep research queries per day.';
+          } else if (usageType === 'webSearch') {
+            errorMessage = 'Daily web search limit exceeded. You can use up to 20 web search queries per day.';
+          } else {
+            errorMessage = 'Daily usage limit exceeded. You can use up to 100 queries per day.';
+          }
+          
+          socket.emit('error', { 
+            message: errorMessage,
+            type: 'rate_limit_exceeded',
+            usageType: usageType
+          });
+          return;
+        }
+      }
+
       // Verify ownership
       const isOwner = await ConversationModel.verifyOwnership(conversationId, userId);
       if (!isOwner) {
