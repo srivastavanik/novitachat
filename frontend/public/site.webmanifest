@@ -17,5 +17,13 @@
   "theme_color": "#00FF7F",
   "background_color": "#000000",
   "display": "standalone",
-  "start_url": "/"
+  "orientation": "portrait-primary",
+  "start_url": "/",
+  "scope": "/",
+  "categories": ["productivity", "utilities"],
+  "lang": "en",
+  "display_override": ["window-controls-overlay"],
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
 }

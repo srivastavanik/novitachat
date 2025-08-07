@@ -75,7 +75,7 @@ export default function MessageList({
       onScroll={handleScroll}
       style={{ scrollBehavior: 'auto' }} // Prevent conflicts with smooth scrolling
     >
-      <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="max-w-4xl md:max-w-7xl mx-auto px-2 md:px-4 py-2 md:py-4">
         {messages.map((message) => (
           <Message 
             key={message.id} 
@@ -85,7 +85,7 @@ export default function MessageList({
         ))}
         
         {/* Add some padding at the bottom */}
-        <div className="h-4" />
+        <div className="h-4 md:h-4" />
         <div ref={messagesEndRef} />
       </div>
     </div>

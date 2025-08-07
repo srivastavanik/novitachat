@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   themeColor: '#00FF7F',
-  viewport: 'width=device-width, initial-scale=1'
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover'
 }
 
 export default function RootLayout({

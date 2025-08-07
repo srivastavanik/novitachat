@@ -1050,7 +1050,15 @@ export default function ChatPage() {
 
   // Normal authenticated UI
   return (
-      <div className="flex h-screen bg-[var(--nova-bg-primary)] text-[var(--nova-text-primary)]">
+      <div className="flex h-screen bg-[var(--nova-bg-primary)] text-[var(--nova-text-primary)] relative">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
       <Sidebar
         conversations={conversations}
         currentConversation={currentConversation}
@@ -1072,9 +1080,9 @@ export default function ChatPage() {
       />
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col bg-[var(--nova-bg-primary)]">
+      <div className="flex-1 flex flex-col bg-[var(--nova-bg-primary)] min-w-0">
         {/* Header */}
-        <div className="h-12 border-b border-[var(--nova-border-primary)] bg-[var(--nova-bg-secondary)] flex items-center justify-between px-4">
+        <div className="h-12 md:h-14 border-b border-[var(--nova-border-primary)] bg-[var(--nova-bg-secondary)] flex items-center justify-between px-4 safe-area-top">
           <h2 className="font-medium text-sm text-[var(--nova-text-primary)] truncate">
             {currentConversation ? currentConversation.title : 'Select a conversation'}
           </h2>
@@ -1111,7 +1119,7 @@ export default function ChatPage() {
                 loading={messagesLoading}
               />
             </div>
-            <div className="px-4">
+            <div className="px-2 md:px-4 safe-area-bottom">
               {/* Active Key Indicator */}
               {user && (
                 <div className="flex items-center justify-between mb-2 px-2">
@@ -1121,7 +1129,7 @@ export default function ChatPage() {
                       Using: {activeKey === 'user' ? 'Your API Key' : 'Chat Platform Key'}
                     </span>
                     {activeKey === 'novita' && dailyUsage && (
-                      <span className="text-gray-500 dark:text-white/40">
+                      <span className="text-gray-500 dark:text-white/40 hidden sm:inline">
                         ({dailyUsage.maxTotal - dailyUsage.totalQueries} queries left)
                       </span>
                     )}

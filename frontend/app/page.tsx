@@ -117,32 +117,32 @@ export default function LandingPage() {
           ))}
         </div>
         
-        <div className="px-6 max-w-6xl mx-auto mt-2 md:mt-4 relative">
+        <div className="px-4 sm:px-6 max-w-6xl mx-auto mt-2 md:mt-4 relative">
           <div className="md:max-w-2xl mx-auto text-center relative">
-            {/* Clean glowing ring with pulse */}
-            <div className="absolute inset-0 -inset-x-80 -inset-y-64 flex items-center justify-center pointer-events-none">
-              <div className="relative w-[1400px] h-[1400px]">
+            {/* Clean glowing ring with pulse - responsive sizing */}
+            <div className="absolute inset-0 -inset-x-40 sm:-inset-x-60 md:-inset-x-80 -inset-y-32 sm:-inset-y-48 md:-inset-y-64 flex items-center justify-center pointer-events-none">
+              <div className="relative w-[800px] sm:w-[1100px] md:w-[1400px] h-[800px] sm:h-[1100px] md:h-[1400px]">
                 {/* Clean hollow ring with glow and pulse animation */}
-                <div className="absolute inset-0 rounded-full border-[48px] border-[#00FF7F] animate-pulse-slow"
+                <div className="absolute inset-0 rounded-full border-[24px] sm:border-[36px] md:border-[48px] border-[#00FF7F] animate-pulse-slow"
                      style={{
-                       boxShadow: `0 0 80px #00FF7F, 
-                                   0 0 160px #00FF7F,
-                                   inset 0 0 80px #00FF7F`,
+                       boxShadow: `0 0 40px #00FF7F, 
+                                   0 0 80px #00FF7F,
+                                   inset 0 0 40px #00FF7F`,
                        animation: 'pulse-glow 4s ease-in-out infinite'
                      }}>
                 </div>
               </div>
             </div>
             
-            <h1 className="text-7xl md:text-8xl font-semibold tracking-tight text-white select-text relative z-10 mt-24">
+            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-semibold tracking-tight text-white select-text relative z-10 mt-12 sm:mt-18 md:mt-24">
               Open Source <span className="text-[#00FF7F]">AI Chat</span>
             </h1>
-            <p className="text-white/60 mt-8 text-xl md:text-2xl font-normal leading-relaxed select-text relative z-10 max-w-3xl mx-auto">
+            <p className="text-white/60 mt-4 sm:mt-6 md:mt-8 text-base sm:text-lg md:text-xl lg:text-2xl font-normal leading-relaxed select-text relative z-10 max-w-3xl mx-auto px-4">
               Powered by cutting-edge models including Kimi K2, OpenAI OSS, and more. 
               Built with transparency, customizable with style prompts, and enhanced with real-time web search.
             </p>
             
-            <div className="mt-10 flex flex-wrap gap-4 justify-center">
+            <div className="mt-6 sm:mt-8 md:mt-10 flex flex-col sm:flex-row flex-wrap gap-4 justify-center px-4">
               <Link href="/register" className="bg-[#00FF7F] text-black text-base font-medium rounded-full px-8 py-3 hover:bg-[#00E572] transition-all">
                 Get Started
               </Link>

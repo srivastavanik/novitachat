@@ -451,8 +451,12 @@ export default function ChatInput({
               }
               disabled={disabled || isStreaming}
               rows={1}
-              className="w-full resize-none rounded-2xl border border-[var(--nova-border-primary)] bg-[var(--nova-bg-tertiary)] px-4 py-3 text-sm text-[var(--nova-text-primary)] placeholder:text-[var(--nova-text-tertiary)] focus:outline-none focus:border-[var(--nova-primary)]/50 focus:ring-1 focus:ring-[var(--nova-primary)]/50 disabled:cursor-not-allowed disabled:opacity-50 max-h-32 overflow-y-auto transition-all"
-              style={{ minHeight: '48px' }}
+              className="w-full resize-none rounded-2xl border border-[var(--nova-border-primary)] bg-[var(--nova-bg-tertiary)] px-4 py-3 text-sm md:text-sm text-[var(--nova-text-primary)] placeholder:text-[var(--nova-text-tertiary)] focus:outline-none focus:border-[var(--nova-primary)]/50 focus:ring-1 focus:ring-[var(--nova-primary)]/50 disabled:cursor-not-allowed disabled:opacity-50 max-h-32 overflow-y-auto transition-all"
+              style={{ minHeight: '48px', fontSize: '16px' }} // 16px prevents zoom on iOS
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
             />
           </div>
           <div className="flex-shrink-0 mb-[1px]">

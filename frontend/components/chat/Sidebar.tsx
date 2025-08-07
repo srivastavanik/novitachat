@@ -142,15 +142,18 @@ export default function Sidebar({
       {/* Mobile toggle button */}
       <button
         onClick={onToggle}
-        className="fixed top-4 left-4 z-50 p-3 rounded-lg bg-[var(--nova-bg-secondary)]/90 backdrop-blur-xl border border-[var(--nova-border-primary)] md:hidden shadow-lg text-[var(--nova-text-primary)] font-medium text-sm"
+        className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-[var(--nova-bg-secondary)]/90 backdrop-blur-xl border border-[var(--nova-border-primary)] md:hidden shadow-lg text-[var(--nova-text-primary)] font-medium text-sm min-h-[44px] min-w-[44px] flex items-center justify-center safe-area-top"
+        aria-label="Toggle menu"
       >
-        Menu
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
       </button>
 
       {/* Sidebar */}
       <div className={`${
         isOpen ? 'translate-x-0' : '-translate-x-full'
-      } fixed md:relative md:translate-x-0 z-40 w-64 h-full bg-[var(--nova-bg-primary)] border-r border-[var(--nova-border-primary)] transition-transform duration-300 flex flex-col`}>
+      } fixed md:relative md:translate-x-0 z-40 w-72 md:w-64 h-full bg-[var(--nova-bg-primary)] border-r border-[var(--nova-border-primary)] transition-transform duration-300 flex flex-col safe-area-left`}>
         
         {/* Header */}
         <div className="p-4 flex items-center justify-between">

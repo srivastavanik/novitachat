@@ -88,21 +88,21 @@ export default function Message({ message, isStreaming = false }: MessageProps) 
     return content.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
   }
 
-  return (
-    <div className={`flex ${isUser ? 'justify-end pl-8' : 'justify-start pr-8'} px-4 ${isUser ? 'py-3' : 'py-6'}`}>
+    return (
+    <div className={`flex ${isUser ? 'justify-end pl-2 md:pl-8' : 'justify-start pr-2 md:pr-8'} px-2 md:px-4 ${isUser ? 'py-2 md:py-3' : 'py-4 md:py-6'}`}>
       {!isUser && (
-        <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-gray-900 dark:bg-[var(--nova-bg-tertiary)] mr-3">
+        <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-gray-900 dark:bg-[var(--nova-bg-tertiary)] mr-2 md:mr-3">
           <Image 
             src="/novita-logo-only.png" 
-                          alt="Chat" 
-            width={28} 
-            height={28}
-            className="object-contain"
+            alt="Chat" 
+            width={24} 
+            height={24}
+            className="object-contain md:w-7 md:h-7"
           />
         </div>
       )}
       
-      <div className={`${isUser ? 'max-w-[95%]' : 'max-w-[95%]'}`}>
+      <div className={`${isUser ? 'max-w-[85%] md:max-w-[95%]' : 'max-w-[85%] md:max-w-[95%]'}`}>
         <div className={`space-y-2 ${isUser ? 'items-end' : 'items-start'}`}>
           {/* Display search sources before the message if this is an assistant message with search results */}
           {!isUser && message.metadata?.searchSources && message.metadata.searchSources.length > 0 && (
