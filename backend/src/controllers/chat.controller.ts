@@ -483,6 +483,9 @@ export class ChatController {
     webSearch?: boolean;
     deepResearch?: boolean;
     thinking?: boolean;
+    useUserKey?: boolean;
+    userApiKey?: string;
+    useNovitaKey?: boolean;
     style?: {
       systemPrompt: string;
     };
