@@ -42,7 +42,7 @@ const TRIAL_MESSAGE_LIMIT = 10
 export default function ChatPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user, loading: authLoading, logout } = useAuth()
+  const { user, loading: authLoading, logout, checkAuth } = useAuth()
   const isTrialMode = searchParams.get('trial') === 'true'
   const initialQuery = searchParams.get('q')
   const authSuccess = searchParams.get('auth') === 'success'
@@ -349,6 +349,9 @@ export default function ChatPage() {
             
             // Set auth header
             axios.defaults.headers.common['Authorization'] = `Bearer ${loginResponse.data.access_token}`
+            
+            // Refresh auth context to update user state
+            await checkAuth()
             
             // Clean up URL parameters
             router.replace('/chat')
