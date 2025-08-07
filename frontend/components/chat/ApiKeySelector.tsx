@@ -103,13 +103,7 @@ export default function ApiKeySelector({
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  activeKey === 'novita' ? 'bg-[#00FF7F]/20' : 'bg-gray-200 dark:bg-white/10'
-                }`}>
-                  <Key className={`h-5 w-5 ${
-                    activeKey === 'novita' ? 'text-[#00FF7F]' : 'text-gray-600 dark:text-white/60'
-                  }`} />
-                </div>
+
                 <div className="text-left">
                   <div className="text-sm font-medium text-gray-900 dark:text-white">Chat Platform Key</div>
                   <div className="text-xs text-gray-600 dark:text-white/60">
@@ -143,13 +137,7 @@ export default function ApiKeySelector({
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    activeKey === 'user' ? 'bg-[#00FF7F]/20' : 'bg-white/10'
-                  }`}>
-                    <Key className={`h-5 w-5 ${
-                      activeKey === 'user' ? 'text-[#00FF7F]' : 'text-white/60'
-                    }`} />
-                  </div>
+
                   <div className="text-left">
                     <div className="text-sm font-medium text-white">Your API Key</div>
                     <div className="text-xs text-white/60">
