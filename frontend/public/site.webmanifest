@@ -1,7 +1,7 @@
 {
-  "name": "Nova Chat",
-  "short_name": "Nova",
-  "description": "AI-Powered Assistant Chat",
+  "name": "Chat by Novita",
+  "short_name": "Chat",
+  "description": "Chat with AI powered by Novita",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
