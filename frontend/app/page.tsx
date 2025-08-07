@@ -120,14 +120,14 @@ export default function LandingPage() {
         <div className="px-6 max-w-6xl mx-auto mt-20 md:mt-32 relative">
           <div className="md:max-w-2xl mx-auto text-center relative">
             {/* Clean glowing ring with pulse */}
-            <div className="absolute inset-0 -inset-x-40 -inset-y-32 flex items-center justify-center pointer-events-none">
-              <div className="relative w-[720px] h-[720px]">
+            <div className="absolute inset-0 -inset-x-80 -inset-y-60 flex items-center justify-center pointer-events-none">
+              <div className="relative w-[1200px] h-[1200px]">
                 {/* Clean hollow ring with glow and pulse animation */}
-                <div className="absolute inset-0 rounded-full border-[32px] border-[#00FF7F] animate-pulse-slow"
+                <div className="absolute inset-0 rounded-full border-[48px] border-[#00FF7F] animate-pulse-slow"
                      style={{
-                       boxShadow: `0 0 60px #00FF7F, 
-                                   0 0 120px #00FF7F,
-                                   inset 0 0 60px #00FF7F`,
+                       boxShadow: `0 0 80px #00FF7F, 
+                                   0 0 160px #00FF7F,
+                                   inset 0 0 80px #00FF7F`,
                        animation: 'pulse-glow 4s ease-in-out infinite'
                      }}>
                 </div>
