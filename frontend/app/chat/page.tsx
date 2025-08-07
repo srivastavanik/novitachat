@@ -17,7 +17,7 @@ import UsageIndicator from '@/components/chat/UsageIndicator'
 import ChatFooter from '@/components/chat/ChatFooter'
 import ApiKeyModal from '@/components/chat/ApiKeyModal'
 import ApiKeySelector from '@/components/chat/ApiKeySelector'
-import { getCookie } from '@/lib/utils'
+import { getCookie, setCookie } from '@/lib/utils'
 
 interface TrialMessage {
   id: string
@@ -45,6 +45,8 @@ export default function ChatPage() {
   const { user, loading: authLoading, logout } = useAuth()
   const isTrialMode = searchParams.get('trial') === 'true'
   const initialQuery = searchParams.get('q')
+  const authSuccess = searchParams.get('auth') === 'success'
+  const authCode = searchParams.get('code')
   const [socket, setSocket] = useState<Socket | null>(null)
   const [conversations, setConversations] = useState<any[]>([])
   const [currentConversation, setCurrentConversation] = useState<any>(null)
@@ -90,12 +92,19 @@ export default function ChatPage() {
   // Thinking state for authenticated users
   const [thinkingMessage, setThinkingMessage] = useState<{ id: string; content: string; isThinking: boolean } | null>(null)
 
+  // Handle OAuth callback
+  useEffect(() => {
+    if (authSuccess && authCode) {
+      handleOAuthCallback(authCode)
+    }
+  }, [authSuccess, authCode])
+
   // Redirect if not authenticated and not in trial mode
   useEffect(() => {
-    if (!isTrialMode && !authLoading && !user) {
+    if (!isTrialMode && !authLoading && !user && !authSuccess) {
       router.push('/login')
     }
-  }, [authLoading, user, router, isTrialMode])
+  }, [authLoading, user, router, isTrialMode, authSuccess])
 
   // Initialize trial mode
   useEffect(() => {
@@ -296,6 +305,65 @@ export default function ChatPage() {
       loadDailyUsage()
     }
   }, [user, isTrialMode])
+
+  // Handle OAuth callback with Novita token cookie access
+  const handleOAuthCallback = async (code: string) => {
+    try {
+      console.log('Processing OAuth callback with code:', code)
+      
+      // Access Novita token cookie directly (as suggested by your coworker)
+      const novitaToken = getCookie('token') // This will be the Novita token cookie
+      
+      if (novitaToken) {
+        console.log('Found Novita token cookie, fetching user info...')
+        
+        // Call Novita's user info API directly
+        const userInfoResponse = await fetch('https://api-server.novita.ai/v1/user/info', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${novitaToken}`,
+            'Accept': 'application/json',
+          }
+        })
+        
+        if (userInfoResponse.ok) {
+          const userInfo = await userInfoResponse.json()
+          console.log('Successfully fetched user info from Novita:', userInfo)
+          
+          // Create or login user in your backend
+          const loginResponse = await axios.post('/api/auth/external-login', {
+            userInfo: userInfo,
+            novitaToken: novitaToken
+          })
+          
+          if (loginResponse.data.access_token) {
+            setCookie('access_token', loginResponse.data.access_token, {
+              expires: 7,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax'
+            })
+            
+            // Set auth header
+            axios.defaults.headers.common['Authorization'] = `Bearer ${loginResponse.data.access_token}`
+            
+            // Clean up URL parameters
+            router.replace('/chat')
+            
+            console.log('OAuth login successful!')
+          }
+        } else {
+          console.error('Failed to fetch user info from Novita:', userInfoResponse.status)
+          router.push('/login?error=oauth_failed')
+        }
+      } else {
+        console.error('No Novita token cookie found')
+        router.push('/login?error=no_token')
+      }
+    } catch (error) {
+      console.error('OAuth callback error:', error)
+      router.push('/login?error=oauth_failed')
+    }
+  }
 
   const handleRemoveApiKey = async () => {
     try {

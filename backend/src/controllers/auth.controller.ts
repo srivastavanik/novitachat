@@ -326,6 +326,55 @@ export class AuthController {
       next(error);
     }
   }
+
+  /**
+   * External login (Novita OAuth)
+   */
+  async externalLogin(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { userInfo, novitaToken } = req.body;
+
+      if (!userInfo || !novitaToken) {
+        res.status(400).json({ error: 'Missing user info or Novita token' });
+        return;
+      }
+
+      // Check if user already exists
+      let user = await UserModel.findByEmail(userInfo.email || userInfo.sub);
+      
+      if (!user) {
+        // Create new user
+        user = await UserModel.create({
+          email: userInfo.email || userInfo.sub,
+          password: userInfo.sub, // Use sub as password placeholder
+          username: userInfo.preferred_username || userInfo.name || userInfo.sub
+        });
+      }
+
+      // Generate our own access token
+      const accessToken = generateAccessToken(user.id);
+      const refreshToken = generateRefreshToken(user.id);
+
+      // Store refresh token in Redis
+      await redisClient.set(
+        `refresh_token:${user.id}`,
+        refreshToken,
+        30 * 24 * 60 * 60 // 30 days
+      );
+
+      res.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          username: user.username
+        },
+        access_token: accessToken,
+        novita_token: novitaToken // Pass through for frontend use
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 // Export singleton instance
