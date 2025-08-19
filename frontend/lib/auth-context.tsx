@@ -36,7 +36,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = getCookie('access_token')
       
       if (!token) {
-        setLoading(false)
+        const novitaToken = getCookie('token')
+        if (novitaToken) {
+          const novitaResponse = await axios.get('https://api-server.novita.ai/v1/user/info', {
+            headers: {
+              'authorization': `Bearer ${decodeURIComponent(novitaToken)}`,
+              'content-type': 'application/json',
+            }
+          })
+          
+          if (novitaResponse.data) {
+            console.log('Novita user info:', novitaResponse.data)
+          }
+        } else {
+          setLoading(false)
+        }
         return
       }
       
