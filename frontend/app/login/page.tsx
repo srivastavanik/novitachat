@@ -26,21 +26,8 @@ export default function LoginPage() {
     setIsLoadingOAuth(true);
     setError('');
 
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/api/external-auth/url`);
-
-      if (!response.ok) {
-        throw new Error("Failed to get auth URL");
-      }
-
-      const { authUrl } = await response.json();
-      window.location.href = authUrl;
-    } catch (error) {
-      console.error("OAuth login error:", error);
-      setError('Failed to connect to Novita authentication service. Please try again.');
-      setIsLoadingOAuth(false);
-    }
+    // TODO: Use Next.js environment variables for configuration
+    window.location.href = `https://novita.ai/user/login?utm_source=nova&redirect=${encodeURIComponent('https://chat.novita.ai')}`;
   };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
