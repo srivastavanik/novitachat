@@ -1170,10 +1170,16 @@ export class ChatController {
         return res.status(400).json({ error: 'Search query is required' });
       }
 
-      // Search in conversation titles
+      // Sanitize search query
+      const sanitizedQuery = q.replace(/[\\%\_\[\]\^]/g, '\\      // Search in conversation titles
       const conversations = await ConversationModel.search(userId, q);
       
-      // Also search in message content for each conversation
+      // Also search in message content for each conversation');
+
+      // Search in conversation titles using parameterized query
+      const conversations = await ConversationModel.search(userId, sanitizedQuery);
+      
+      // Also search in message content for each conversation using sanitized query
       const conversationsWithMessageMatches = await Promise.all(
         conversations.map(async (conv) => {
           const messageMatches = await MessageModel.searchInConversation(conv.id, q);
