@@ -49,16 +49,21 @@ export class ModelsController {
       });
 
       // Filter for vision models if attachments present
-      if (hasAttachments === 'true') {
-        const hasImages = attachmentTypes && (attachmentTypes as string).includes('image');
+      if (typeof hasAttachments === 'string' && hasAttachments === 'true') {
+        const attachmentTypesStr = typeof attachmentTypes === 'string' ? attachmentTypes : '';
+        const hasImages = attachmentTypesStr.includes('image');
         if (hasImages) {
           models = models.filter((model: any) => model.capabilities.includes('image'));
         }
       }
 
       // Filter by category if specified
-      if (category) {
-        models = models.filter((model: any) => model.category === category);
+      if (typeof category === 'string' && category.length > 0) {
+        const sanitizedCategory = category.trim().toLowerCase();
+        const validCategories = ['reasoning', 'general', 'coding', 'vision', 'math', 'premium'];
+        if (validCategories.includes(sanitizedCategory)) {
+          models = models.filter((model: any) => model.category === sanitizedCategory);
+        }
       }
 
       // Sort by popularity/capability
