@@ -1170,13 +1170,42 @@ export class ChatController {
         return res.status(400).json({ error: 'Search query is required' });
       }
 
-      // Search in conversation titles
-      const conversations = await ConversationModel.search(userId, q);
+      // Input validation and sanitization for SQL injection prevention
+      const sanitizedQuery = q.trim();
+      
+      // Validate query length
+      if (sanitizedQuery.length === 0 || sanitizedQuery.length > 200) {
+        return res.status(400).json({ error: 'Search query must be between 1 and 200 characters' });
+      }
+
+      // Validate against SQL injection patterns
+      const sqlInjectionPattern = /[';"\-\-\/\*\*\/]|\b(union|select|insert|update|delete|drop|create|alter|exec|execute|script|javascript|eval|setTimeout|setInterval)\b/i;
+      if (sqlInjectionPattern.test(sanitizedQuery)) {
+        console.warn(`Potential SQL injection attempt from user ${userId}: ${sanitizedQuery}`);
+        return res.status(400).json({ error: 'Invalid characters in search query' });
+      }
+
+      // Additional validation: Allow only alphanumeric, spaces, and basic punctuation
+      const allowedPattern = /^[a-zA-Z0-9\s\.,!?@#$%&()\[\]{}+=_\-]+$/;
+      if (!allowedPattern.test(sanitizedQuery)) {
+        return res.status(400).json({ error: 'Search query contains invalid characters' });
+      }
+
+      // Escape special characters for safe SQL usage
+      const escapedQuery = sanitizedQuery
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "''")
+        .replace(/"/g, '""')
+        .replace(/%/g, '\\%')
+        .replace(/_/g, '\\_');
+
+      // Search in conversation titles with sanitized input
+      const conversations = await ConversationModel.search(userId, escapedQuery);
       
       // Also search in message content for each conversation
       const conversationsWithMessageMatches = await Promise.all(
         conversations.map(async (conv) => {
-          const messageMatches = await MessageModel.searchInConversation(conv.id, q);
+          const messageMatches = await MessageModel.searchInConversation(conv.id, escapedQuery);
           return {
             ...conv,
             hasMessageMatch: messageMatches.length > 0,
