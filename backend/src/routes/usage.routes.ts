@@ -3,8 +3,69 @@ import { Request, Response } from 'express'
 import { authenticate } from '../middleware/auth'
 import { getUserApiKey } from './apikey.routes'
 import { supabaseAdmin } from '../services/supabase.service'
+import rateLimit from 'express-rate-limit'
+import RedisStore from 'rate-limit-redis'
+import Redis from 'ioredis'
 
 const router = Router()
+
+// Initialize Redis client for distributed rate limiting
+const redisClient = new Redis({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: parseInt(process.env.REDIS_PORT || '6379'),
+  password: process.env.REDIS_PASSWORD,
+  retryStrategy: (times: number) => {
+    const delay = Math.min(times * 50, 2000)
+    return delay
+  },
+  enableOfflineQueue: false,
+  maxRetriesPerRequest: 3
+})
+
+// Configure rate limiter with Redis store for distributed environments
+const usageRateLimiter = rateLimit({
+  store: new RedisStore({
+    client: redisClient,
+    prefix: 'rl:usage:',
+    sendCommand: (...args: string[]) => (redisClient as any).call(...args)
+  }),
+  windowMs: 60 * 1000, // 1 minute window
+  max: 10, // 10 requests per minute per authenticated user
+  message: 'Too many usage requests, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: Request) => {
+    // Use authenticated user ID as rate limit key
+    const userId = (req as any).user?.userId
+    return userId || req.ip // Fallback to IP if user ID not available
+  },
+  skip: (req: Request) => {
+    // Skip rate limiting for service accounts if needed
+    const serviceAccount = req.headers['x-service-account']
+    return serviceAccount === process.env.SERVICE_ACCOUNT_KEY
+  },
+  handler: (req: Request, res: Response) => {
+    res.status(429).json({
+      error: 'Rate limit exceeded',
+      message: 'Too many requests. Please wait before making another request.',
+      retryAfter: res.getHeader('Retry-After')
+    })
+  }
+})
+
+// Global rate limiter to prevent overall system abuse
+const globalRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour window
+  max: 100, // 100 requests per hour globally
+  message: 'Global rate limit exceeded',
+  standardHeaders: false,
+  legacyHeaders: false,
+  keyGenerator: () => 'global',
+  skip: (req: Request) => {
+    const serviceAccount = req.headers['x-service-account']
+    return serviceAccount === process.env.SERVICE_ACCOUNT_KEY
+  }
+})
 
 const getOrCreateUsage = async (userId: string) => {
   const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
@@ -62,7 +123,7 @@ const getOrCreateUsage = async (userId: string) => {
 }
 
 // Get current usage
-router.get('/usage', authenticate, async (req: Request, res: Response) => {
+router.get('/usage', authenticate, usageRateLimiter, globalRateLimiter, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId
     if (!userId) {
