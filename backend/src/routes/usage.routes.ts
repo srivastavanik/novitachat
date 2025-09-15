@@ -3,8 +3,55 @@ import { Request, Response } from 'express'
 import { authenticate } from '../middleware/auth'
 import { getUserApiKey } from './apikey.routes'
 import { supabaseAdmin } from '../services/supabase.service'
+import rateLimit from 'express-rate-limit'
+import RedisStore from 'rate-limit-redis'
+import Redis from 'ioredis'
 
 const router = Router()
+
+// Initialize Redis client with connection pooling and retry logic
+const redisClient = new Redis({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: parseInt(process.env.REDIS_PORT || '6379'),
+  password: process.env.REDIS_PASSWORD,
+  db: parseInt(process.env.REDIS_DB || '0'),
+  retryStrategy: (times: number) => {
+    const delay = Math.min(times * 50, 2000);
+    return delay;
+  },
+  enableOfflineQueue: false,
+  maxRetriesPerRequest: 3
+})
+
+// Configure rate limiter with Redis store for distributed rate limiting
+const usageRateLimiter = rateLimit({
+  store: new RedisStore({
+    client: redisClient,
+    prefix: 'rl:usage:',
+    sendCommand: (...args: string[]) => (redisClient as any).call(...args)
+  }),
+  windowMs: 60 * 1000, // 1 minute sliding window
+  max: 30, // 30 requests per minute per user
+  message: 'Too many requests to usage endpoint. Please try again later.',
+  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
+  legacyHeaders: false, // Disable `X-RateLimit-*` headers
+  keyGenerator: (req: Request) => {
+    // Use authenticated user ID for rate limiting key
+    const userId = (req as any).user?.userId
+    return userId ? `user:${userId}` : `ip:${req.ip}`
+  },
+  skip: (req: Request) => {
+    // Skip rate limiting for internal health checks
+    return req.headers['x-internal-health-check'] === 'true'
+  },
+  handler: (req: Request, res: Response) => {
+    res.status(429).json({
+      error: 'Rate limit exceeded',
+      message: 'Too many requests to usage endpoint. Please try again later.',
+      retryAfter: res.getHeader('Retry-After')
+    })
+  }
+})
 
 const getOrCreateUsage = async (userId: string) => {
   const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
@@ -61,8 +108,8 @@ const getOrCreateUsage = async (userId: string) => {
   }
 }
 
-// Get current usage
-router.get('/usage', authenticate, async (req: Request, res: Response) => {
+// Get current usage with rate limiting protection
+router.get('/usage', authenticate, usageRateLimiter, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId
     if (!userId) {
