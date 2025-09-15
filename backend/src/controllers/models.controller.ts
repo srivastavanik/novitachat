@@ -49,8 +49,9 @@ export class ModelsController {
       });
 
       // Filter for vision models if attachments present
-      if (hasAttachments === 'true') {
-        const hasImages = attachmentTypes && (attachmentTypes as string).includes('image');
+      if (typeof hasAttachments === 'string' && hasAttachments === 'true') {
+        const attachmentTypesStr = typeof attachmentTypes === 'string' ? attachmentTypes : '';
+        const hasImages = attachmentTypesStr.includes('image');
         if (hasImages) {
           models = models.filter((model: any) => model.capabilities.includes('image'));
         }
