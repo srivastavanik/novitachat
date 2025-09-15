@@ -40,7 +40,8 @@ export const buildAuthUrl = (state?: string): string => {
 export const exchangeCodeForToken = async (code: string): Promise<TokenResponse> => {
   const tokenUrl = oauthConfig.tokenExchangeUrl;
 
-  console.log('Token exchange endpoint:', { tokenUrl });
+  // Security: Endpoint URL logged without sensitive data for debugging purposes
+  console.log('Token exchange initiated for endpoint:', tokenUrl.replace(/^(https?:\/\/[^/]+).*/, '$1/[REDACTED]'));
   
   const response = await fetch(tokenUrl, {
     method: 'POST',
