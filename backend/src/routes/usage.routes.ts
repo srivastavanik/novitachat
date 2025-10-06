@@ -62,6 +62,7 @@ const getOrCreateUsage = async (userId: string) => {
 }
 
 // Get current usage
+  // SECURITY FIX REQUIRED: js/missing-rate-limiting
 router.get('/usage', authenticate, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId
