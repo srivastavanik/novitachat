@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback, useMemo, type MouseEvent } from 'react'
 import { ChevronDown, Check, AlertCircle, Trash2, Plus } from 'lucide-react'
 
 interface ApiKeySelectorProps {
@@ -29,29 +29,51 @@ export default function ApiKeySelector({
 }: ApiKeySelectorProps) {
   const [isOpen, setIsOpen] = useState(false)
 
-  const getRemainingQueries = () => {
+  const remaining = useMemo(() => {
     if (!dailyUsage) return null
     return dailyUsage.maxTotal - dailyUsage.totalQueries
-  }
+  }, [dailyUsage])
 
-  const getKeyStatus = (key: 'novita' | 'user') => {
-    if (key === 'novita') {
-      const remaining = getRemainingQueries()
-      if (remaining === null) return null
-      if (remaining === 0) return 'exhausted'
-      if (remaining <= 10) return 'low'
-      return 'good'
-    }
-    return userApiKey ? 'active' : null
-  }
+  const novitaStatus = useMemo(() => {
+    if (remaining === null) return null
+    if (remaining === 0) return 'exhausted'
+    if (remaining <= 10) return 'low'
+    return 'good'
+  }, [remaining])
 
-  const novitaStatus = getKeyStatus('novita')
-  const remaining = getRemainingQueries()
+  const toggleOpen = useCallback(() => {
+    setIsOpen((prev: boolean) => !prev)
+  }, [])
+
+  const close = useCallback(() => {
+    setIsOpen(false)
+  }, [])
+
+  const selectNovita = useCallback(() => {
+    onKeyChange('novita')
+    setIsOpen(false)
+  }, [onKeyChange])
+
+  const selectUser = useCallback(() => {
+    onKeyChange('user')
+    setIsOpen(false)
+  }, [onKeyChange])
+
+  const removeKey = useCallback((e: MouseEvent) => {
+    e.stopPropagation()
+    onRemoveKey()
+    setIsOpen(false)
+  }, [onRemoveKey])
+
+  const addKey = useCallback(() => {
+    onAddKey()
+    setIsOpen(false)
+  }, [onAddKey])
 
   return (
     <div className="relative">
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggleOpen}
         className="w-full flex items-center justify-between px-3 py-2 bg-[var(--nova-bg-secondary)] border border-[var(--nova-border-primary)] rounded-xl hover:bg-[var(--nova-bg-hover)] transition-colors"
       >
         <div className="flex items-center gap-2">
@@ -89,15 +111,12 @@ export default function ApiKeySelector({
         <>
           <div 
             className="fixed inset-0 z-40" 
-            onClick={() => setIsOpen(false)}
+            onClick={close}
           />
           <div className="absolute bottom-full left-0 right-0 mb-2 bg-[var(--nova-bg-primary)] border border-[var(--nova-border-primary)] rounded-xl shadow-xl z-50 overflow-hidden max-h-96 overflow-y-auto">
             {/* Novita Key Option */}
             <button
-              onClick={() => {
-                onKeyChange('novita')
-                setIsOpen(false)
-              }}
+              onClick={selectNovita}
               className={`w-full px-4 py-3 flex items-center justify-between hover:bg-[var(--nova-bg-secondary)] transition-colors ${
                 activeKey === 'novita' ? 'bg-[var(--nova-bg-secondary)]' : ''
               }`}
@@ -128,10 +147,7 @@ export default function ApiKeySelector({
             {/* User Key Option */}
             {userApiKey ? (
               <button
-                onClick={() => {
-                  onKeyChange('user')
-                  setIsOpen(false)
-                }}
+                onClick={selectUser}
                 className={`w-full px-4 py-3 flex items-center justify-between hover:bg-[var(--nova-bg-secondary)] transition-colors border-t border-[var(--nova-border-primary)] ${
                   activeKey === 'user' ? 'bg-[var(--nova-bg-secondary)]' : ''
                 }`}
@@ -154,11 +170,7 @@ export default function ApiKeySelector({
                     <Check className="h-4 w-4 text-[#00FF7F]" />
                   )}
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onRemoveKey()
-                      setIsOpen(false)
-                    }}
+                    onClick={removeKey}
                     className="p-1 hover:bg-red-500/20 rounded transition-colors"
                     title="Remove API key"
                   >
@@ -168,10 +180,7 @@ export default function ApiKeySelector({
               </button>
             ) : (
               <button
-                onClick={() => {
-                  onAddKey()
-                  setIsOpen(false)
-                }}
+                onClick={addKey}
                 className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[var(--nova-bg-secondary)] transition-colors border-t border-[var(--nova-border-primary)]"
               >
                 <div className="w-10 h-10 rounded-lg bg-[#00FF7F]/10 flex items-center justify-center">
