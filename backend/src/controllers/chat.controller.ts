@@ -7,6 +7,46 @@ import { MessageModel } from '../models/Message';
 import { AuthRequest } from '../types/auth';
 import { updateUsage, hasRemainingQuota } from '../routes/usage.routes';
 import { getUserApiKey } from '../routes/apikey.routes';
+import rateLimit from 'express-rate-limit';
+import DOMPurify from 'isomorphic-dompurify';
+import validator from 'validator';
+
+// Rate limiting middleware
+export const chatRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many chat requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+export const trialChatRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // limit each IP to 10 trial requests per hour
+  message: 'Trial chat limit exceeded. Please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Input validation and sanitization helpers
+const sanitizeInput = (input: string): string => {
+  if (!input || typeof input !== 'string') return '';
+  return DOMPurify.sanitize(validator.escape(input.trim()));
+};
+
+const validateMessageContent = (content: string): boolean => {
+  if (!content || typeof content !== 'string') return false;
+  const sanitized = content.trim();
+  return sanitized.length > 0 && sanitized.length <= 50000; // Max 50k chars
+};
+
+const validateConversationId = (id: string): boolean => {
+  return validator.isUUID(id);
+};
+
+const validateUserId = (id: string): boolean => {
+  return validator.isUUID(id);
+};
 
 export class ChatController {
   // Trial chat handler (no auth required)
@@ -14,8 +54,27 @@ export class ChatController {
     try {
       const { message, history = [], attachments = [], webSearch = false, thinking = false } = req.body;
 
-      if (!message || message.trim() === '') {
-        return res.status(400).json({ error: 'Message content is required' });
+      // Input validation
+      if (!validateMessageContent(message)) {
+        return res.status(400).json({ error: 'Invalid message content' });
+      }
+
+      const sanitizedMessage = sanitizeInput(message);
+
+      // Validate history array
+      if (!Array.isArray(history) || history.length > 50) {
+        return res.status(400).json({ error: 'Invalid history format or too many messages' });
+      }
+
+      // Validate and sanitize history
+      const sanitizedHistory = history.map(msg => ({
+        role: ['user', 'assistant', 'system'].includes(msg.role) ? msg.role : 'user',
+        content: sanitizeInput(msg.content || '')
+      })).filter(msg => msg.content.length > 0);
+
+      // Validate attachments
+      if (!Array.isArray(attachments) || attachments.length > 10) {
+        return res.status(400).json({ error: 'Invalid attachments or too many files' });
       }
 
       // Build messages array
@@ -27,11 +86,11 @@ export class ChatController {
       let searchResults = '';
       if (webSearch) {
         try {
-          console.log('Performing web search for trial user:', message);
+          console.log('Performing web search for trial user:', sanitizedMessage);
           // Simple web search without progress callbacks for trial
-          searchResults = await searchService.webSearch(message, 5);
+          searchResults = await searchService.webSearch(sanitizedMessage, 5);
           systemPrompt += '\n\nYou have access to web search results. Use this information to provide accurate, up-to-date responses. When citing sources, format them as clickable links using markdown: [Source Title](URL).';
-          systemPrompt += '\n\nSearch Results:\n' + searchResults;
+          systemPrompt += '\n\nSearch Results:\n' + DOMPurify.sanitize(searchResults);
         } catch (error) {
           console.error('Trial search error:', error);
           // Continue without search results
@@ -43,25 +102,34 @@ export class ChatController {
         content: systemPrompt
       });
 
-      // Add history
-      for (const msg of history) {
+      // Add sanitized history
+      for (const msg of sanitizedHistory) {
         messages.push({
-          role: msg.role,
+          role: msg.role as 'system' | 'user' | 'assistant',
           content: msg.content
         });
       }
 
       // Add current message with attachments if any
       if (attachments && attachments.length > 0) {
-        const contentParts: any[] = [{ type: 'text', text: message.trim() }];
+        const contentParts: any[] = [{ type: 'text', text: sanitizedMessage }];
         
-        // Add image attachments
+        // Add image attachments with validation
         for (const attachment of attachments) {
           if (attachment.type === 'image' && attachment.data) {
+            // Validate base64 data
+            if (!validator.isBase64(attachment.data)) {
+              continue; // Skip invalid base64 data
+            }
+            
+            const mimeType = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(attachment.mimeType) 
+              ? attachment.mimeType 
+              : 'image/jpeg';
+            
             contentParts.push({
               type: 'image_url',
               image_url: {
-                url: `data:${attachment.mimeType || 'image/jpeg'};base64,${attachment.data}`
+                url: `data:${mimeType};base64,${attachment.data}`
               }
             });
           }
@@ -74,7 +142,7 @@ export class ChatController {
       } else {
         messages.push({
           role: 'user',
-          content: message.trim()
+          content: sanitizedMessage
         });
       }
 
@@ -110,8 +178,8 @@ export class ChatController {
         {
           model,
           messages,
-          temperature: 0.7,
-          max_tokens: isThinkingModel ? 4000 : 1024,
+          temperature: Math.max(0.1, Math.min(2.0, 0.7)), // Clamp temperature
+          max_tokens: Math.max(100, Math.min(4000, isThinkingModel ? 4000 : 1024)), // Clamp max_tokens
           stream: true,
           ...(supportsThinking && { thinking: true })
         },
@@ -122,9 +190,11 @@ export class ChatController {
             
             // Handle regular content
             if (delta.content) {
+              const sanitizedContent = DOMPurify.sanitize(delta.content);
+              
               // Parse content to separate thinking from regular response
               if (supportsThinking) {
-                let remainingContent = delta.content;
+                let remainingContent = sanitizedContent;
                 let regularChunk = '';
                 
                 while (remainingContent.length > 0) {
@@ -172,22 +242,24 @@ export class ChatController {
                 }
               } else {
                 // No thinking support - just send as regular content
-                fullContent += delta.content;
-                res.write(`data: ${JSON.stringify({ content: delta.content })}\n\n`);
+                fullContent += sanitizedContent;
+                res.write(`data: ${JSON.stringify({ content: sanitizedContent })}\n\n`);
               }
             }
             
             // Handle thinking content from delta (if API provides it separately)
             if (delta.thinking && supportsThinking) {
-              fullThinking += delta.thinking;
-              res.write(`data: ${JSON.stringify({ thinking: delta.thinking })}\n\n`);
+              const sanitizedThinking = DOMPurify.sanitize(delta.thinking);
+              fullThinking += sanitizedThinking;
+              res.write(`data: ${JSON.stringify({ thinking: sanitizedThinking })}\n\n`);
             }
           }
         },
         (error) => {
           // Handle error
           console.error('Trial chat streaming error:', error);
-          res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+          const sanitizedError = sanitizeInput(error.message || 'Unknown error');
+          res.write(`data: ${JSON.stringify({ error: sanitizedError })}\n\n`);
           res.end();
         },
         async () => {
@@ -206,7 +278,7 @@ export class ChatController {
   async getConversations(req: AuthRequest, res: Response) {
     try {
       const userId = (req as any).user?.userId;
-      if (!userId) {
+      if (!userId || !validateUserId(userId)) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
       const conversations = await ConversationModel.findByUserId(userId);
@@ -224,18 +296,30 @@ export class ChatController {
       const userId = (req as any).user?.userId;
       console.log('Extracted userId:', userId);
       
-      if (!userId) {
+      if (!userId || !validateUserId(userId)) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
+      
       const { title, model, temperature, max_tokens, system_prompt } = req.body;
+
+      // Input validation and sanitization
+      const sanitizedTitle = sanitizeInput(title || 'New Chat');
+      const sanitizedModel = sanitizeInput(model || 'gpt-3.5-turbo');
+      const sanitizedSystemPrompt = sanitizeInput(system_prompt || '');
+      
+      // Validate numeric inputs
+      const validTemperature = temperature !== undefined ? 
+        Math.max(0.1, Math.min(2.0, parseFloat(temperature) || 0.7)) : 0.7;
+      const validMaxTokens = max_tokens !== undefined ? 
+        Math.max(100, Math.min(8192, parseInt(max_tokens) || 2048)) : 2048;
 
       const conversation = await ConversationModel.create({
         user_id: userId,
-        title,
-        model,
-        temperature,
-        max_tokens,
-        system_prompt
+        title: sanitizedTitle,
+        model: sanitizedModel,
+        temperature: validTemperature,
+        max_tokens: validMaxTokens,
+        system_prompt: sanitizedSystemPrompt
       });
 
       res.status(201).json({ conversation });
@@ -249,10 +333,14 @@ export class ChatController {
   async getConversation(req: AuthRequest, res: Response) {
     try {
       const userId = (req as any).user?.userId;
-      if (!userId) {
+      if (!userId || !validateUserId(userId)) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
       const { conversationId } = req.params;
+
+      if (!validateConversationId(conversationId)) {
+        return res.status(400).json({ error: 'Invalid conversation ID' });
+      }
 
       // Verify ownership
       const isOwner = await ConversationModel.verifyOwnership(conversationId, userId);
@@ -276,11 +364,14 @@ export class ChatController {
   async updateConversation(req: AuthRequest, res: Response) {
     try {
       const userId = (req as any).user?.userId;
-      if (!userId) {
+      if (!userId || !validateUserId(userId)) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
       const { conversationId } = req.params;
-      const updates = req.body;
+      
+      if (!validateConversationId(conversationId)) {
+        return res.status(400).json({ error: 'Invalid conversation ID' });
+      }
 
       // Verify ownership
       const isOwner = await ConversationModel.verifyOwnership(conversationId, userId);
@@ -288,7 +379,27 @@ export class ChatController {
         return res.status(404).json({ error: 'Conversation not found' });
       }
 
-      const conversation = await ConversationModel.update(conversationId, updates);
+      // Sanitize updates
+      const updates = req.body;
+      const sanitizedUpdates: any = {};
+      
+      if (updates.title) {
+        sanitizedUpdates.title = sanitizeInput(updates.title);
+      }
+      if (updates.model) {
+        sanitizedUpdates.model = sanitizeInput(updates.model);
+      }
+      if (updates.system_prompt) {
+        sanitizedUpdates.system_prompt = sanitizeInput(updates.system_prompt);
+      }
+      if (updates.temperature !== undefined) {
+        sanitizedUpdates.temperature = Math.max(0.1, Math.min(2.0, parseFloat(updates.temperature) || 0.7));
+      }
+      if (updates.max_tokens !== undefined) {
+        sanitizedUpdates.max_tokens = Math.max(100, Math.min(8192, parseInt(updates.max_tokens) || 2048));
+      }
+
+      const conversation = await ConversationModel.update(conversationId, sanitizedUpdates);
       if (!conversation) {
         return res.status(404).json({ error: 'Conversation not found' });
       }
@@ -304,10 +415,14 @@ export class ChatController {
   async deleteConversation(req: AuthRequest, res: Response) {
     try {
       const userId = (req as any).user?.userId;
-      if (!userId) {
+      if (!userId || !validateUserId(userId)) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
       const { conversationId } = req.params;
+
+      if (!validateConversationId(conversationId)) {
+        return res.status(400).json({ error: 'Invalid conversation ID' });
+      }
 
       // Verify ownership
       const isOwner = await ConversationModel.verifyOwnership(conversationId, userId);
@@ -335,11 +450,19 @@ export class ChatController {
   async getMessages(req: AuthRequest, res: Response) {
     try {
       const userId = (req as any).user?.userId;
-      if (!userId) {
+      if (!userId || !validateUserId(userId)) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
       const { conversationId } = req.params;
       const { limit = 100, offset = 0 } = req.query;
+
+      if (!validateConversationId(conversationId)) {
+        return res.status(400).json({ error: 'Invalid conversation ID' });
+      }
+
+      // Validate and sanitize pagination parameters
+      const validLimit = Math.max(1, Math.min(1000, parseInt(limit as string) || 100));
+      const validOffset = Math.max(0, parseInt(offset as string) || 0);
 
       // Verify ownership
       const isOwner = await ConversationModel.verifyOwnership(conversationId, userId);
@@ -349,8 +472,8 @@ export class ChatController {
 
       const messages = await MessageModel.findByConversationId(
         conversationId,
-        Number(limit),
-        Number(offset)
+        validLimit,
+        validOffset
       );
 
       // Load attachments for each message
@@ -372,15 +495,21 @@ export class ChatController {
   async sendMessage(req: AuthRequest, res: Response) {
     try {
       const userId = (req as any).user?.userId;
-      if (!userId) {
+      if (!userId || !validateUserId(userId)) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
       const { conversationId } = req.params;
       const { content } = req.body;
 
-      if (!content || content.trim() === '') {
-        return res.status(400).json({ error: 'Message content is required' });
+      if (!validateConversationId(conversationId)) {
+        return res.status(400).json({ error: 'Invalid conversation ID' });
       }
+
+      if (!validateMessageContent(content)) {
+        return res.status(400).json({ error: 'Invalid message content' });
+      }
+
+      const sanitizedContent = sanitizeInput(content);
 
       // Verify ownership
       const isOwner = await ConversationModel.verifyOwnership(conversationId, userId);
@@ -399,7 +528,7 @@ export class ChatController {
         conversation_id: conversationId,
         user_id: userId,
         role: 'user',
-        content: content.trim()
+        content: sanitizedContent
       });
 
       // Get advanced priority-based conversation context
@@ -407,15 +536,15 @@ export class ChatController {
       const context = contextData.context;
       
       // Prepare system prompt with conversation summary if available
-      let systemPrompt = conversation.system_prompt || '';
+      let systemPrompt = sanitizeInput(conversation.system_prompt || '');
       
       // Add Chat by Novita AI branding with model info
-      const modelName = conversation.model || 'GPT-4';
+      const modelName = sanitizeInput(conversation.model || 'GPT-4');
       const novitaBranding = `I am Chat, an AI assistant offered by Novita AI. I am powered by the ${modelName} model. I am a helpful, knowledgeable AI assistant designed to provide accurate, helpful, and engaging responses while maintaining a professional and friendly tone.`;
       systemPrompt = novitaBranding + '\n\n' + systemPrompt;
       
       if (contextData.summary) {
-        systemPrompt += '\n\nConversation Context: ' + contextData.summary;
+        systemPrompt += '\n\nConversation Context: ' + DOMPurify.sanitize(contextData.summary);
       }
 
       // Add system prompt if it exists
@@ -427,10 +556,10 @@ export class ChatController {
         });
       }
       
-      // Add context messages with proper type casting
+      // Add context messages with proper type casting and sanitization
       messages.push(...context.map(msg => ({
         role: msg.role as 'system' | 'user' | 'assistant',
-        content: msg.content
+        content: DOMPurify.sanitize(msg.content)
       })));
 
       // Call Novita AI
@@ -448,8 +577,8 @@ export class ChatController {
       
       const aiContent = aiResponse.choices[0].message.content;
       const contentString = typeof aiContent === 'string' 
-        ? aiContent 
-        : Array.isArray(aiContent) ? aiContent.map(part => part.text || '').join('') : '';
+        ? DOMPurify.sanitize(aiContent)
+        : Array.isArray(aiContent) ? DOMPurify.sanitize(aiContent.map(part => part.text || '').join('')) : '';
 
       // Save AI response
       const assistantMessage = await MessageModel.create({
@@ -499,6 +628,14 @@ export class ChatController {
     try {
       const { conversationId, content, userId, attachments, webSearch, deepResearch, thinking } = data;
 
+      // Input validation
+      if (!validateUserId(userId) || !validateConversationId(conversationId) || !validateMessageContent(content)) {
+        socket.emit('error', { message: 'Invalid input parameters' });
+        return;
+      }
+
+      const sanitizedContent = sanitizeInput(content);
+
       // Check rate limits only if using Novita platform key (not user's own key)
       if (!data.useUserKey) {
         let usageType: 'total' | 'webSearch' | 'deepResearch' = 'total';
@@ -539,19 +676,57 @@ export class ChatController {
         return;
       }
 
-      // Extract style if provided
+      // Extract and sanitize style if provided
       let styleSystemPrompt = '';
       if (data.style && data.style.systemPrompt) {
-        styleSystemPrompt = data.style.systemPrompt;
+        styleSystemPrompt = sanitizeInput(data.style.systemPrompt);
+      }
+
+      // Validate and sanitize attachments
+      const validatedAttachments: any[] = [];
+      if (attachments && Array.isArray(attachments) && attachments.length <= 10) {
+        for (const attachment of attachments) {
+          if (attachment.name && attachment.type && attachment.mimeType && attachment.data) {
+            // Validate base64 data
+            if (!validator.isBase64(attachment.data)) {
+              continue; // Skip invalid base64 data
+            }
+            
+            // Validate file size (max 10MB)
+            if (attachment.size > 10 * 1024 * 1024) {
+              continue; // Skip files larger than 10MB
+            }
+            
+            // Validate MIME types
+            const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            const allowedDocTypes = ['text/plain', 'application/pdf', 'text/csv'];
+            
+            if (attachment.type === 'image' && !allowedImageTypes.includes(attachment.mimeType)) {
+              continue; // Skip invalid image types
+            }
+            
+            if (attachment.type === 'document' && !allowedDocTypes.includes(attachment.mimeType)) {
+              continue; // Skip invalid document types
+            }
+            
+            validatedAttachments.push({
+              name: sanitizeInput(attachment.name),
+              type: attachment.type,
+              mimeType: attachment.mimeType,
+              size: attachment.size,
+              data: attachment.data
+            });
+          }
+        }
       }
 
       // Prepare metadata for user message
       const userMessageMetadata: any = {};
       if (webSearch) userMessageMetadata.webSearch = true;
       if (deepResearch) userMessageMetadata.deepResearch = true;
-      if (attachments && attachments.length > 0) {
+      if (validatedAttachments && validatedAttachments.length > 0) {
         userMessageMetadata.hasAttachments = true;
-        userMessageMetadata.attachmentCount = attachments.length;
+        userMessageMetadata.attachmentCount = validatedAttachments.length;
       }
 
       // Save user message
@@ -559,14 +734,14 @@ export class ChatController {
         conversation_id: conversationId,
         user_id: userId,
         role: 'user',
-        content: content.trim(),
+        content: sanitizedContent,
         metadata: userMessageMetadata
       });
 
       // Save attachments if any
       const savedAttachments: any[] = [];
-      if (attachments && attachments.length > 0) {
-        for (const attachment of attachments) {
+      if (validatedAttachments && validatedAttachments.length > 0) {
+        for (const attachment of validatedAttachments) {
           const savedAttachment = await MessageModel.addAttachment(userMessage.id, {
             filename: attachment.name,
             mime_type: attachment.mimeType,
@@ -602,657 +777,4 @@ export class ChatController {
         
         // If still no context, try alternative method
         if (context.length === 0) {
-          const allMessages = await MessageModel.findByConversationId(conversationId, 20, 0);
-          context = allMessages.map(msg => ({
-            role: msg.role,
-            content: msg.content,
-            attachments: []
-          }));
-          console.log('Fallback - retrieved messages:', context.length);
-        }
-      } catch (error) {
-        console.error('ERROR: Error retrieving context:', error);
-        // Try basic message retrieval as last resort
-        try {
-          const basicMessages = await MessageModel.findByConversationId(conversationId, 10, 0);
-          context = basicMessages.map(msg => ({
-            role: msg.role,
-            content: msg.content,
-            attachments: []
-          }));
-          console.log('Emergency fallback - retrieved messages:', context.length);
-        } catch (fallbackError) {
-          console.error('ERROR: Emergency fallback also failed:', fallbackError);
-          context = []; // Absolutely final fallback
-        }
-      }
-
-      // Perform web search or deep research if requested
-      let searchResults = '';
-      let linkPreviews: any[] = [];
-      
-      if (webSearch || deepResearch) {
-        try {
-          // Create a search progress message
-          const searchMessage = await MessageModel.create({
-            conversation_id: conversationId,
-            user_id: userId,
-            role: 'system',
-            content: deepResearch ? 'Performing deep research...' : 'Performing web search...',
-            metadata: { isSearchProgress: true }
-          });
-
-          socket.emit('search_progress', { 
-            messageId: searchMessage.id,
-            message: searchMessage 
-          });
-
-          const progressCallback = (update: string, links?: any[]) => {
-            socket.emit('search_update', {
-              messageId: searchMessage.id,
-              update,
-              links
-            });
-            
-            // Collect link previews
-            if (links) {
-              linkPreviews = [...linkPreviews, ...links];
-            }
-          };
-
-          if (deepResearch) {
-            console.log('Performing deep research for:', content);
-            const deepResearchResult = await searchService.deepResearch(content, progressCallback);
-            searchResults = deepResearchResult.content;
-            // Add the unique sources to link previews
-            if (deepResearchResult.sources) {
-              linkPreviews = [...linkPreviews, ...deepResearchResult.sources];
-            }
-          } else if (webSearch) {
-            console.log('Performing web search for:', content);
-            searchResults = await searchService.webSearch(content, 5, progressCallback);
-          }
-
-          // Update search message with results summary
-          const finalUpdate = deepResearch 
-            ? 'Deep research completed! Analyzed multiple sources to provide comprehensive insights.'
-            : 'Web search completed! Results from top sources included in response.';
-          
-          socket.emit('search_update', {
-            messageId: searchMessage.id,
-            update: `\n${finalUpdate}`,
-            isComplete: true
-          });
-          
-          // Final update to the message
-          await MessageModel.update(searchMessage.id, {
-            content: (await MessageModel.findById(searchMessage.id))?.content + `\n${finalUpdate}`,
-            metadata: { 
-              isSearchProgress: true,
-              isComplete: true
-            }
-          });
-
-        } catch (error) {
-          console.error('Search error:', error);
-          searchResults = 'Search failed. Proceeding with general knowledge.';
-        }
-      }
-
-      // Check if model supports thinking (expanded list)  
-      const isThinkingModel = (
-        conversation.model.includes('thinking') || 
-        conversation.model.includes('gpt-oss') ||  // GPT OSS models support thinking
-        conversation.model.includes('deepseek-r1') ||
-        conversation.model.includes('glm-4.1v-9b-thinking') ||
-        conversation.model.includes('qwen3-235b-a22b-thinking') ||
-        conversation.model.includes('qwen-2.5-72b-instruct-thinking') ||
-        conversation.model.includes('kimi-k2') ||
-        conversation.model.includes('kimi/k2') ||
-        conversation.model.includes('reflection') ||
-        conversation.model.includes('reasoning')
-      );
-      
-      // Enable thinking for thinking models
-      const supportsThinking = isThinkingModel;
-
-      // Create thinking message if enabled (not saved to DB)
-      let thinkingMessageId: string | null = null;
-      if (supportsThinking) {
-        thinkingMessageId = `thinking-${Date.now()}`;
-        
-        socket.emit('thinking_start', {
-          messageId: thinkingMessageId
-        });
-      }
-
-      // Build messages array with enhanced context
-      const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string | Array<any> }> = [];
-      
-      // Add system prompt with search instructions if needed
-      let systemPrompt = conversation.system_prompt || '';
-      
-      // Add Chat by Novita AI branding with model info
-      const modelName = conversation.model || 'GPT-4';
-      const novitaBranding = `I am Chat, an AI assistant offered by Novita AI. I am powered by the ${modelName} model. I am a helpful, knowledgeable AI assistant designed to provide accurate, helpful, and engaging responses while maintaining a professional and friendly tone.`;
-      
-      // Add style system prompt if provided
-      if (styleSystemPrompt) {
-        systemPrompt = novitaBranding + '\n\n' + styleSystemPrompt + '\n\n' + systemPrompt;
-      } else {
-        systemPrompt = novitaBranding + '\n\n' + systemPrompt;
-      }
-      
-      if (searchResults) {
-        systemPrompt += '\n\nYou have access to web search results. Use this information to provide accurate, up-to-date responses. When citing sources, format them as clickable links using markdown: [Source Title](URL). Always include the specific sources you reference.';
-        systemPrompt += '\n\nSearch Results:\n' + searchResults;
-      }
-      
-      if (systemPrompt) {
-        messages.push({
-          role: 'system',
-          content: systemPrompt
-        });
-      }
-
-      // Add context messages
-      for (const msg of context) {
-        // For user messages with attachments, format content appropriately
-        if (msg.role === 'user' && msg.attachments && msg.attachments.length > 0) {
-          const contentParts: any[] = [{ type: 'text', text: msg.content }];
-          
-          // Add attachments to content
-          for (const attachment of msg.attachments) {
-            if (attachment.type === 'image' && attachment.data) {
-              contentParts.push({
-                type: 'image_url',
-                image_url: {
-                  url: `data:${attachment.mime_type};base64,${attachment.data}`
-                }
-              });
-            } else if (attachment.type === 'document' && attachment.data) {
-              // For documents in history, add them as text content with file info
-              let documentText = `\n\n[DOCUMENT: ${attachment.filename}]\n`;
-              
-              // Try to extract text content from common formats
-              if (attachment.mime_type === 'text/plain' || attachment.filename?.endsWith('.txt')) {
-                // Plain text file - decode base64
-                try {
-                  const textContent = Buffer.from(attachment.data, 'base64').toString('utf-8');
-                  documentText += `Content:\n${textContent}\n[END DOCUMENT]\n\n`;
-                } catch (error) {
-                  documentText += `[Could not read text content]\n[END DOCUMENT]\n\n`;
-                }
-              } else if (attachment.mime_type === 'application/pdf' || attachment.filename?.endsWith('.pdf')) {
-                // PDF file - inform about the document
-                documentText += `[PDF Document - ${Math.round(attachment.size / 1024)}KB]\n`;
-                documentText += `Please note: This is a PDF document that was previously uploaded.\n[END DOCUMENT]\n\n`;
-              } else {
-                // Other document types
-                documentText += `[${attachment.mime_type || 'Unknown'} - ${Math.round(attachment.size / 1024)}KB]\n`;
-                documentText += `Document type: ${attachment.mime_type || 'Unknown'}\n[END DOCUMENT]\n\n`;
-              }
-              
-              // Add document info to the text content
-              contentParts[0].text += documentText;
-            }
-          }
-          
-          messages.push({
-            role: 'user',
-            content: contentParts.length > 1 ? contentParts : msg.content
-          });
-        } else {
-          messages.push({
-            role: msg.role as 'system' | 'user' | 'assistant',
-            content: msg.content
-          });
-        }
-      }
-
-      // Add the current user message with attachments to the messages array
-      if (attachments && attachments.length > 0) {
-        console.log('Processing attachments for model:', conversation.model);
-        console.log('Attachments received:', attachments.map(att => ({
-          name: att.name,
-          type: att.type,
-          mimeType: att.mimeType,
-          size: att.size,
-          hasData: !!att.data
-        })));
-
-        const contentParts: any[] = [{ type: 'text', text: content }];
-        
-        // Add attachments to content
-        for (const attachment of attachments) {
-          if (attachment.type === 'image' && attachment.data) {
-            console.log('Adding image attachment:', attachment.name);
-            // Add image attachments as image_url
-            contentParts.push({
-              type: 'image_url',
-              image_url: {
-                url: `data:${attachment.mimeType};base64,${attachment.data}`
-              }
-            });
-          } else if (attachment.type === 'document' && attachment.data) {
-            console.log('Adding document attachment:', attachment.name);
-            // For documents, add them as text content with file info
-            let documentText = `\n\n[DOCUMENT: ${attachment.name}]\n`;
-            
-            // Try to extract text content from common formats
-            if (attachment.mimeType === 'text/plain' || attachment.name?.endsWith('.txt')) {
-              // Plain text file - decode base64
-              try {
-                const textContent = Buffer.from(attachment.data, 'base64').toString('utf-8');
-                documentText += `Content:\n${textContent}\n[END DOCUMENT]\n\n`;
-              } catch (error) {
-                documentText += `[Could not read text content]\n[END DOCUMENT]\n\n`;
-              }
-            } else if (attachment.mimeType === 'application/pdf' || attachment.name?.endsWith('.pdf')) {
-              // PDF file - extract text server-side for text-only models
-              try {
-                const pdfBuffer = Buffer.from(attachment.data, 'base64');
-                const pdfParse = (await import('pdf-parse')).default as any;
-                const parsed = await pdfParse(pdfBuffer);
-                const extracted = (parsed?.text || '').trim();
-                if (extracted) {
-                  const limited = extracted.length > 20000 ? `${extracted.slice(0, 20000)}...[truncated]` : extracted;
-                  documentText += `PDF Extracted Text (truncated if large):\n${limited}\n[END DOCUMENT]\n\n`;
-                } else {
-                  documentText += `[PDF detected but no extractable text]\n[END DOCUMENT]\n\n`;
-                }
-              } catch (err) {
-                console.error('PDF parse failed:', err);
-                documentText += `[PDF Document - ${Math.round(attachment.size / 1024)}KB]\n`;
-                documentText += `Unable to extract text. Please summarize key sections to analyze.\n[END DOCUMENT]\n\n`;
-              }
-            } else if (attachment.mimeType === 'text/csv' || attachment.name?.endsWith('.csv')) {
-              // CSV file - decode and include content
-              try {
-                const csvContent = Buffer.from(attachment.data, 'base64').toString('utf-8');
-                documentText += `CSV Content (first 2000 chars):\n${csvContent.substring(0, 2000)}${csvContent.length > 2000 ? '...[truncated]' : ''}\n[END DOCUMENT]\n\n`;
-              } catch (error) {
-                documentText += `[Could not read CSV content]\n[END DOCUMENT]\n\n`;
-              }
-            } else {
-              // Other document types
-              documentText += `[${attachment.mimeType || 'Unknown'} - ${Math.round(attachment.size / 1024)}KB]\n`;
-              documentText += `Document type: ${attachment.mimeType || 'Unknown'}\n[END DOCUMENT]\n\n`;
-            }
-            
-            // Add document info to the text content
-            contentParts[0].text += documentText;
-          }
-        }
-        
-        console.log('Final message content structure:', {
-          hasMultipleParts: contentParts.length > 1,
-          parts: contentParts.map(part => ({ type: part.type, hasImageUrl: !!part.image_url }))
-        });
-
-        messages.push({
-          role: 'user',
-          content: contentParts
-        });
-      } else {
-        messages.push({
-          role: 'user',
-          content: content
-        });
-      }
-
-      // Create streaming message placeholder
-      const streamingMessage = await MessageModel.createStreamingMessage(
-        conversationId,
-        userId,
-        conversation.model
-      );
-
-      socket.emit('stream_start', { 
-        messageId: streamingMessage.id,
-        message: streamingMessage 
-      });
-
-      let fullContent = '';
-      let fullThinking = '';
-      let isInThinkingBlock = false;
-
-      // Call Novita AI with streaming
-      await novitaService.createChatCompletionStream(
-        {
-          model: conversation.model,
-          messages,
-          temperature: conversation.temperature,
-          max_tokens: conversation.max_tokens || (deepResearch ? 16384 : isThinkingModel ? 8192 : 4096),
-          stream: true,
-          ...(supportsThinking && { thinking: true })
-        },
-        async (chunk) => {
-          // Handle streaming chunk
-          if (chunk.choices && chunk.choices[0] && chunk.choices[0].delta) {
-            const delta = chunk.choices[0].delta;
-            
-            // Handle regular content
-            if (delta.content) {
-              // Parse content to separate thinking from regular response
-              if (supportsThinking && thinkingMessageId) {
-                let remainingContent = delta.content;
-                let regularChunk = '';
-                
-                while (remainingContent.length > 0) {
-                  if (isInThinkingBlock) {
-                    // We're inside a thinking block, look for the end tag
-                    const endIndex = remainingContent.indexOf('</think>');
-                    if (endIndex !== -1) {
-                      // Found the end tag
-                      const thinkingChunk = remainingContent.substring(0, endIndex);
-                      if (thinkingChunk) {
-                        fullThinking += thinkingChunk;
-                        socket.emit('thinking_chunk', {
-                          messageId: thinkingMessageId,
-                          chunk: thinkingChunk
-                        });
-                      }
-                      isInThinkingBlock = false;
-                      remainingContent = remainingContent.substring(endIndex + 8); // Skip </think>
-                    } else {
-                      // No end tag in this chunk, entire content is thinking
-                      fullThinking += remainingContent;
-                      socket.emit('thinking_chunk', {
-                        messageId: thinkingMessageId,
-                        chunk: remainingContent
-                      });
-                      remainingContent = '';
-                    }
-                  } else {
-                    // Not in thinking block, look for start tag
-                    const startIndex = remainingContent.indexOf('<think>');
-                    if (startIndex !== -1) {
-                      // Found start tag
-                      const beforeThinking = remainingContent.substring(0, startIndex);
-                      if (beforeThinking) {
-                        regularChunk += beforeThinking;
-                      }
-                      isInThinkingBlock = true;
-                      remainingContent = remainingContent.substring(startIndex + 7); // Skip <think>
-                    } else {
-                      // No thinking tag in remaining content
-                      regularChunk += remainingContent;
-                      remainingContent = '';
-                    }
-                  }
-                }
-                
-                // Send any accumulated regular content
-                if (regularChunk) {
-                  fullContent += regularChunk;
-                  socket.emit('stream_chunk', { 
-                    messageId: streamingMessage.id,
-                    chunk: regularChunk 
-                  });
-                }
-              } else {
-                // No thinking support or no thinking message - just send as regular content
-                fullContent += delta.content;
-                socket.emit('stream_chunk', { 
-                  messageId: streamingMessage.id,
-                  chunk: delta.content 
-                });
-              }
-            }
-            
-            // Handle thinking content from delta (if API provides it separately)
-            if (delta.thinking && thinkingMessageId) {
-              fullThinking += delta.thinking;
-              socket.emit('thinking_chunk', {
-                messageId: thinkingMessageId,
-                chunk: delta.thinking
-              });
-            }
-          }
-        },
-        (error) => {
-          // Handle error
-          console.error('Streaming error:', error);
-          socket.emit('stream_error', { 
-            messageId: streamingMessage.id,
-            error: error.message 
-          });
-          
-          // Mark message as error
-          MessageModel.markAsError(
-            streamingMessage.id,
-            error.message
-          );
-        },
-        async () => {
-          // Handle completion
-          // Complete thinking message if exists
-          if (thinkingMessageId) {
-            socket.emit('thinking_complete', {
-              messageId: thinkingMessageId
-            });
-          }
-          
-          // Update the message with the full content and link previews
-          const finalMetadata: any = { 
-            streaming: false,
-            ...(linkPreviews.length > 0 && { 
-              linkPreviews,
-              searchSources: linkPreviews  // Also include as searchSources for compatibility
-            })
-          };
-          
-          await MessageModel.update(streamingMessage.id, {
-            content: fullContent,
-            metadata: finalMetadata
-          });
-          
-          // Finalize the message with all metadata
-          const finalizedMessage = await MessageModel.finalizeStreamingMessage(
-            streamingMessage.id,
-            novitaService.estimateTokens(fullContent)
-          );
-          
-          // Get the message with metadata included
-          const messageWithMetadata = await MessageModel.findById(streamingMessage.id);
-          if (messageWithMetadata && linkPreviews.length > 0) {
-            messageWithMetadata.metadata = {
-              ...messageWithMetadata.metadata,
-              linkPreviews,
-              searchSources: linkPreviews
-            };
-          }
-
-          // Update conversation timestamp
-          await ConversationModel.updateLastMessageAt(conversationId);
-
-          // Generate title if needed
-          if (shouldUpdateTitle && fullContent.length > 10) {
-            try {
-              const titlePrompt = `Generate a concise 3-5 word title for a conversation that started with this user message: "${content.trim()}". The title should capture the main topic or intent. Respond with only the title, no quotes or extra text.`;
-              
-              const titleResponse = await novitaService.createChatCompletion({
-                model: 'meta-llama/llama-3.1-8b-instruct',
-                messages: [{ role: 'user', content: titlePrompt }],
-                temperature: 0.3,
-                max_tokens: 20
-              });
-              
-              const titleContent = titleResponse.choices[0].message.content;
-              const generatedTitle = typeof titleContent === 'string' 
-                ? titleContent.trim()
-                : titleContent.map(part => part.text || '').join('').trim();
-              if (generatedTitle && generatedTitle.length > 0 && generatedTitle.length < 100) {
-                await ConversationModel.update(conversationId, { title: generatedTitle });
-                socket.emit('conversation_title_updated', { 
-                  conversationId, 
-                  title: generatedTitle 
-                });
-              }
-            } catch (error) {
-              console.error('Failed to generate conversation title:', error);
-            }
-          }
-
-          // Send the complete message with all metadata
-          if (finalizedMessage) {
-            const completeMessage = {
-              ...finalizedMessage,
-              metadata: {
-                ...finalizedMessage.metadata,
-                ...finalMetadata
-              }
-            };
-            
-            socket.emit('stream_complete', { 
-              messageId: streamingMessage.id,
-              message: completeMessage 
-            });
-
-            // Update usage tracking - only for Novita platform key usage
-            if (!data.useUserKey) {
-              try {
-                let usageType: 'total' | 'webSearch' | 'deepResearch' = 'total';
-                if (deepResearch) usageType = 'deepResearch';
-                else if (webSearch) usageType = 'webSearch';
-                
-                await updateUsage(userId, usageType);
-                console.log(`Usage updated for user ${userId}, type: ${usageType}`);
-              } catch (usageError) {
-                console.error('Error updating usage:', usageError);
-              }
-            }
-          } else {
-            // If finalization failed, still send the message with metadata
-            const messageWithAllMetadata = await MessageModel.findById(streamingMessage.id);
-            if (messageWithAllMetadata) {
-              messageWithAllMetadata.metadata = finalMetadata;
-              socket.emit('stream_complete', { 
-                messageId: streamingMessage.id,
-                message: messageWithAllMetadata 
-              });
-
-              // Update usage tracking - only for Novita platform key usage
-              if (!data.useUserKey) {
-                try {
-                  let usageType: 'total' | 'webSearch' | 'deepResearch' = 'total';
-                  if (deepResearch) usageType = 'deepResearch';
-                  else if (webSearch) usageType = 'webSearch';
-                  
-                  await updateUsage(userId, usageType);
-                  console.log(`Usage updated for user ${userId}, type: ${usageType}`);
-                } catch (usageError) {
-                  console.error('Error updating usage:', usageError);
-                }
-              }
-            }
-          }
-        }
-      );
-
-    } catch (error) {
-      console.error('WebSocket streaming error:', error);
-      socket.emit('error', { message: 'Failed to process streaming chat' });
-    }
-  }
-
-  // Search conversations and messages
-  async searchConversations(req: AuthRequest, res: Response) {
-    try {
-      const userId = (req as any).user?.userId;
-      if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-      const { q } = req.query;
-
-      if (!q || typeof q !== 'string') {
-        return res.status(400).json({ error: 'Search query is required' });
-      }
-
-      // Search in conversation titles
-      const conversations = await ConversationModel.search(userId, q);
-      
-      // Also search in message content for each conversation
-      const conversationsWithMessageMatches = await Promise.all(
-        conversations.map(async (conv) => {
-          const messageMatches = await MessageModel.searchInConversation(conv.id, q);
-          return {
-            ...conv,
-            hasMessageMatch: messageMatches.length > 0,
-            matchedMessages: messageMatches.slice(0, 3) // Include up to 3 matching messages
-          };
-        })
-      );
-
-      // Sort by relevance - conversations with message matches first
-      conversationsWithMessageMatches.sort((a, b) => {
-        if (a.hasMessageMatch && !b.hasMessageMatch) return -1;
-        if (!a.hasMessageMatch && b.hasMessageMatch) return 1;
-        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-      });
-
-      res.json(conversationsWithMessageMatches);
-    } catch (error) {
-      console.error('Error searching conversations:', error);
-      res.status(500).json({ error: 'Failed to search conversations' });
-    }
-  }
-
-  // Archive a conversation
-  async archiveConversation(req: AuthRequest, res: Response) {
-    try {
-      const userId = (req as any).user?.userId;
-      if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-      const { conversationId } = req.params;
-
-      // Verify ownership
-      const isOwner = await ConversationModel.verifyOwnership(conversationId, userId);
-      if (!isOwner) {
-        return res.status(404).json({ error: 'Conversation not found' });
-      }
-
-      const conversation = await ConversationModel.archive(conversationId);
-      if (!conversation) {
-        return res.status(404).json({ error: 'Conversation not found' });
-      }
-
-      res.json(conversation);
-    } catch (error) {
-      console.error('Error archiving conversation:', error);
-      res.status(500).json({ error: 'Failed to archive conversation' });
-    }
-  }
-
-  // Unarchive a conversation
-  async unarchiveConversation(req: AuthRequest, res: Response) {
-    try {
-      const userId = (req as any).user?.userId;
-      if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-      const { conversationId } = req.params;
-
-      // Verify ownership
-      const isOwner = await ConversationModel.verifyOwnership(conversationId, userId);
-      if (!isOwner) {
-        return res.status(404).json({ error: 'Conversation not found' });
-      }
-
-      const conversation = await ConversationModel.unarchive(conversationId);
-      if (!conversation) {
-        return res.status(404).json({ error: 'Conversation not found' });
-      }
-
-      res.json(conversation);
-    } catch (error) {
-      console.error('Error unarchiving conversation:', error);
-      res.status(500).json({ error: 'Failed to unarchive conversation' });
-    }
-  }
-}
-
-// Export singleton instance
-export const chatController = new ChatController();
+          const allMessages = await MessageModel.findByConversationId(conversationId,
